@@ -75,6 +75,7 @@ pub fn mode_items() -> Vec<SelectionItem> {
 }
 
 mod interaction;
+mod lanes;
 mod play;
 mod rows;
 mod session;
