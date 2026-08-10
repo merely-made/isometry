@@ -172,6 +172,29 @@ impl App {
             );
         }
 
+        // The receipt path only selects an existing declaration; the following
+        // two pumps reuse the normal preview call. Its result stays host-local.
+        if let Some(runner) = self.runner.as_mut() {
+            runner.update(|ui| {
+                ui.choose_generator(
+                    "cmd-selftest".to_owned(),
+                    "isometry.cmd-selftest/v1".to_owned(),
+                    "What should I prepare for the next scene?".to_owned(),
+                )
+            });
+        }
+        self.pump_generators(); // receipt -> selected declaration -> Generate
+        self.pump_generators(); // Generate -> preview
+        eprintln!(
+            "[isometry] cmd selftest: receipt selection = {:?}",
+            self.last_generator_selection
+                .as_ref()
+                .map(|selection| (&selection.reading.candidate_id, &selection.reading.receipt))
+        );
+        if let Some(runner) = self.runner.as_mut() {
+            runner.update(|ui| ui.discard_generation_preview());
+        }
+
         // >gen npc: open the generator, generate a preview, commit it.
         if let Some(runner) = self.runner.as_mut() {
             runner.update(|ui| ui.start_generator("npc"));

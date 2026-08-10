@@ -222,6 +222,9 @@ pub struct UiState {
     pub generator_selected: usize,
     pub generator_locks: BTreeMap<String, GenValue>,
     pub generation_request: Option<GenerationRequest>,
+    /// One host-only request to derive a generator selection from the GM's
+    /// disclosed input. The host drains it before queuing an ordinary preview.
+    pub generator_selection_request: Option<GeneratorSelectionRequest>,
     /// The storylet surface (C6, "dialogue"): host-computed rows of the
     /// campaign's narrative opportunities, whether each is currently playable
     /// (its requirements met and roles cast), and the DM's request to play one.
@@ -462,6 +465,7 @@ impl UiState {
             generator_selected: 0,
             generator_locks: BTreeMap::new(),
             generation_request: None,
+            generator_selection_request: None,
             governance_conflict: None,
             governance_conflict_open: false,
             governance_selected: 0,

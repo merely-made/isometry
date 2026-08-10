@@ -47,6 +47,11 @@ impl UiState {
         match crate::command::parse(&input) {
             crate::command::Command::Spawn(query) => self.spawn_query(&query),
             crate::command::Command::Gen(kind) => self.start_generator(&kind),
+            crate::command::Command::Choose {
+                seed,
+                domain,
+                prompt,
+            } => self.choose_generator(seed, domain, prompt),
             crate::command::Command::Find(query) => self.find_query(&query),
             crate::command::Command::Roll(expr) => {
                 if expr.trim().is_empty() {
@@ -59,7 +64,7 @@ impl UiState {
             }
             crate::command::Command::Time(ticks) => self.pass_time(ticks),
             crate::command::Command::Help => {
-                self.status = "commands: >spawn >gen >find >roll >time".to_owned();
+                self.status = "commands: >spawn >gen >choose >find >roll >time".to_owned();
             }
             crate::command::Command::Unknown(verb) => {
                 self.status = format!("unknown command: {verb} (try >help)");
@@ -136,6 +141,27 @@ impl UiState {
             }
             None => self.status = format!("no generator matches '{kind}'"),
         }
+    }
+
+    /// `>choose <seed> <domain> <prompt>`: ask the local host to select one of
+    /// the already loaded generators, then use the normal preview path. The
+    /// view owns only the request; the receipt and generator runtime stay host
+    /// concerns.
+    pub fn choose_generator(&mut self, seed: String, domain: String, prompt: String) {
+        if !self.can_edit_inventory {
+            self.status = "generation requires the host".to_owned();
+            return;
+        }
+        if self.generator_choices.is_empty() {
+            self.status = "no generator packs loaded".to_owned();
+            return;
+        }
+        self.generator_selection_request = Some(GeneratorSelectionRequest {
+            seed,
+            domain,
+            prompt,
+        });
+        self.status = "selecting a generator from the local receipt".to_owned();
     }
 
     /// `>find <query>`: a unified substring search over the compendium

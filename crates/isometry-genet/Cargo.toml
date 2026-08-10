@@ -13,6 +13,7 @@ isometry-campaign = { workspace = true }
 isometry-views = { workspace = true }
 isometry-net = { workspace = true, features = ["iroh"] }
 isometry-system = { workspace = true }
+cleromancy = { workspace = true }
 tokio = { version = "1", features = ["rt-multi-thread", "sync", "macros", "time"] }
 cambium = { workspace = true }
 cambium-winit = { workspace = true }

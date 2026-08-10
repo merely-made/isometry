@@ -245,6 +245,16 @@ pub enum GenerationRequest {
     Commit,
 }
 
+/// A GM's explicit public inputs for choosing an already-loaded generator.
+/// The host decides how to seal the choice; this view-layer request deliberately
+/// carries neither a pack runtime nor a campaign mutation.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct GeneratorSelectionRequest {
+    pub seed: String,
+    pub domain: String,
+    pub prompt: String,
+}
+
 /// One narrative opportunity as the DM sees it. Host-projected: the app resolves
 /// the storylet's requirements (including host-private secret facts) and casting
 /// once, and hands the view only the result. `cast` is role -> character name;

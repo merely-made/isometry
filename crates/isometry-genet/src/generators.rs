@@ -18,10 +18,12 @@ impl App {
         let mut preview = None;
         let mut choice = None;
         let mut local_snapshot = None;
+        let mut selection_request = None;
         let journal = self.journal.clone();
         if let Some(runner) = self.runner.as_mut() {
             runner.update(|ui| {
                 action = ui.generation_request.take();
+                selection_request = ui.generator_selection_request.take();
                 locks = ui.generator_locks.clone();
                 can_edit = ui.can_edit_inventory;
                 remote = ui.net_mode == NetMode::Remote;
@@ -52,6 +54,53 @@ impl App {
                     });
                 }
             });
+        }
+        if let Some(request) = selection_request {
+            if !can_edit {
+                if let Some(runner) = self.runner.as_mut() {
+                    runner.update(|ui| ui.status = "generation requires the host".to_owned());
+                }
+                return;
+            }
+            let choices = self.generator_catalog.choices();
+            match crate::cleromancy_selection::select_generator(&choices, &request) {
+                Ok(selection) => {
+                    let choice_index = selection.choice_index;
+                    let choice_name = choices[choice_index].name.clone();
+                    let receipt_digest = selection
+                        .reading
+                        .receipt
+                        .derivation_digest
+                        .clone()
+                        .unwrap_or_else(|| "unavailable".to_owned());
+                    self.last_generator_selection = Some(selection);
+                    if let Some(runner) = self.runner.as_mut() {
+                        runner.update(|ui| {
+                            ui.generator_selected = choice_index;
+                            ui.generator_preview = None;
+                            ui.generator_locks.clear();
+                            ui.generator_open = true;
+                            // This is intentionally the existing host action:
+                            // Cleromancy chooses a declaration, never an output.
+                            ui.generation_request = Some(GenerationRequest::Generate);
+                            ui.status = format!(
+                                "receipt chose {choice_name} ({receipt_digest}); generating preview"
+                            );
+                        });
+                    }
+                }
+                Err(error) => {
+                    if let Some(runner) = self.runner.as_mut() {
+                        runner.update(|ui| {
+                            ui.status = format!("generator selection failed: {error}")
+                        });
+                    }
+                }
+            }
+            if let Some(window) = self.window.as_ref() {
+                window.request_redraw();
+            }
+            return;
         }
         let Some(action) = action else {
             return;

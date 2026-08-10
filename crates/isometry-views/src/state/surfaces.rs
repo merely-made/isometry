@@ -323,6 +323,7 @@ impl UiState {
         self.generator_open = false;
         self.generator_preview = None;
         self.generation_request = None;
+        self.generator_selection_request = None;
     }
 
     pub fn request_generation(&mut self) {
@@ -339,6 +340,7 @@ impl UiState {
             self.generator_preview = None;
             self.generator_locks.clear();
             self.generation_request = None;
+            self.generator_selection_request = None;
         }
     }
 
@@ -378,6 +380,7 @@ impl UiState {
     pub fn discard_generation_preview(&mut self) {
         self.generator_preview = None;
         self.generation_request = None;
+        self.generator_selection_request = None;
         self.status = "discarded generation preview".to_owned();
     }
 

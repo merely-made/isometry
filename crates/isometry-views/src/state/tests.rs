@@ -259,6 +259,43 @@ fn generator_controls_keep_locks_visible_and_queue_host_work() {
 }
 
 #[test]
+fn generator_choice_request_is_host_only_and_preserves_the_disclosed_inputs() {
+    let mut ui = UiState::new(demo_map());
+    ui.generator_choices.push(GeneratorChoice {
+        id: "demo:npc".to_owned(),
+        name: "NPC".to_owned(),
+        default_args: GenValue::Text {
+            value: "example".to_owned(),
+        },
+        lock_presets: Vec::new(),
+    });
+
+    ui.can_edit_inventory = false;
+    ui.choose_generator(
+        "session-4".to_owned(),
+        "isometry.generator-preview/v1".to_owned(),
+        "What should I prepare?".to_owned(),
+    );
+    assert!(ui.generator_selection_request.is_none());
+    assert_eq!(ui.status, "generation requires the host");
+
+    ui.can_edit_inventory = true;
+    ui.choose_generator(
+        "session-4".to_owned(),
+        "isometry.generator-preview/v1".to_owned(),
+        "What should I prepare?".to_owned(),
+    );
+    assert_eq!(
+        ui.generator_selection_request,
+        Some(GeneratorSelectionRequest {
+            seed: "session-4".to_owned(),
+            domain: "isometry.generator-preview/v1".to_owned(),
+            prompt: "What should I prepare?".to_owned(),
+        })
+    );
+}
+
+#[test]
 fn governance_conflict_queues_typed_adopt_and_branch_requests() {
     let mut ui = UiState::new(demo_map());
     ui.governance_conflict = Some(GovernanceConflict {

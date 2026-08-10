@@ -49,6 +49,7 @@ use isometry_views::{
 mod adjudicate;
 mod campaign_store;
 mod catalog;
+mod cleromancy_selection;
 mod dispatch;
 mod generators;
 mod host;
@@ -291,6 +292,10 @@ struct App {
     generation_tape: EntropyTape,
     generation_ordinal: u64,
     generator_catalog: GeneratorCatalog,
+    /// The last Cleromancy-backed generator choice. This remains a host-local
+    /// receipt: previews and commits continue through their normal Isometry
+    /// path, while campaign state never contains this selection record.
+    last_generator_selection: Option<cleromancy_selection::GeneratorSelection>,
     /// The real faction moves behind the downtime surface's display rows,
     /// index-aligned with them. The DM strikes rows in the view; on commit the
     /// host keeps the moves whose row survived. Rolled from `generation_tape`.
@@ -539,6 +544,7 @@ fn main() {
         ),
         generation_ordinal: 0,
         generator_catalog,
+        last_generator_selection: None,
         faction_turn_batch: Vec::new(),
         pack_emotes,
     };

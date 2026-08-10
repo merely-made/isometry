@@ -14,6 +14,13 @@ pub enum Command {
     Spawn(String),
     /// `>gen npc` — open the generator overlay on a matching generator.
     Gen(String),
+    /// `>choose seed domain prompt` — select an existing generator through the
+    /// host's local receipt path, then open its ordinary preview.
+    Choose {
+        seed: String,
+        domain: String,
+        prompt: String,
+    },
     /// `>find sword` — search the compendium (monsters, items, spells).
     Find(String),
     /// `>roll 2d6+3` — roll to the shared log.
@@ -45,6 +52,21 @@ pub fn parse(input: &str) -> Command {
     match verb.to_ascii_lowercase().as_str() {
         "spawn" | "s" => Command::Spawn(rest.to_owned()),
         "gen" | "generate" | "g" => Command::Gen(rest.to_owned()),
+        "choose" | "oracle" => {
+            let mut parts = rest.splitn(3, char::is_whitespace);
+            let seed = parts.next().unwrap_or_default().trim();
+            let domain = parts.next().unwrap_or_default().trim();
+            let prompt = parts.next().unwrap_or_default().trim();
+            if seed.is_empty() || domain.is_empty() || prompt.is_empty() {
+                Command::Unknown("choose (needs seed, domain, and prompt)".to_owned())
+            } else {
+                Command::Choose {
+                    seed: seed.to_owned(),
+                    domain: domain.to_owned(),
+                    prompt: prompt.to_owned(),
+                }
+            }
+        }
         "find" | "search" => Command::Find(rest.to_owned()),
         "roll" | "r" => Command::Roll(rest.to_owned()),
         // A bare number is unusable time; that reads as a mistake, not "0".
@@ -68,6 +90,14 @@ mod tests {
     fn verbs_parse_with_their_argument() {
         assert_eq!(parse("spawn goblin"), Command::Spawn("goblin".to_owned()));
         assert_eq!(parse("gen npc"), Command::Gen("npc".to_owned()));
+        assert_eq!(
+            parse("choose session-4 isometry.generator/v1 next scene"),
+            Command::Choose {
+                seed: "session-4".to_owned(),
+                domain: "isometry.generator/v1".to_owned(),
+                prompt: "next scene".to_owned(),
+            }
+        );
         assert_eq!(
             parse("find rusty sword"),
             Command::Find("rusty sword".to_owned())
@@ -113,6 +143,10 @@ mod tests {
         assert_eq!(
             parse("time"),
             Command::Unknown("time (needs a number)".to_owned())
+        );
+        assert_eq!(
+            parse("choose seed domain"),
+            Command::Unknown("choose (needs seed, domain, and prompt)".to_owned())
         );
     }
 

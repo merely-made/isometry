@@ -33,9 +33,9 @@ pub use projection::{
 };
 pub use state::{
     ActionRow, CompendiumTab, EditMode, FactionMoveRow, FogLevel, GenerationRequest,
-    GovernanceBindingRow, GovernanceConflict, GovernanceResolutionRequest, InitiativeMode,
-    InventoryRequest, ItemRow, MonsterRow, NetMode, SheetSchema, SpellRow, StoryletRow, UiState,
-    MESSAGES_CAP, PANEL_W,
+    GeneratorSelectionRequest, GovernanceBindingRow, GovernanceConflict,
+    GovernanceResolutionRequest, InitiativeMode, InventoryRequest, ItemRow, MonsterRow, NetMode,
+    SheetSchema, SpellRow, StoryletRow, UiState, MESSAGES_CAP, PANEL_W,
 };
 pub use state::{mode_items, pace_items, stance_items, PACE_PCTS, STANCE_KEYS};
 pub use theme::board_css;
