@@ -29,7 +29,7 @@ isometry-system = { path = "crates/isometry-system", version = "0.1.0" }
 # Private host-side choice receipts. The committed source stays on Git; a local
 # Cleromancy checkout is supplied by the machine-local source patch during
 # paired development.
-cleromancy = { git = "https://github.com/mark-ik/cleromancy.git", branch = "main", default-features = false }
+cleromancy = { git = "https://github.com/merely-made/cleromancy.git", branch = "main", default-features = false }
 
 # Persistence
 serde = { version = "1.0", features = ["derive"] }
