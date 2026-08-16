@@ -67,7 +67,10 @@ thiserror = "1"
 sceno = { git = "https://github.com/merely-made/mere.git", branch = "main" }
 scenomise = { git = "https://github.com/merely-made/mere.git", branch = "main" }
 graphshell-endpoint = { git = "https://github.com/merely-made/mere.git", branch = "main" }
-graphshell-protocol = { git = "https://github.com/merely-made/mere.git", branch = "main" }
+# The projection contract. Was `graphshell-protocol`; mere renamed it to
+# `chirograph` on 2026-08-14 because the contract is the family's, not the
+# portal's. Same types, same re-exports.
+chirograph = { git = "https://github.com/merely-made/mere.git", branch = "main" }
 graphshell-stdio = { git = "https://github.com/merely-made/mere.git", branch = "main" }
 
 # UI: the Genet host stack (I1, the Woodshed pattern). Git deps on the

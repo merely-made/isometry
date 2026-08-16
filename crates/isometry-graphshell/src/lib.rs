@@ -7,7 +7,7 @@
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 use graphshell_endpoint::{IntentSink, PresentationSource, ProjectionCatalog, ProjectionSource};
-use graphshell_protocol::{
+use chirograph::{
     AdvertisedAction, BoundsRelationship, CachePolicy, CardValueV1, ContentHash,
     EndpointDescriptor, IntentEffect, IntentInvocation, IntentReference, IntentResult,
     NativeGlyphV1, PortableCardV1, PresentationBinding, PresentationCapability, PresentationCodec,
@@ -15,7 +15,7 @@ use graphshell_protocol::{
     ProjectionOffer, ProjectionRequest, ProjectionSession, ProjectionSnapshot, ProtocolVersion,
     ResourceRequest, ResourceResponse, SemanticRole,
 };
-use graphshell_protocol::{Revision, SceneEpoch, SceneSnapshot};
+use chirograph::{Revision, SceneEpoch, SceneSnapshot};
 use isometry_campaign::{CampaignWorld, WorldPlace, WorldRoute};
 use isometry_core::{MapDocument, Overmap};
 use isometry_views::{overmap_score, tile_board_score};

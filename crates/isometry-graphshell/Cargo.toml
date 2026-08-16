@@ -9,7 +9,7 @@ description = "Isometry's product-owned Graphshell projection endpoint."
 
 [dependencies]
 graphshell-endpoint = { workspace = true }
-graphshell-protocol = { workspace = true }
+chirograph = { workspace = true }
 graphshell-stdio = { workspace = true }
 isometry-campaign = { workspace = true }
 isometry-core = { workspace = true }
