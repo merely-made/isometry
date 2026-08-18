@@ -1043,6 +1043,7 @@ name = "cambium-winit"
 version = "0.3.0"
 dependencies = [
  "cambium",
+ "web-time",
  "winit",
 ]
 
@@ -5062,9 +5063,11 @@ dependencies = [
  "iroh",
  "iroh-blobs",
  "iroh-tickets",
+ "muniment",
  "p2panda-core",
  "p2panda-net",
  "personae",
+ "stickleback",
  "thiserror 1.0.69",
  "tokio",
  "tracing",
@@ -11416,10 +11419,6 @@ dependencies = [
 ]
 
 [[patch.unused]]
-name = "netfetcher"
-version = "0.1.1"
-
-[[patch.unused]]
 name = "scholia"
 version = "0.1.1"
 
@@ -11430,3 +11429,7 @@ version = "0.1.2"
 [[patch.unused]]
 name = "vates"
 version = "0.1.2"
+
+[[patch.unused]]
+name = "netfetcher"
+version = "0.1.1"
