@@ -232,6 +232,7 @@ pub fn overmap_swatch(ui: &UiState) -> Option<GraphCanvasSwatch<String, OvermapN
                     "Route".to_owned()
                 },
                 label: format!("{from} to {to}, travel weight {}", edge.weight),
+                route: Vec::new(),
                 visible: !ui.overmap_hidden_relations.contains(&id),
                 emphasized: ui.overmap_selected_relation.as_deref() == Some(id.as_str())
                     || ui.overmap_hovered_relation.as_deref() == Some(id.as_str()),

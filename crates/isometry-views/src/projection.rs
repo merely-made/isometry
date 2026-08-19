@@ -7,7 +7,7 @@ use std::collections::BTreeSet;
 
 use isometry_core::{MapDocument, TileCoord};
 use sceno::{
-    Arrangement, Board, Footprint, Placement, Representation, Scene, Score, ScoreItem, Size2,
+    Arrangement, Footprint, Grid, Placement, Representation, Scene, Score, ScoreItem, Size2,
     SourceRef, Vec2,
 };
 
@@ -18,7 +18,7 @@ pub const ISOMETRY_TILE_BOARD_ADAPTER: &str = "isometry.tile-board";
 /// consumes the resulting scene for membership while retaining its own diamond
 /// geometry, elevation, fog, and interaction rules.
 pub fn tile_board_score(map: &MapDocument) -> Score {
-    let mut score = Score::new(Arrangement::Board(Board {
+    let mut score = Score::new(Arrangement::Grid(Grid {
         origin: Vec2::ZERO,
         cell: Vec2::new(32.0, 32.0),
         columns: map.ground.width(),
@@ -79,7 +79,7 @@ mod tests {
         map.ground.set(2, 1, TileKindId(1));
         map.ground.set(0, 0, TileKindId(2));
         let score = tile_board_score(&map);
-        assert!(matches!(score.arrangement, Arrangement::Board(_)));
+        assert!(matches!(score.arrangement, Arrangement::Grid(_)));
         let scene = tile_board_scene(&map);
         assert_eq!(tile_board_cells(&map), BTreeSet::from([(0, 0), (2, 1)]));
         let tile = scene
