@@ -7,12 +7,15 @@ use std::collections::BTreeSet;
 
 use isometry_core::{MapDocument, TileCoord};
 use sceno::{
-    Arrangement, Footprint, Grid, Placement, Representation, Scene, Score, ScoreItem, Size2,
-    SourceRef, Vec2,
+    Arrangement, Backdrop, Footprint, Grid, Placement, Rect, Representation, Scene, Score,
+    ScoreItem, Size2, SourceRef, Transform2, Vec2,
 };
 
 /// Opaque source lane for tactical-board tiles.
 pub const ISOMETRY_TILE_BOARD_ADAPTER: &str = "isometry.tile-board";
+
+/// Open face used for the authored board surface behind selectable tiles.
+pub const ISOMETRY_TILE_BOARD_BACKDROP: &str = "isometry:tile-board";
 
 /// Score the authored ground tiles as a regular board. The isometric painter
 /// consumes the resulting scene for membership while retaining its own diamond
@@ -49,7 +52,30 @@ pub fn tile_board_score(map: &MapDocument) -> Score {
 
 /// Realize the board through the same score-to-scene path as the overmap.
 pub fn tile_board_scene(map: &MapDocument) -> Scene {
-    scenomise::solve(&tile_board_score(map))
+    let mut scene = scenomise::solve(&tile_board_score(map));
+    let board_size = Size2::new(
+        map.ground.width() as f32 * 32.0,
+        map.ground.height() as f32 * 32.0,
+    );
+    let board_origin = Vec2::new(-16.0, -16.0);
+    let source = scene.intern_source(SourceRef::new(
+        ISOMETRY_TILE_BOARD_ADAPTER,
+        format!("map:{}", map.name),
+    ));
+    scene.backdrops.push(Backdrop {
+        source,
+        space: Scene::WORLD,
+        transform: Transform2::translation(
+            board_origin.x + board_size.w * 0.5,
+            board_origin.y + board_size.h * 0.5,
+        ),
+        footprint: Footprint::Rect { size: board_size },
+        kind: ISOMETRY_TILE_BOARD_BACKDROP.into(),
+        visible: true,
+        collidable: false,
+    });
+    scene.bounds = Rect::new(board_origin, board_size);
+    scene
 }
 
 /// Extract the ground members the board renderer should paint. The solver owns
@@ -81,6 +107,10 @@ mod tests {
         let score = tile_board_score(&map);
         assert!(matches!(score.arrangement, Arrangement::Grid(_)));
         let scene = tile_board_scene(&map);
+        assert_eq!(scene.backdrops.len(), 1);
+        assert_eq!(scene.backdrops[0].kind, ISOMETRY_TILE_BOARD_BACKDROP);
+        assert!(scene.backdrops[0].visible);
+        assert!(!scene.backdrops[0].collidable);
         assert_eq!(tile_board_cells(&map), BTreeSet::from([(0, 0), (2, 1)]));
         let tile = scene
             .items

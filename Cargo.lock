@@ -1161,14 +1161,28 @@ dependencies = [
 [[package]]
 name = "chirograph"
 version = "0.0.1"
+source = "git+https://github.com/merely-made/mere.git?branch=main#a48d46b0a0a602d4f81662497305f6122e9fab44"
 dependencies = [
  "base64",
  "blake3",
- "sceno",
- "scenotime",
+ "sceno 0.0.3",
+ "scenotime 0.0.3",
  "serde",
  "serde_json",
- "titulus",
+ "titulus 0.0.1 (git+https://github.com/merely-made/mere.git?branch=main)",
+]
+
+[[package]]
+name = "chirograph"
+version = "0.0.2"
+dependencies = [
+ "base64",
+ "blake3",
+ "sceno 0.0.4",
+ "scenotime 0.0.4",
+ "serde",
+ "serde_json",
+ "titulus 0.0.1",
 ]
 
 [[package]]
@@ -1254,7 +1268,7 @@ dependencies = [
  "cambium",
  "cambium-winit",
  "chartulary",
- "chirograph",
+ "chirograph 0.0.2",
  "dirs",
  "genet-layout",
  "genet-probe",
@@ -1274,8 +1288,8 @@ dependencies = [
  "paint_list_render",
  "pollster",
  "rand_core 0.6.4",
- "sceno",
- "scenotime",
+ "sceno 0.0.4",
+ "scenotime 0.0.4",
  "serde",
  "serde_json",
  "servitor",
@@ -2632,6 +2646,7 @@ dependencies = [
 name = "gemot"
 version = "0.1.0"
 dependencies = [
+ "mere-capability",
  "mere-proofs",
  "mooting",
  "muniment",
@@ -3092,11 +3107,11 @@ name = "graphshell"
 version = "0.0.1"
 dependencies = [
  "base64",
- "chirograph",
+ "chirograph 0.0.2",
  "graphshell-client",
  "graphshell-endpoint",
- "sceno",
- "scenotime",
+ "sceno 0.0.4",
+ "scenotime 0.0.4",
  "serde_json",
  "windows-sys 0.59.0",
 ]
@@ -3105,9 +3120,9 @@ dependencies = [
 name = "graphshell-client"
 version = "0.0.1"
 dependencies = [
- "chirograph",
- "sceno",
- "scenotime",
+ "chirograph 0.0.2",
+ "sceno 0.0.4",
+ "scenotime 0.0.4",
  "serde",
  "serde_json",
 ]
@@ -3116,7 +3131,7 @@ dependencies = [
 name = "graphshell-endpoint"
 version = "0.0.1"
 dependencies = [
- "chirograph",
+ "chirograph 0.0.2",
 ]
 
 [[package]]
@@ -3124,7 +3139,7 @@ name = "graphshell-local"
 version = "0.0.1"
 source = "git+https://github.com/merely-made/mere.git?branch=main#a48d46b0a0a602d4f81662497305f6122e9fab44"
 dependencies = [
- "chirograph",
+ "chirograph 0.0.1",
  "graphshell-endpoint",
  "serde",
  "serde_json",
@@ -3134,7 +3149,7 @@ dependencies = [
 name = "graphshell-stdio"
 version = "0.0.1"
 dependencies = [
- "chirograph",
+ "chirograph 0.0.2",
  "graphshell-endpoint",
  "serde_json",
 ]
@@ -4366,13 +4381,13 @@ dependencies = [
 name = "isometry-graphshell"
 version = "0.1.0"
 dependencies = [
- "chirograph",
+ "chirograph 0.0.2",
  "graphshell-endpoint",
  "graphshell-stdio",
  "isometry-campaign",
  "isometry-core",
  "isometry-views",
- "sceno",
+ "sceno 0.0.4",
  "scenomise",
  "serde_json",
 ]
@@ -4426,7 +4441,7 @@ dependencies = [
  "isometry-core",
  "isometry-net",
  "isometry-voxel",
- "sceno",
+ "sceno 0.0.4",
  "scenomise",
  "serde_json",
 ]
@@ -4938,7 +4953,7 @@ dependencies = [
  "paint_list_render",
  "png 0.18.1",
  "quint",
- "sceno",
+ "sceno 0.0.3",
  "scenomise",
  "seiche",
  "serde",
@@ -4949,12 +4964,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "mere-capability"
+version = "0.0.1"
+
+[[package]]
 name = "mere-cartography"
 version = "0.0.1"
 source = "git+https://github.com/merely-made/mere.git?branch=main#a48d46b0a0a602d4f81662497305f6122e9fab44"
 dependencies = [
  "mere-kernel",
- "sceno",
+ "sceno 0.0.3",
  "scenomise",
  "serde",
 ]
@@ -7956,22 +7975,39 @@ dependencies = [
 [[package]]
 name = "sceno"
 version = "0.0.3"
+source = "git+https://github.com/merely-made/mere.git?branch=main#a48d46b0a0a602d4f81662497305f6122e9fab44"
+dependencies = [
+ "serde",
+]
+
+[[package]]
+name = "sceno"
+version = "0.0.4"
 dependencies = [
  "serde",
 ]
 
 [[package]]
 name = "scenomise"
-version = "0.0.3"
+version = "0.0.4"
 dependencies = [
- "sceno",
+ "sceno 0.0.4",
 ]
 
 [[package]]
 name = "scenotime"
 version = "0.0.3"
+source = "git+https://github.com/merely-made/mere.git?branch=main#a48d46b0a0a602d4f81662497305f6122e9fab44"
 dependencies = [
- "sceno",
+ "sceno 0.0.3",
+ "serde",
+]
+
+[[package]]
+name = "scenotime"
+version = "0.0.4"
+dependencies = [
+ "sceno 0.0.4",
  "serde",
 ]
 
@@ -8206,6 +8242,7 @@ name = "servitor"
 version = "0.0.1"
 dependencies = [
  "chartulary",
+ "mere-capability",
  "personae",
 ]
 
@@ -9174,7 +9211,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32497e9a4c7b38532efcdebeef879707aa9f794296a4f0244f6f69e9bc8574bd"
 dependencies = [
  "fastrand",
- "getrandom 0.4.3",
+ "getrandom 0.3.4",
  "once_cell",
  "rustix 1.1.4",
  "windows-sys 0.59.0",
@@ -9396,6 +9433,16 @@ checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
 [[package]]
 name = "titulus"
 version = "0.0.1"
+dependencies = [
+ "blake3",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "titulus"
+version = "0.0.1"
+source = "git+https://github.com/merely-made/mere.git?branch=main#a48d46b0a0a602d4f81662497305f6122e9fab44"
 dependencies = [
  "blake3",
  "serde",

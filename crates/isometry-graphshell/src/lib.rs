@@ -6,7 +6,6 @@
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
-use graphshell_endpoint::{IntentSink, PresentationSource, ProjectionCatalog, ProjectionSource};
 use chirograph::{
     AdvertisedAction, BoundsRelationship, CachePolicy, CardValueV1, ContentHash,
     EndpointDescriptor, IntentEffect, IntentInvocation, IntentReference, IntentResult,
@@ -16,9 +15,10 @@ use chirograph::{
     ResourceRequest, ResourceResponse, SemanticRole,
 };
 use chirograph::{Revision, SceneEpoch, SceneSnapshot};
+use graphshell_endpoint::{IntentSink, PresentationSource, ProjectionCatalog, ProjectionSource};
 use isometry_campaign::{CampaignWorld, WorldPlace, WorldRoute};
 use isometry_core::{MapDocument, Overmap};
-use isometry_views::{overmap_score, tile_board_score};
+use isometry_views::{overmap_score, tile_board_scene, tile_board_score};
 use sceno::{InstanceId, RoutedRelation, Scene};
 
 const OVERMAP_SESSION: &str = "loopback:isometry:overmap";
@@ -147,7 +147,7 @@ impl IsometryEndpoint {
                 add_overmap_routes(&mut scene, &overmap);
                 (scene, Some(overmap))
             }
-            ProjectionKind::TileBoard => (scenomise::solve(&tile_board_score(&self.map)), None),
+            ProjectionKind::TileBoard => (tile_board_scene(&self.map), None),
         }
     }
 
@@ -518,6 +518,16 @@ mod tests {
             .snapshot(descriptor.projections[1].request.clone())
             .unwrap();
         assert_eq!(board.scene.active_item_count(), 4);
+        let backdrop = board.scene.active_backdrops_in_order();
+        assert_eq!(backdrop.len(), 1);
+        assert_eq!(
+            backdrop[0].1.kind,
+            isometry_views::ISOMETRY_TILE_BOARD_BACKDROP
+        );
+        assert!(!backdrop[0].1.collidable);
+        let wire = serde_json::to_string(&board.scene).unwrap();
+        let remote: SceneSnapshot = serde_json::from_str(&wire).unwrap();
+        assert_eq!(remote.active_backdrops_in_order()[0].1, backdrop[0].1);
         assert!(board
             .scene
             .tables

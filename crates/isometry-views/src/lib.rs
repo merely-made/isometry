@@ -29,7 +29,8 @@ pub use overmap::{
     OVERMAP_CANVAS, OVERMAP_LEAF_KEY,
 };
 pub use projection::{
-    tile_board_cells, tile_board_scene, tile_board_score, ISOMETRY_TILE_BOARD_ADAPTER,
+    ISOMETRY_TILE_BOARD_ADAPTER, ISOMETRY_TILE_BOARD_BACKDROP, tile_board_cells,
+    tile_board_scene, tile_board_score,
 };
 pub use state::{
     ActionRow, CompendiumTab, EditMode, FactionMoveRow, FogLevel, GenerationRequest,
