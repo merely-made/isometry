@@ -1160,29 +1160,15 @@ dependencies = [
 
 [[package]]
 name = "chirograph"
-version = "0.0.1"
-source = "git+https://github.com/merely-made/mere.git?branch=main#a48d46b0a0a602d4f81662497305f6122e9fab44"
-dependencies = [
- "base64",
- "blake3",
- "sceno 0.0.3",
- "scenotime 0.0.3",
- "serde",
- "serde_json",
- "titulus 0.0.1 (git+https://github.com/merely-made/mere.git?branch=main)",
-]
-
-[[package]]
-name = "chirograph"
 version = "0.0.2"
 dependencies = [
  "base64",
  "blake3",
  "sceno 0.0.4",
- "scenotime 0.0.4",
+ "scenotime",
  "serde",
  "serde_json",
- "titulus 0.0.1",
+ "titulus",
 ]
 
 [[package]]
@@ -1268,7 +1254,7 @@ dependencies = [
  "cambium",
  "cambium-winit",
  "chartulary",
- "chirograph 0.0.2",
+ "chirograph",
  "dirs",
  "genet-layout",
  "genet-probe",
@@ -1289,7 +1275,7 @@ dependencies = [
  "pollster",
  "rand_core 0.6.4",
  "sceno 0.0.4",
- "scenotime 0.0.4",
+ "scenotime",
  "serde",
  "serde_json",
  "servitor",
@@ -3107,11 +3093,11 @@ name = "graphshell"
 version = "0.0.1"
 dependencies = [
  "base64",
- "chirograph 0.0.2",
+ "chirograph",
  "graphshell-client",
  "graphshell-endpoint",
  "sceno 0.0.4",
- "scenotime 0.0.4",
+ "scenotime",
  "serde_json",
  "windows-sys 0.59.0",
 ]
@@ -3120,9 +3106,9 @@ dependencies = [
 name = "graphshell-client"
 version = "0.0.1"
 dependencies = [
- "chirograph 0.0.2",
+ "chirograph",
  "sceno 0.0.4",
- "scenotime 0.0.4",
+ "scenotime",
  "serde",
  "serde_json",
 ]
@@ -3131,15 +3117,14 @@ dependencies = [
 name = "graphshell-endpoint"
 version = "0.0.1"
 dependencies = [
- "chirograph 0.0.2",
+ "chirograph",
 ]
 
 [[package]]
 name = "graphshell-local"
 version = "0.0.1"
-source = "git+https://github.com/merely-made/mere.git?branch=main#a48d46b0a0a602d4f81662497305f6122e9fab44"
 dependencies = [
- "chirograph 0.0.1",
+ "chirograph",
  "graphshell-endpoint",
  "serde",
  "serde_json",
@@ -3149,7 +3134,7 @@ dependencies = [
 name = "graphshell-stdio"
 version = "0.0.1"
 dependencies = [
- "chirograph 0.0.2",
+ "chirograph",
  "graphshell-endpoint",
  "serde_json",
 ]
@@ -4381,7 +4366,7 @@ dependencies = [
 name = "isometry-graphshell"
 version = "0.1.0"
 dependencies = [
- "chirograph 0.0.2",
+ "chirograph",
  "graphshell-endpoint",
  "graphshell-stdio",
  "isometry-campaign",
@@ -7996,15 +7981,6 @@ dependencies = [
 
 [[package]]
 name = "scenotime"
-version = "0.0.3"
-source = "git+https://github.com/merely-made/mere.git?branch=main#a48d46b0a0a602d4f81662497305f6122e9fab44"
-dependencies = [
- "sceno 0.0.3",
- "serde",
-]
-
-[[package]]
-name = "scenotime"
 version = "0.0.4"
 dependencies = [
  "sceno 0.0.4",
@@ -9433,16 +9409,6 @@ checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
 [[package]]
 name = "titulus"
 version = "0.0.1"
-dependencies = [
- "blake3",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "titulus"
-version = "0.0.1"
-source = "git+https://github.com/merely-made/mere.git?branch=main#a48d46b0a0a602d4f81662497305f6122e9fab44"
 dependencies = [
  "blake3",
  "serde",
@@ -11466,6 +11432,10 @@ dependencies = [
 ]
 
 [[patch.unused]]
+name = "netfetcher"
+version = "0.1.1"
+
+[[patch.unused]]
 name = "scholia"
 version = "0.1.1"
 
@@ -11476,7 +11446,3 @@ version = "0.1.2"
 [[patch.unused]]
 name = "vates"
 version = "0.1.2"
-
-[[patch.unused]]
-name = "netfetcher"
-version = "0.1.1"
