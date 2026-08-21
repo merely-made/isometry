@@ -55,7 +55,24 @@ pub struct BrickMap {
 
 impl BrickMap {
     pub fn from_ground(ground: &Ground) -> Result<Self, BrickMapError> {
-        let keys: Vec<_> = ground.keys().collect();
+        Self::from_ground_keys(ground, ground.keys())
+    }
+
+    /// Builds a bounded presentation map from selected world bricks.
+    ///
+    /// Selection is presentation policy rather than world authority. Keys are
+    /// deduplicated and ordered here so camera traversal cannot make slot
+    /// assignment nondeterministic. A missing key is refused rather than
+    /// silently presented as air.
+    pub fn from_ground_keys(
+        ground: &Ground,
+        keys: impl IntoIterator<Item = [i16; 3]>,
+    ) -> Result<Self, BrickMapError> {
+        let keys: Vec<_> = keys
+            .into_iter()
+            .collect::<BTreeSet<_>>()
+            .into_iter()
+            .collect();
         if keys.len() > MAX_BRICKS {
             return Err(BrickMapError::TooManyBricks {
                 actual: keys.len(),
@@ -295,5 +312,44 @@ mod tests {
                 "brick {key:?} stayed coherent"
             );
         }
+    }
+
+    #[test]
+    fn a_selected_working_set_is_deterministic_and_outside_is_air() {
+        let ground = ground();
+        let selected: Vec<_> = ground
+            .keys()
+            .filter(|key| key[0].abs() <= 2 && key[2].abs() <= 2)
+            .collect();
+        let mut reversed = selected.clone();
+        reversed.reverse();
+        reversed.extend(selected.iter().copied());
+
+        let a = BrickMap::from_ground_keys(&ground, selected.clone()).unwrap();
+        let b = BrickMap::from_ground_keys(&ground, reversed).unwrap();
+        assert_eq!(a.origin(), b.origin());
+        assert_eq!(a.pointer_extent(), b.pointer_extent());
+        assert_eq!(a.pointers(), b.pointers());
+        assert_eq!(a.atlas(), b.atlas());
+
+        for key in &selected {
+            let (brick, origin) = ground.brick_materials(*key).unwrap();
+            assert_eq!(a.material_at(origin), brick.get([0, 0, 0]));
+        }
+        let outside = ground
+            .keys()
+            .find(|key| !selected.contains(key))
+            .expect("the working set excludes some ground");
+        let (_, origin) = ground.brick_materials(outside).unwrap();
+        assert_eq!(a.material_at(origin), 0);
+    }
+
+    #[test]
+    fn a_selected_working_set_refuses_a_missing_brick() {
+        let ground = ground();
+        assert!(matches!(
+            BrickMap::from_ground_keys(&ground, [[i16::MAX; 3]]),
+            Err(BrickMapError::GroundShapeChanged)
+        ));
     }
 }
