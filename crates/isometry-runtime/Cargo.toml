@@ -1,0 +1,17 @@
+[package]
+name = "isometry-runtime"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.92"
+license = "MIT OR Apache-2.0"
+authors = ["Mark <sgt.mark3@gmail.com>"]
+repository = "https://github.com/merely-made/isometry"
+description = "Isometry's product-owned conductor for shared runtime organs."
+
+[dependencies]
+isometry-core = { path = "../isometry-core", version = "0.1.0" }
+conatus = { git = "https://github.com/merely-made/mere.git", rev = "5767563cde0b577b11d690f2ceea04eca61f9997" }
+
+# The profile stays independently testable until the desktop host's active
+# protocol and Genet migration gates admit it into the root workspace.
+[workspace]
