@@ -17,6 +17,12 @@ use conatus::{
 };
 use isometry_core::{Facing, MapDocument, Token, TokenId};
 
+#[cfg(feature = "resident-gpu")]
+mod resident;
+
+#[cfg(feature = "resident-gpu")]
+pub use resident::{IsometryResidentBodies, IsometryResidentError, IsometryResidentUpdate};
+
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct MapSourceId(String);
 

@@ -1,7 +1,8 @@
 # Runtime Profile Plan
 
-**Status:** active (2026-08-23); host-neutral profile and focused acceptance
-receipt complete, desktop adoption gate open.
+**Status:** active (2026-08-24); host-neutral profile, focused acceptance
+receipt, and optional resident body-position consumer complete; desktop
+adoption gate open.
 
 ## Purpose
 
@@ -37,6 +38,14 @@ session. Switching maps removes the old bindings and materializes the new map,
 so equal token numbers never alias. Tile span, elevation step, and token
 collider extent are profile configuration rather than stack defaults.
 
+The optional resident path is also product-owned. `resident-gpu` projects the
+profile's accepted `IsometrySpatialFrame` into one fixed-capacity Quint F32
+position plane on the host device. Isometry chooses capacity, coordinates,
+source bindings, generation handling, and which tenant may consume the raw
+view. Quint supplies the retained allocation, typed view, stamp, and atomic
+sparse-patch mechanics. This is a disposable cache, not a shared spatial frame
+or durable body table.
+
 ## Gates
 
 ### R0 — Product profile crate
@@ -65,6 +74,25 @@ core replay/protocol suites remain unchanged.
 Rust 1.96.0. The existing desktop/core sources and root lock remain unchanged;
 the profile is not yet part of the desktop workspace gate.
 
+### R1a — Profile-local resident body view
+
+**Complete.** `IsometryResidentBodies`, behind `resident-gpu`, maps each
+Conatus body slot to one `[x, y, z, occupied]` row in a retained Quint
+allocation. A host-issued read epoch and Conatus revision publish together.
+Removals zero their rows; a recycled slot is rebound only after the old
+product source is removed, and the CPU binding retains the new body generation.
+Capacity failure is explicit and leaves the resident allocation unstamped.
+
+**Done when:** two nonadjacent accepted body changes publish under one stamp;
+the allocation range stays identical; an unchanged frame performs no write;
+same-slot generation replacement is distinguished; a too-small capacity is
+refused before mutation; and the accepted `MapDocument` remains unchanged.
+
+**Receipt:** the `resident_bodies` hardware test, gated by
+`resident-gpu-receipt`, passes on the local adapter. The original four
+host-neutral profile tests still pass without enabling or compiling the GPU
+stack. Warnings-denied Clippy covers all targets with the receipt feature.
+
 ### R2 — Desktop adoption
 
 **Open behind existing prerequisites.** The current Isometry desktop host still
@@ -75,6 +103,10 @@ remains first in the repository's audit order.
 **Done when:** those prerequisites close; `isometry-genet` constructs the
 profile; every accepted active-map change is synchronized once; a still redraw
 is silent; and a local render/spatial consumer consumes the published frame.
+
+The host-neutral resident consumer now proves the final clause independently:
+accepted frames reach a local spatial consumer. Desktop construction and event
+wiring remain open, so R2 is not complete.
 
 ### R3 — Second consumer
 
@@ -99,6 +131,14 @@ contract is smaller than both product-local profiles.
 - **2026-08-23:** An event-driven turn-based product does not need to tick
   Conatus merely to prove composition. `advance(0)` publishes admitted source
   changes and preserves the product clock.
+- **2026-08-24:** `FrameUpdate` needed no new shared body-frame contract. The
+  existing product-local `IsometrySpatialFrame` contains enough final body
+  state and source identity for a resident projection, while Quint needed one
+  reusable mechanism: validate and publish several nonoverlapping ranges under
+  one stamp.
+- **2026-08-24:** Unconditional GPU dev-dependencies made the four ordinary
+  profile tests compile Burn/CubeCL. The hardware harness now has a required
+  `resident-gpu-receipt` feature, leaving the default test graph host-neutral.
 
 ## Stop rules
 
@@ -107,6 +147,10 @@ contract is smaller than both product-local profiles.
 - Do not serialize `BodyId` or Conatus state into a campaign checkpoint.
 - Do not invent a shared `ProductSourceId`, spatial frame, or conductor before
   the second consumer.
+- Do not silently grow or compact the resident body plane. A capacity rebuild
+  changes the allocation and requires product-selected tenants to rebind.
+- Do not treat a body slot as identity; the product binding keeps the Conatus
+  generation and processes removal before replacement.
 - Do not defer unrelated Isometry product work behind R2 or R3.
 - Do not use this slice to bypass protocol H2 or the no-second-runtime gate.
 
@@ -116,3 +160,8 @@ contract is smaller than both product-local profiles.
   focused tests and warnings-denied Clippy pass. Desktop wiring was attempted,
   exposed the stale Genet baseline, and was deliberately moved back behind R2
   rather than expanding scope.
+- **2026-08-24:** R1a completed as an optional product-local resident consumer.
+  The real-adapter receipt proves nonadjacent sparse updates, retained
+  allocation identity, silent frames, generation-aware slot reuse, explicit
+  capacity refusal, and unchanged product facts. R2 host wiring and R3's
+  second-consumer challenge remain open.
