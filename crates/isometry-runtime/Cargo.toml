@@ -10,7 +10,47 @@ description = "Isometry's product-owned conductor for shared runtime organs."
 
 [dependencies]
 isometry-core = { path = "../isometry-core", version = "0.1.0" }
-conatus = { git = "https://github.com/merely-made/mere.git", rev = "5767563cde0b577b11d690f2ceea04eca61f9997" }
+conatus = { git = "https://github.com/merely-made/mere.git", rev = "c382e73482e53c3d3507b57b0fe5d5f67dfb9a79" }
+quint = { git = "https://github.com/merely-made/mere.git", rev = "c382e73482e53c3d3507b57b0fe5d5f67dfb9a79", optional = true, features = ["field-gpu"] }
+wgpu = { version = "30", default-features = false, features = ["wgsl"], optional = true }
+bytemuck = { version = "1", optional = true }
+cubecl = { version = "0.11.0-pre.2", default-features = false, features = ["std", "wgpu"], optional = true }
+pollster = { version = "0.4", optional = true }
+netrender = { git = "https://github.com/merely-made/netrender.git", branch = "main", optional = true }
+
+[features]
+default = []
+resident-gpu = ["dep:quint", "dep:wgpu"]
+resident-render = ["resident-gpu", "dep:bytemuck"]
+netrender-tenant = ["resident-render", "dep:netrender"]
+resident-gpu-receipt = [
+    "resident-gpu",
+    "dep:bytemuck",
+    "dep:cubecl",
+    "dep:pollster",
+    "wgpu/dx12",
+    "wgpu/vulkan",
+    "wgpu/metal",
+]
+resident-render-receipt = [
+    "netrender-tenant",
+    "dep:cubecl",
+    "dep:pollster",
+    "wgpu/dx12",
+    "wgpu/vulkan",
+    "wgpu/metal",
+]
+
+[[test]]
+name = "resident_bodies"
+required-features = ["resident-gpu-receipt"]
+
+[[test]]
+name = "resident_render"
+required-features = ["resident-render-receipt"]
+
+[patch.crates-io]
+vello = { git = "https://github.com/mark-ik/vello.git", rev = "4354955e9d8637f32b7c78b20af2a58f842ba39e" }
 
 # The profile stays independently testable until the desktop host's active
 # protocol and Genet migration gates admit it into the root workspace.
