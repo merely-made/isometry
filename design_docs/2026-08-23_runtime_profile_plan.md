@@ -148,9 +148,17 @@ complete.
 
 **Open.** Paredros or Mesocosm must challenge the actual needs of the profile:
 source identity, cadence, authorization, subsystem selection, and frame
-consumption. Only the common minimum may then move to Mere.
+consumption. Paredros F3 may first prove the general product-owned lifecycle of
+compiling durable facts into rebuildable runtime query state: cold rebuild,
+incremental delta, recipe-version refusal, removal before replacement, and
+one durable source producing several runtime bindings. That nonspatial proof
+does not close R3 or move Paredros epistemic types into this profile. Only an
+executable spatial consumer that challenges this profile's actual assumptions
+can do so, and only the common minimum may then move to Mere.
 
-**Done when:** the second product carries an executable receipt and the shared
+**Done when:** the second product carries an executable spatial receipt that
+tests those five dimensions; cold rebuild and incremental synchronization
+agree; runtime removal/replacement cannot alias durable sources; and the shared
 contract is smaller than both product-local profiles.
 
 ## Findings
@@ -190,6 +198,12 @@ contract is smaller than both product-local profiles.
   copied publication stamp. The tenant refreshes that view when the stamp
   advances, reuses its bind group while the allocation is stable, skips equal
   stamps, and refuses allocation changes that lack a new stamp.
+- **2026-08-26:** A semantic runtime projection can exercise the general
+  rebuild/delta lifecycle before it has spatial work, but that is composition
+  evidence rather than this profile's heterogeneous second-consumer receipt.
+  R3 still requires another product to consume spatial state and challenge
+  source identity, cadence, authorization, subsystem selection, and frame
+  consumption.
 
 ## Stop rules
 
