@@ -57,7 +57,7 @@ marker lens is a forcing receipt, not a sprite ABI or a free-camera 3D mode.
 
 ### R0 — Product profile crate
 
-**Complete.** `isometry-runtime` owns the Conatus engine and the binding table.
+**Complete.** `isometry-runtime` owns the Conatus runtime and the binding table.
 It mirrors tokens as fixed bodies and publishes product-local changed and
 removed records. Facing lowers to a Y-axis rotation; elevation remains an
 authored map fact and lowers to Y translation. Its standalone manifest pins
