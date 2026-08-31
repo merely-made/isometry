@@ -40,7 +40,6 @@ postcard = { version = "1", features = ["alloc"], default-features = false }
 # backend for private desktop campaign state; the future web host can swap
 # the backend without changing campaign data.
 muniment = { git = "https://github.com/merely-made/mere.git", branch = "main" }
-codicil = { git = "https://github.com/merely-made/mere.git", branch = "main" }
 # Host-neutral actor runtime for background host/session work. The SerVal
 # application owns its state on the winit thread and drains typed updates.
 armillary = { git = "https://github.com/merely-made/mere.git", branch = "main" }

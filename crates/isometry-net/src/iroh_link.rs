@@ -25,8 +25,8 @@ use crate::protocol::{
     fnv1a, GameEvent, GameSnapshot, NetMessage, Outbound, PeerId, Recipient, FNV_OFFSET,
 };
 use crate::session::{ClientSession, HostSession};
-use codicil::Codicil;
 use isometry_campaign::CampaignStore;
+use muniment::Journal;
 
 /// The session ALPN. Bumping it is a protocol break (old clients can't
 /// dial a new host).
@@ -147,14 +147,14 @@ impl HostNet {
         state: GameSnapshot,
         campaign: CampaignStore,
     ) -> Result<Self, String> {
-        Self::bind_with_history(state, campaign, Codicil::new()).await
+        Self::bind_with_history(state, campaign, Journal::new()).await
     }
 
     /// Bind a host restored from a checkpoint's complete ordered history.
     pub async fn bind_with_history(
         state: GameSnapshot,
         campaign: CampaignStore,
-        history: Codicil<GameEvent>,
+        history: Journal<GameEvent>,
     ) -> Result<Self, String> {
         let endpoint = Endpoint::builder(presets::N0)
             .alpns(vec![ALPN.to_vec()])
@@ -280,7 +280,7 @@ impl HostNet {
 
     /// The authoritative append-only history, for checkpoint persistence and
     /// later host handoff. It never travels in a normal peer snapshot.
-    pub async fn history(&self) -> Codicil<GameEvent> {
+    pub async fn history(&self) -> Journal<GameEvent> {
         self.session.lock().await.history().clone()
     }
 

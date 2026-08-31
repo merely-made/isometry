@@ -7,10 +7,9 @@
 
 use std::path::Path;
 
-use codicil::Codicil;
 use isometry_campaign::CampaignStore;
 use isometry_net::GameSnapshot;
-use muniment::{JsonSlots, RedbBackend};
+use muniment::{Journal, JsonSlots, RedbBackend};
 use serde::{Deserialize, Serialize};
 
 const PRIVATE_CAMPAIGN_SLOT: &str = "isometry/campaign/private";
@@ -23,7 +22,7 @@ pub struct CampaignCheckpoint {
     pub format: u32,
     pub public: GameSnapshot,
     pub private: CampaignStore,
-    pub history: Codicil<isometry_net::GameEvent>,
+    pub history: Journal<isometry_net::GameEvent>,
     /// The public state immediately before `history` began. Checkpoints written
     /// before source time omit it and remain readable, but cannot fabricate a
     /// replayable past from their current snapshot.
@@ -37,7 +36,7 @@ impl CampaignCheckpoint {
     pub fn new(
         public: GameSnapshot,
         private: CampaignStore,
-        history: Codicil<isometry_net::GameEvent>,
+        history: Journal<isometry_net::GameEvent>,
         history_origin: Option<GameSnapshot>,
     ) -> Self {
         Self {
@@ -132,7 +131,7 @@ mod tests {
             text: "The city was founded on a ford.".to_owned(),
             tags: Vec::new(),
         };
-        let mut history = Codicil::new();
+        let mut history = Journal::new();
         history.append(GameEvent::Fact(fact.clone()));
         let generation = GenerationRecord {
             id: "generated.river-blade.1".to_owned(),

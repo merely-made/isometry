@@ -6,13 +6,13 @@
 
 use std::collections::HashMap;
 
-use codicil::Codicil;
 use isometry_campaign::{
     CampaignStore, FactionMove, GenerationRecord, GenerationRecordError, InventoryError, ItemId,
     ItemInstance, ItemModifierReveal, MapScale, StoryletEffect, StoryletProposal, WorldError,
     WorldEvent, WorldFact,
 };
 use isometry_core::{apply, EventError, TileCoord, TokenId};
+use muniment::Journal;
 
 use crate::protocol::{
     fold_event, ActionIntent, GameEvent, GameSnapshot, NetMessage, Outbound, PeerId, Recipient,
@@ -33,4 +33,3 @@ pub use apply::{apply_game, GameError};
 pub use client::ClientSession;
 pub use host::HostSession;
 pub use travel::resolve_transition;
-

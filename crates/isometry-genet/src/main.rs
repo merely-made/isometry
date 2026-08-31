@@ -25,7 +25,6 @@ use std::rc::Rc;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
-use codicil::Codicil;
 use isometry_campaign::{
     CampaignStore, CampaignWorld, EntropyTape, FactionMove, GenValue, GeneratorRequest, ItemId,
     ItemInstance, MapScale, WorldEvent, WorldFact,
@@ -34,17 +33,18 @@ use isometry_core::{
     Facing, FieldValue, MapDocument, Rng, SessionEvent, SheetData, TileCoord, Token, TokenId,
 };
 use isometry_net::{
-    ActionIntent, ActionResolved, GameEvent, GameSnapshot, HostSession, RequestId, apply_game,
+    apply_game, ActionIntent, ActionResolved, GameEvent, GameSnapshot, HostSession, RequestId,
 };
 use isometry_system::{
-    ActionError, GeneratorCatalog, GeneratorLimits, System, monster_sheet, sheet_with_conditions,
-    sheet_with_turn_counters, srd_5e, srd_bestiary, srd_items, srd_spells,
+    monster_sheet, sheet_with_conditions, sheet_with_turn_counters, srd_5e, srd_bestiary,
+    srd_items, srd_spells, ActionError, GeneratorCatalog, GeneratorLimits, System,
 };
 use isometry_views::{
-    ActionRow, EditMode, FactionMoveRow, GenerationRequest, InventoryRequest, ItemRow, MonsterRow,
-    NetMode, PANEL_W, SheetSchema, SpellRow, StoryletRow, UiChild, UiState, board_css, board_root,
-    demo_map, synth_map,
+    board_css, board_root, demo_map, synth_map, ActionRow, EditMode, FactionMoveRow,
+    GenerationRequest, InventoryRequest, ItemRow, MonsterRow, NetMode, SheetSchema, SpellRow,
+    StoryletRow, UiChild, UiState, PANEL_W,
 };
+use muniment::Journal;
 
 mod adjudicate;
 mod campaign_store;
@@ -146,9 +146,9 @@ struct App {
     /// Public campaign facts. The view does not render the journal yet, but
     /// the checkpoint must retain it for replay and host handoff.
     journal: Vec<WorldFact>,
-    /// The host's append-only Codicil history. It is empty for local editing
+    /// The host's append-only Journal history. It is empty for local editing
     /// until a session begins, then mirrors the authority actor.
-    history: Codicil<GameEvent>,
+    history: Journal<GameEvent>,
     /// Public state immediately before the first entry in `history`. It is the
     /// required replay origin for a truthful source-time projection.
     history_origin: Option<GameSnapshot>,
@@ -473,7 +473,7 @@ fn main() {
         runner: None,
         campaign: CampaignStore::new(),
         journal: Vec::new(),
-        history: Codicil::new(),
+        history: Journal::new(),
         history_origin: None,
         source_history_len: None,
         source_history_attached: false,

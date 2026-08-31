@@ -435,7 +435,7 @@ impl App {
                 .as_ref()
                 .map(|runner| self.snapshot_of(runner.state()));
             if let Some(origin) = origin {
-                self.history = Codicil::new();
+                self.history = Journal::new();
                 self.history_origin = Some(origin);
                 self.source_history_len = None;
                 self.source_history_attached = false;

@@ -15,7 +15,6 @@ default = []
 iroh = ["dep:iroh", "dep:iroh-tickets", "dep:tokio", "dep:tracing"]
 campaign-p2p = [
     "dep:personae",
-    "dep:muniment",
     "dep:mooting",
     "dep:murm-replication",
     "dep:p2panda-core",
@@ -35,13 +34,12 @@ campaign-murm = ["dep:murm", "dep:thiserror"]
 [dependencies]
 isometry-core = { workspace = true }
 isometry-campaign = { workspace = true }
-codicil = { workspace = true }
+muniment = { workspace = true }
 serde = { workspace = true }
 # Compact, no_std-friendly wire framing; also the byte form the portable
 # log hash folds over (so convergence is std-hash-independent).
 postcard = { version = "1", features = ["alloc"] }
 personae = { workspace = true, optional = true }
-muniment = { workspace = true, optional = true }
 mooting = { workspace = true, optional = true }
 murm-replication = { workspace = true, optional = true }
 gemot = { workspace = true, optional = true }

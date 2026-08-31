@@ -1,6 +1,6 @@
 //! Desktop ownership of an event log's replay origin.
 //!
-//! `Codicil` alone is not enough to show history: the current materialized
+//! `Journal` alone is not enough to show history: the current materialized
 //! snapshot cannot be played backwards. The app captures and persists the
 //! public state immediately before the first authority event, then hands a
 //! read-only `GameSourceHistory` to the view. Older checkpoints without that

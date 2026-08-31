@@ -117,8 +117,8 @@ impl UiState {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use codicil::Codicil;
     use isometry_campaign::WorldFact;
+    use muniment::Journal;
 
     #[test]
     fn scrubbing_uses_a_disposable_historical_snapshot_and_returns_live() {
@@ -138,7 +138,7 @@ mod tests {
             beat_seq: 0,
             applied_actions: Default::default(),
         };
-        let mut history = Codicil::new();
+        let mut history = Journal::new();
         history.append(GameEvent::Fact(WorldFact {
             id: "mark".to_owned(),
             kind: "history".to_owned(),

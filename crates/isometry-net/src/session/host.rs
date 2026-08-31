@@ -16,7 +16,7 @@ pub struct HostSession {
     pub(super) campaign: CampaignStore,
     /// The durable, append-only authority history. The public snapshot is a
     /// materialized view of this log; checkpoints keep both for fast restore.
-    pub(super) history: Codicil<GameEvent>,
+    pub(super) history: Journal<GameEvent>,
     /// Count of applied events; also the seq stamped on the next one.
     pub(super) seq: u64,
     pub(super) log_hash: u64,
@@ -43,16 +43,16 @@ impl HostSession {
 
     /// Restore a host from its public session state and private GM state.
     pub fn with_campaign(state: GameSnapshot, campaign: CampaignStore) -> Self {
-        Self::with_history(state, campaign, Codicil::new())
+        Self::with_history(state, campaign, Journal::new())
     }
 
-    /// Restore a host from its materialized state and ordered Codicil history.
+    /// Restore a host from its materialized state and ordered Journal history.
     /// Sequence and convergence hash derive from the log rather than from a
     /// separately persisted counter.
     pub fn with_history(
         state: GameSnapshot,
         campaign: CampaignStore,
-        history: Codicil<GameEvent>,
+        history: Journal<GameEvent>,
     ) -> Self {
         let mut log_hash = FNV_OFFSET;
         for (index, event) in history.entries().iter().enumerate() {
@@ -97,7 +97,7 @@ impl HostSession {
         &mut self.campaign
     }
 
-    pub fn history(&self) -> &Codicil<GameEvent> {
+    pub fn history(&self) -> &Journal<GameEvent> {
         &self.history
     }
 
@@ -266,7 +266,10 @@ impl HostSession {
     /// and its change), which commit through the same path a DM edit does, so
     /// the whole batch lands in the ordered log and replicates to every peer.
     /// Staged on a clone first, so one rejected move cannot half-apply the tick.
-    pub fn commit_faction_turn(&mut self, moves: Vec<FactionMove>) -> Result<Vec<Outbound>, String> {
+    pub fn commit_faction_turn(
+        &mut self,
+        moves: Vec<FactionMove>,
+    ) -> Result<Vec<Outbound>, String> {
         // A faction empties its bank when it acts: the moves it earned are the
         // time it spent, so the same banked time cannot buy a busy tick twice.
         // Collected before the moves are consumed; a faction with nothing banked
@@ -415,5 +418,4 @@ impl HostSession {
         self.campaign = private;
         Ok(out)
     }
-
 }

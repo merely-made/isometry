@@ -1,15 +1,15 @@
 //! Read-only snapshots of an authority event log.
 //!
 //! A [`GameSourceHistory`] pairs the public state from immediately before a
-//! Codicil began with that log's immutable entries. Prefix cursors replay into
+//! Journal began with that log's immutable entries. Prefix cursors replay into
 //! a fresh [`GameSnapshot`]; selecting one never mutates the live authority or
 //! changes the log. The owner of the log must retain the origin explicitly:
 //! reconstructing an older state from the current materialized snapshot would
 //! be a fiction.
 
-use codicil::Codicil;
+use muniment::Journal;
 
-use crate::{GameError, GameEvent, GameSnapshot, apply_game};
+use crate::{apply_game, GameError, GameEvent, GameSnapshot};
 
 /// A failure while materializing a source-time prefix.
 #[derive(Clone, Debug, PartialEq)]
@@ -30,13 +30,13 @@ pub enum GameSourceTimeError {
 #[derive(Clone, Debug)]
 pub struct GameSourceHistory {
     origin: GameSnapshot,
-    history: Codicil<GameEvent>,
+    history: Journal<GameEvent>,
 }
 
 impl GameSourceHistory {
     /// Build a replayable source from the public state that existed just before
     /// `history`'s first entry.
-    pub fn new(origin: GameSnapshot, history: Codicil<GameEvent>) -> Self {
+    pub fn new(origin: GameSnapshot, history: Journal<GameEvent>) -> Self {
         Self { origin, history }
     }
 
@@ -46,7 +46,7 @@ impl GameSourceHistory {
     }
 
     /// The immutable ordered authority log.
-    pub fn history(&self) -> &Codicil<GameEvent> {
+    pub fn history(&self) -> &Journal<GameEvent> {
         &self.history
     }
 
@@ -128,7 +128,7 @@ mod tests {
     #[test]
     fn prefix_snapshots_replay_without_changing_live_authority() {
         let origin = snapshot();
-        let mut history = Codicil::new();
+        let mut history = Journal::new();
         history.append(GameEvent::Fact(WorldFact {
             id: "first-light".to_owned(),
             kind: "history".to_owned(),

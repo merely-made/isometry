@@ -8,11 +8,11 @@ use std::sync::mpsc::{Receiver, TryRecvError};
 use std::time::Duration;
 
 use armillary::{ActorHandle, Correlated, Emitter, RequestId, RequestIds, Wake};
-use codicil::Codicil;
 use isometry_campaign::{CampaignStore, GenerationRecord};
 use isometry_core::TokenId;
 use isometry_net::iroh_link::{ClientNet, HostNet};
 use isometry_net::{ActionIntent, GameEvent, GameSnapshot};
+use muniment::Journal;
 
 /// Which side of the session this process runs.
 pub enum Role {
@@ -20,7 +20,7 @@ pub enum Role {
     Host {
         state: GameSnapshot,
         campaign: CampaignStore,
-        history: Codicil<GameEvent>,
+        history: Journal<GameEvent>,
     },
     /// A player: dials the host's ticket, announcing a name.
     Client { ticket: String, name: String },
@@ -55,12 +55,12 @@ enum BridgeUpdate {
         ticket: String,
         snapshot: GameSnapshot,
         campaign: CampaignStore,
-        history: Codicil<GameEvent>,
+        history: Journal<GameEvent>,
     },
     HostState {
         snapshot: GameSnapshot,
         campaign: CampaignStore,
-        history: Codicil<GameEvent>,
+        history: Journal<GameEvent>,
         players: Vec<String>,
     },
     ClientState(GameSnapshot),
@@ -79,7 +79,7 @@ pub struct NetBridge {
     updates: Receiver<BridgeUpdate>,
     snapshot: Option<GameSnapshot>,
     campaign: Option<CampaignStore>,
-    history: Option<Codicil<GameEvent>>,
+    history: Option<Journal<GameEvent>>,
     version: u64,
     ticket: Option<String>,
     inbox: Vec<(String, String)>,
@@ -265,7 +265,7 @@ impl NetBridge {
         self.campaign.clone()
     }
 
-    pub fn history(&self) -> Option<Codicil<GameEvent>> {
+    pub fn history(&self) -> Option<Journal<GameEvent>> {
         self.history.clone()
     }
 
@@ -305,7 +305,7 @@ fn drain_commands(commands: &Receiver<BridgeCommand>) -> Result<Vec<BridgeComman
 async fn run_host(
     state: GameSnapshot,
     campaign: CampaignStore,
-    history: Codicil<GameEvent>,
+    history: Journal<GameEvent>,
     commands: Receiver<BridgeCommand>,
     out: Emitter<BridgeUpdate>,
 ) {
@@ -495,7 +495,7 @@ mod tests {
         let mut bridge = NetBridge::spawn(Role::Host {
             state: snapshot(),
             campaign: CampaignStore::new(),
-            history: Codicil::new(),
+            history: Journal::new(),
         });
 
         for _ in 0..100 {
@@ -528,7 +528,7 @@ mod tests {
         let mut bridge = NetBridge::spawn(Role::Host {
             state: snapshot(),
             campaign: CampaignStore::new(),
-            history: Codicil::new(),
+            history: Journal::new(),
         });
         for _ in 0..100 {
             bridge.poll();
