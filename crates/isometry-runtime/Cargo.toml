@@ -10,7 +10,7 @@ description = "Isometry's product-owned conductor for shared runtime organs."
 
 [dependencies]
 isometry-core = { path = "../isometry-core", version = "0.1.0" }
-conatus = { git = "https://github.com/merely-made/mere.git", rev = "c382e73482e53c3d3507b57b0fe5d5f67dfb9a79" }
+conatus = { git = "https://github.com/merely-made/mere.git", rev = "e89950bd5e86fa550c57a9a4f56cc67c7b6a2cc0" }
 wgpu = { version = "30", default-features = false, features = ["wgsl"], optional = true }
 bytemuck = { version = "1", optional = true }
 cubecl = { version = "0.11.0-pre.2", default-features = false, features = ["std", "wgpu"], optional = true }

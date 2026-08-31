@@ -938,19 +938,17 @@ dependencies = [
 [[package]]
 name = "conatus"
 version = "0.1.0"
-source = "git+https://github.com/merely-made/mere.git?rev=c382e73482e53c3d3507b57b0fe5d5f67dfb9a79#c382e73482e53c3d3507b57b0fe5d5f67dfb9a79"
+source = "git+https://github.com/merely-made/mere.git?rev=e89950bd5e86fa550c57a9a4f56cc67c7b6a2cc0#e89950bd5e86fa550c57a9a4f56cc67c7b6a2cc0"
 dependencies = [
- "conatus-voxel",
+ "burn",
+ "burn-wgpu",
+ "bytemuck",
+ "cubecl",
+ "getrandom 0.4.3",
+ "nisus",
  "rapier3d",
  "serde",
-]
-
-[[package]]
-name = "conatus-voxel"
-version = "0.1.0"
-source = "git+https://github.com/merely-made/mere.git?rev=c382e73482e53c3d3507b57b0fe5d5f67dfb9a79#c382e73482e53c3d3507b57b0fe5d5f67dfb9a79"
-dependencies = [
- "serde",
+ "wgpu",
 ]
 
 [[package]]
@@ -3001,7 +2999,6 @@ dependencies = [
  "isometry-core",
  "netrender",
  "pollster",
- "quint",
  "wgpu",
 ]
 
@@ -3513,6 +3510,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "650eef8c711430f1a879fdd01d4745a7deea475becfb90269c06775983bbf086"
 
 [[package]]
+name = "nisus"
+version = "0.1.0"
+source = "git+https://github.com/merely-made/mere.git?rev=e89950bd5e86fa550c57a9a4f56cc67c7b6a2cc0#e89950bd5e86fa550c57a9a4f56cc67c7b6a2cc0"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "no_std_io2"
 version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3644,16 +3649,6 @@ checksum = "91df4bbde75afed763b708b7eee1e8e7651e02d97f6d5dd763e89367e957b23b"
 dependencies = [
  "hermit-abi",
  "libc",
-]
-
-[[package]]
-name = "numen"
-version = "0.2.0"
-source = "git+https://github.com/merely-made/mere.git?rev=c382e73482e53c3d3507b57b0fe5d5f67dfb9a79#c382e73482e53c3d3507b57b0fe5d5f67dfb9a79"
-dependencies = [
- "serde",
- "strum",
- "uuid",
 ]
 
 [[package]]
@@ -4139,22 +4134,6 @@ dependencies = [
  "socket2",
  "tracing",
  "windows-sys 0.61.2",
-]
-
-[[package]]
-name = "quint"
-version = "0.0.4"
-source = "git+https://github.com/merely-made/mere.git?rev=c382e73482e53c3d3507b57b0fe5d5f67dfb9a79#c382e73482e53c3d3507b57b0fe5d5f67dfb9a79"
-dependencies = [
- "burn",
- "burn-wgpu",
- "bytemuck",
- "cubecl",
- "getrandom 0.4.3",
- "numen",
- "serde",
- "uuid",
- "wgpu",
 ]
 
 [[package]]
@@ -5002,27 +4981,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7da8b5736845d9f2fcb837ea5d9e2628564b3b043a70948a3f0b778838c5fb4f"
 
 [[package]]
-name = "strum"
-version = "0.28.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9628de9b8791db39ceda2b119bbe13134770b56c138ec1d3af810d045c04f9bd"
-dependencies = [
- "strum_macros",
-]
-
-[[package]]
-name = "strum_macros"
-version = "0.28.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ab85eea0270ee17587ed4156089e10b9e6880ee688791d45a905f5b1ca36f664"
-dependencies = [
- "heck",
- "proc-macro2",
- "quote",
- "syn 2.0.119",
-]
-
-[[package]]
 name = "subtle"
 version = "2.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5649,12 +5607,6 @@ name = "uuid"
 version = "1.25.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f053576934f05a761a402421fbbe3d425d9366f75f978806a037b3ca481abecc"
-dependencies = [
- "getrandom 0.4.3",
- "js-sys",
- "serde_core",
- "wasm-bindgen",
-]
 
 [[package]]
 name = "v_frame"
