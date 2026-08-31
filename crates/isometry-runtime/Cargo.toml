@@ -11,7 +11,6 @@ description = "Isometry's product-owned conductor for shared runtime organs."
 [dependencies]
 isometry-core = { path = "../isometry-core", version = "0.1.0" }
 conatus = { git = "https://github.com/merely-made/mere.git", rev = "c382e73482e53c3d3507b57b0fe5d5f67dfb9a79" }
-quint = { git = "https://github.com/merely-made/mere.git", rev = "c382e73482e53c3d3507b57b0fe5d5f67dfb9a79", optional = true, features = ["field-gpu"] }
 wgpu = { version = "30", default-features = false, features = ["wgsl"], optional = true }
 bytemuck = { version = "1", optional = true }
 cubecl = { version = "0.11.0-pre.2", default-features = false, features = ["std", "wgpu"], optional = true }
@@ -20,7 +19,7 @@ netrender = { git = "https://github.com/merely-made/netrender.git", branch = "ma
 
 [features]
 default = []
-resident-gpu = ["dep:quint", "dep:wgpu"]
+resident-gpu = ["conatus/resident", "dep:wgpu"]
 resident-render = ["resident-gpu", "dep:bytemuck"]
 netrender-tenant = ["resident-render", "dep:netrender"]
 resident-gpu-receipt = [

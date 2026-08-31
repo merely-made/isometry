@@ -1,6 +1,6 @@
 //! Product-owned rendering of Isometry's resident Conatus body positions.
 //!
-//! The tenant reads Quint's exact suballocation directly and renders a locked
+//! The tenant reads Conatus's exact suballocation directly and renders a locked
 //! isometric marker layer into its own same-device texture. Isometry owns the
 //! projection and appearance. Netrender only receives the resulting texture
 //! view for explicit composition.
@@ -8,7 +8,7 @@
 use std::{error::Error, fmt, num::NonZeroU64};
 
 use bytemuck::{Pod, Zeroable};
-use quint::resident::{ChunkStamp, PlaneClass, PlaneElementType, RawKernelView};
+use conatus::resident::{ChunkStamp, PlaneClass, PlaneElementType, RawKernelView};
 
 const POSITION_WIDTH: usize = 4;
 const POSITION_BYTES: u64 = 16;
@@ -58,7 +58,7 @@ struct BoundPositions {
 
 /// Isometry's fixed-isometric body renderer tenant.
 ///
-/// It owns its output texture and keeps the current Quint view alive. A fresh
+/// It owns its output texture and keeps the current Conatus view alive. A fresh
 /// view with the same stamp performs no render submission. An advancing stamp
 /// reuses the bind group while the allocation is stable and rebuilds it only
 /// after an explicit resident allocation replacement.

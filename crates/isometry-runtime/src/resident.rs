@@ -1,17 +1,17 @@
 //! Isometry's disposable GPU projection of accepted Conatus body positions.
 //!
-//! This module deliberately stays in the product profile. Quint owns the
+//! This module deliberately stays in the product profile. Conatus owns the
 //! resident allocation and sparse publication mechanics; Isometry owns the
 //! capacity, source binding, coordinate meaning, and the decision to expose
 //! this particular position plane to a selected tenant.
 
 use std::{collections::BTreeMap, error::Error, fmt};
 
-use conatus::BodyId;
-use quint::resident::{
+use conatus::resident::{
     ChunkBounds, ChunkStamp, DirtyRegion, PlaneClass, PlaneId, PlanePatch, RawKernelView,
     ReadEpoch, ResidentChunk, ResidentChunkError, ResidentClient,
 };
+use conatus::BodyId;
 
 use crate::{IsometrySpatialFrame, TokenSourceId};
 
@@ -107,7 +107,7 @@ impl IsometryResidentBodies {
     /// Publish one already-authorized product frame into the resident cache.
     ///
     /// A silent product frame performs no queue write and does not restamp the
-    /// allocation. All source and capacity checks complete before Quint's own
+    /// allocation. All source and capacity checks complete before Conatus's own
     /// all-or-nothing patch validation begins.
     pub fn apply_frame(
         &mut self,

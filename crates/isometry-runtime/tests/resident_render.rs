@@ -1,3 +1,4 @@
+use conatus::resident::{ReadEpoch, ResidentClient};
 use isometry_core::{apply, Facing, MapDocument, SessionEvent, Token, TokenId};
 use isometry_runtime::{
     IsometryBodyRenderConfig, IsometryBodyRenderError, IsometryBodyTenant, IsometryResidentBodies,
@@ -7,7 +8,6 @@ use netrender::{
     create_netrender_instance, Compositor, ExternalTexturePlacement, NetrenderOptions,
     PresentedFrame, Scene, SourceAlpha, TenantNeeds,
 };
-use quint::resident::{ReadEpoch, ResidentClient};
 
 const DIM: u32 = 96;
 

@@ -1,12 +1,12 @@
 #![cfg(feature = "resident-gpu")]
 
+use conatus::resident::{RawKernelView, ReadEpoch, ResidentClient};
 use conatus::BodyId;
 use isometry_core::{apply, Facing, MapDocument, SessionEvent, Token, TokenId};
 use isometry_runtime::{
     IsometryResidentBodies, IsometryResidentError, IsometryRuntimeProfile, MapSourceId,
     TokenSourceId,
 };
-use quint::resident::{RawKernelView, ReadEpoch, ResidentClient};
 
 fn setup() -> Option<cubecl::wgpu::WgpuSetup> {
     let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
