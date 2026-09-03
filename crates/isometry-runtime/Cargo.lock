@@ -938,7 +938,7 @@ dependencies = [
 [[package]]
 name = "conatus"
 version = "0.1.0"
-source = "git+https://github.com/merely-made/mere.git?rev=e89950bd5e86fa550c57a9a4f56cc67c7b6a2cc0#e89950bd5e86fa550c57a9a4f56cc67c7b6a2cc0"
+source = "git+https://github.com/merely-made/mere.git?rev=1443420b27f3b6b43bf20fbde0094c578aa33021#1443420b27f3b6b43bf20fbde0094c578aa33021"
 dependencies = [
  "burn",
  "burn-wgpu",
@@ -3512,7 +3512,7 @@ checksum = "650eef8c711430f1a879fdd01d4745a7deea475becfb90269c06775983bbf086"
 [[package]]
 name = "nisus"
 version = "0.1.0"
-source = "git+https://github.com/merely-made/mere.git?rev=e89950bd5e86fa550c57a9a4f56cc67c7b6a2cc0#e89950bd5e86fa550c57a9a4f56cc67c7b6a2cc0"
+source = "git+https://github.com/merely-made/mere.git?rev=1443420b27f3b6b43bf20fbde0094c578aa33021#1443420b27f3b6b43bf20fbde0094c578aa33021"
 dependencies = [
  "serde",
 ]
