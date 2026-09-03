@@ -3,10 +3,55 @@
 //! diamonds stand in for sprites until a pixel tileset lands (and the
 //! `image-rendering: pixelated` engine seam opens, probe P1).
 
+/// The floor every overlay panel stacks from, above the whole board.
+///
+/// A tile carries its depth as an *inline* z-index, from
+/// [`isometry_core::depth_key`]: `(col + row) * 64 + elevation`, and a token,
+/// marker or shroud sits two above its tile. The demo skirmish tops out near
+/// 2,945, which is why the hand-picked 500-503 the panels used to carry put
+/// every one of them under the board — the combat capture showed tiles painted
+/// over the Knight's sheet. The board the app actually allows is larger: an
+/// `ISOMETRY_SYNTH=<n>` square has no size cap, and its ceiling is
+/// `(2n - 2) * 64 + 257` (the elevation grid is a `u8`). This clears every
+/// board up to about 7,800 tiles a side — six million elements, far past what
+/// the emitter or the machine will carry — and it is *one* number, so a panel
+/// added later cannot end up under the board by picking a bad one.
+pub const OVERLAY_Z: i32 = 1_000_000;
+
+/// The overlay stack, generated from [`OVERLAY_Z`] so the tile range is
+/// cleared in one place. The offsets keep the order the hand-picked numbers
+/// had (compendium under generator under governance under overmap); the three
+/// panels that never carried a z-index at all sit on the floor with the
+/// compendium, where document order in `board_root` already put them.
+fn overlay_stack_css() -> String {
+    format!(
+        "\n/* Overlay stacking: see OVERLAY_Z. Board tiles carry an inline\n\
+         z-index from depth_key, up to (2n-2)*64+257 on an n x n board. */\n\
+.sheet {{ z-index: {z}; }}\n\
+.storylet {{ z-index: {z}; }}\n\
+.downtime {{ z-index: {z}; }}\n\
+.compendium {{ z-index: {z}; }}\n\
+.generator {{ z-index: {generator}; }}\n\
+.governance {{ z-index: {governance}; }}\n\
+.overmap {{ z-index: {overmap}; }}\n\
+/* The token menu and its dismissal layer ride above the panels: the layer\n\
+   must intercept a press anywhere, including over an open panel. */\n\
+.overlay-surface-dismiss-layer {{ z-index: {dismiss}; }}\n\
+.command-menu {{ z-index: {menu}; }}\n",
+        z = OVERLAY_Z,
+        generator = OVERLAY_Z + 1,
+        governance = OVERLAY_Z + 2,
+        overmap = OVERLAY_Z + 3,
+        dismiss = OVERLAY_Z + 10,
+        menu = OVERLAY_Z + 11,
+    )
+}
+
 /// The whole app sheet: chrome plus the placeholder tileset.
 pub fn board_css() -> String {
     let mut css = r#"
 .app {
+    position: relative;
     width: 100%;
     height: 100%;
     display: flex;
@@ -58,7 +103,55 @@ pub fn board_css() -> String {
 .cmd-line .field-caret { color: #fff0a3; }
 .cmd-result { color: #b9c0cf; font-size: 12px; padding: 1px 6px; }
 
+/* The whisper composer's field. Same shape as the > line, its own colour: the
+   two lanes share the "> " prefix and must not read as the same thing. */
+.compose-line {
+    color: #9fd48a;
+    background-color: #23262f;
+    font-size: 12px;
+    padding: 3px 6px;
+    margin-bottom: 2px;
+}
+.compose-line input {
+    color: #9fd48a;
+    background-color: transparent;
+    border: 0;
+    padding: 0;
+}
+.compose-line .field-caret { color: #d6f2c4; }
+
 .btn-row { display: flex; flex-wrap: wrap; }
+
+/* The Mode section: the catalog `segmented_control`, laid two verbs to a row.
+   Cambium ships the structure and the roles; this is the paint, and it is the
+   panel's own `.btn` vocabulary so a mode still reads as the button it was.
+   The 1px border is the panel's background rather than a colour of its own:
+   with `box-sizing: border-box` it is the gutter between two 50% chips, which
+   a margin cannot be without breaking the halves. Scoped under `.mode-grid`
+   because the downtime overlay's pace and stance rows are the same component
+   and are not on this diet. */
+.mode-grid .selection-bar { display: flex; flex-wrap: wrap; }
+.mode-grid .selection-item {
+    width: 33.333%;
+    box-sizing: border-box;
+    padding: 0 6px;
+    border: 1px solid #1b1e27;
+    background-color: #262b38;
+    color: #cfd3dd;
+    font-size: 12px;
+}
+.mode-grid .selection-item:hover { background-color: #323949; }
+.mode-grid .selection-item.selected { background-color: #3d4666; color: #ffffff; }
+
+/* The Map row: five verbs on one line, so they run at the mini scale. */
+.map-row .btn { margin-right: 3px; }
+
+/* Dice and Measure abreast under one heading. The dice want the wider half:
+   seven mini buttons wrap to three rows at 110px and four at 90. */
+.dice-measure { display: flex; }
+.dice-col { flex: 11; }
+.measure-col { flex: 9; }
+.dice-measure .btn { padding: 1px 3px; margin-right: 2px; }
 .btn {
     padding: 3px 8px;
     margin-right: 4px;
@@ -148,7 +241,6 @@ pub fn board_css() -> String {
     padding: 4px;
     background-color: #1b1e27;
     border: 1px solid #3d4666;
-    z-index: 100000;
 }
 .command-item { padding: 4px 8px; color: #cfd3dd; font-size: 13px; cursor: pointer; }
 .command-item:hover { background-color: #323949; }
@@ -295,6 +387,8 @@ pub fn board_css() -> String {
     // constant means a catalog change arrives instead of silently disagreeing.
     css.push_str(cambium::GRAPH_CANVAS_SWATCH_CSS);
     css.push_str(GRAPH_CANVAS_SWATCH_PALETTE);
+    // Last, so it wins the source-order tie against the panel rules above.
+    css.push_str(&overlay_stack_css());
     css
 }
 
@@ -367,10 +461,16 @@ fn force_css() -> String {
 /// The compendium overlay + `data_grid` styling. The grid places its cells
 /// absolutely (inline geometry), so these rules only paint colour and type.
 const COMPENDIUM_CSS: &str = r#"
-.compendium { position: absolute; left: 232px; top: 36px; width: 372px; background-color: #1b1e27; border: 1px solid #2c3347; border-radius: 4px; padding: 10px 10px 12px; z-index: 500; box-shadow: 0 8px 28px rgba(0,0,0,0.55); }
-.generator { position: absolute; left: 232px; top: 36px; width: 372px; background-color: #1b1e27; border: 1px solid #2c3347; border-radius: 4px; padding: 10px 10px 12px; z-index: 501; box-shadow: 0 8px 28px rgba(0,0,0,0.55); }
-.governance { position: absolute; left: 232px; top: 36px; width: 396px; background-color: #1b1e27; border: 1px solid #2c3347; border-radius: 4px; padding: 10px 10px 12px; z-index: 502; box-shadow: 0 8px 28px rgba(0,0,0,0.55); }
-.overmap { position: absolute; left: 232px; top: 36px; width: 480px; background-color: #1b1e27; border: 1px solid #2c3347; border-radius: 4px; padding: 10px 10px 12px; z-index: 503; box-shadow: 0 8px 28px rgba(0,0,0,0.55); }
+/* The overlay panels. Geometry and paint here; the stacking that lifts them
+   over the board is generated from OVERLAY_Z (see overlay_stack_css). The
+   storylet and downtime panels carried no rule at all until 2026-09-03, so
+   they laid out in the pane's normal flow and painted under every tile. */
+.compendium { position: absolute; left: 232px; top: 36px; width: 372px; background-color: #1b1e27; border: 1px solid #2c3347; border-radius: 4px; padding: 10px 10px 12px; box-shadow: 0 8px 28px rgba(0,0,0,0.55); }
+.generator { position: absolute; left: 232px; top: 36px; width: 372px; background-color: #1b1e27; border: 1px solid #2c3347; border-radius: 4px; padding: 10px 10px 12px; box-shadow: 0 8px 28px rgba(0,0,0,0.55); }
+.governance { position: absolute; left: 232px; top: 36px; width: 396px; background-color: #1b1e27; border: 1px solid #2c3347; border-radius: 4px; padding: 10px 10px 12px; box-shadow: 0 8px 28px rgba(0,0,0,0.55); }
+.overmap { position: absolute; left: 232px; top: 36px; width: 480px; background-color: #1b1e27; border: 1px solid #2c3347; border-radius: 4px; padding: 10px 10px 12px; box-shadow: 0 8px 28px rgba(0,0,0,0.55); }
+.storylet { position: absolute; left: 232px; top: 36px; width: 372px; background-color: #1b1e27; border: 1px solid #2c3347; border-radius: 4px; padding: 10px 10px 12px; box-shadow: 0 8px 28px rgba(0,0,0,0.55); }
+.downtime { position: absolute; left: 232px; top: 36px; width: 372px; background-color: #1b1e27; border: 1px solid #2c3347; border-radius: 4px; padding: 10px 10px 12px; box-shadow: 0 8px 28px rgba(0,0,0,0.55); }
 .overmap-graph { margin: 8px 0; }
 .source-time { margin: 8px 0; padding: 7px 8px; border: 1px solid #343c52; border-radius: 3px; background-color: #151923; }
 .source-time-label { margin-bottom: 5px; color: #aeb8cf; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; }
@@ -422,8 +522,9 @@ const COMPENDIUM_CSS: &str = r#"
 .entry-name { font-size: 16px; font-weight: bold; color: #e8ebf2; margin-bottom: 2px; }
 .compendium-desc { font-size: 12px; color: #cfd3dd; line-height: 1.45; }
 .search-field { display: flex; align-items: center; justify-content: space-between; background-color: #232734; border: 1px solid #2c3347; border-radius: 3px; padding: 5px 9px; margin-bottom: 8px; font-size: 12px; }
+.search-field input { flex: 1; color: #e8ebf2; background-color: transparent; border: 0; padding: 0; font-size: 12px; }
+.search-field .field-caret { color: #9fd48a; }
 .search-hint { color: #6a7080; font-style: italic; }
-.search-text { color: #e8ebf2; }
 .search-clear { color: #8a90a0; cursor: pointer; }
 "#;
 

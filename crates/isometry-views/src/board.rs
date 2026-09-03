@@ -9,16 +9,71 @@
 use std::collections::HashSet;
 
 use cambium::{
-    clickable, command_menu, el, lens, map_action, AnyView, CommandEvent, CommandItem, CommandState,
-    GenetCtx, GenetElement,
+    clickable, command_menu, el, lens, map_action, on_hover, on_pointer, on_wheel, overlay_surface,
+    AnyView, CommandEvent, CommandItem, CommandState, ElementView, GenetCtx, GenetElement,
+    HoverEvent, HoverPhase, OverlayDismiss, OverlayRole, OverlaySurface, Placement, PointerButton,
+    PointerEvent, PointerPhase, WheelEvent,
 };
 use isometry_core::{depth_key, path_to, MapDocument, TileCoord, TileKindId, Token};
 
 use crate::panel::side_panel;
 use crate::projection::tile_board_cells;
-use crate::state::{EditMode, FogLevel, UiState};
+use crate::state::{EditMode, FogLevel, UiState, PANEL_W};
 
 pub type UiChild = Box<dyn AnyView<UiState, (), GenetCtx, GenetElement>>;
+
+/// The unscaled box the stylesheet gives each kind of board element, in CSS
+/// pixels. These restate `theme.rs`, because a board element's size and its
+/// projected position have to move together and only one of the two can live
+/// in a sheet; `the_board_screen_lays_out_where_the_gestures_expect` is the
+/// receipt that the pair still agrees.
+const TILE_BOX: (f32, f32) = (32.0, 16.0);
+const PROP_BOX: (f32, f32) = (20.0, 24.0);
+const TOKEN_BOX: (f32, f32) = (24.0, 36.0);
+const MARKER_BOX: (f32, f32) = (28.0, 14.0);
+
+/// One board element's inline geometry: where it sits, how big it is, and how
+/// deep it stands.
+///
+/// `size` is the sheet's own unscaled number for the box, and it is emitted
+/// only when the board is not at scale 1 — where it would restate what the
+/// stylesheet already says, character for character. Above or below 1 it
+/// overrides the sheet, which is what keeps the diamonds meeting: the
+/// projection in [`UiState::geo`] and the boxes drawn on it are one scale, or
+/// the board tears along every tile edge.
+fn placed(ui: &UiState, (x, y): (f32, f32), size: (f32, f32), z: i32) -> String {
+    let mut style = format!("left: {x}px; top: {y}px; z-index: {z};");
+    if ui.board_scale != 1.0 {
+        let (w, h) = (size.0 * ui.board_scale, size.1 * ui.board_scale);
+        style.push_str(&format!(" width: {w}px; height: {h}px;"));
+    }
+    style
+}
+
+/// Report the tile a board element stands on as the pointer enters and leaves
+/// it, so the play-mode path preview and the measure template follow the
+/// cursor.
+///
+/// The granularity comes from the tree because it cannot come from the host:
+/// the shared host routes `on_hover` Enter and Leave as the *hit element*
+/// changes and deliberately routes no Move, so a single handler on the pane
+/// would only ever learn that the pointer is somewhere over the board. Every
+/// element that stands on a tile carries this instead, and one crossing is one
+/// Leave followed by one Enter. [`UiState::hover_tile_enter`] holds the gate
+/// that decides whether the change is worth a rebuild.
+fn standing_on<V>(child: V, at: TileCoord) -> UiChild
+where
+    V: ElementView<UiState, ()> + 'static,
+{
+    Box::new(on_hover(
+        child,
+        move |ui: &mut UiState, event: HoverEvent| match event.phase {
+            HoverPhase::Enter => ui.hover_tile_enter(Some(at)),
+            HoverPhase::Leave => ui.hover_tile_enter(None),
+            HoverPhase::Move => {}
+        },
+    ))
+}
 
 /// One diamond at tile `at`, drawn at `elevation`, with `class` deciding
 /// its paint. Clicking selects the tile.
@@ -27,14 +82,17 @@ fn tile_el(ui: &UiState, at: TileCoord, elevation: i32, class: String) -> UiChil
     let (cx, cy) = geo.tile_to_screen(at, elevation);
     let (x, y) = (cx - geo.tile_w / 2.0, cy - geo.tile_h / 2.0);
     let z = depth_key(at, elevation);
-    Box::new(clickable(
-        el("div", ())
-            .attr("class", class)
-            .attr("style", format!("left: {x}px; top: {y}px; z-index: {z};")),
-        move |ui: &mut UiState, _| {
-            ui.click_tile(at);
-        },
-    ))
+    standing_on(
+        clickable(
+            el("div", ())
+                .attr("class", class)
+                .attr("style", placed(ui, (x, y), TILE_BOX, z)),
+            move |ui: &mut UiState, _| {
+                ui.click_tile(at);
+            },
+        ),
+        at,
+    )
 }
 
 fn kind_name(map: &MapDocument, kind: TileKindId) -> &str {
@@ -151,10 +209,11 @@ fn shroud_el(ui: &UiState, at: TileCoord, elev: i32) -> UiChild {
     let (cx, cy) = geo.tile_to_screen(at, elev);
     let (x, y) = (cx - geo.tile_w / 2.0, cy - geo.tile_h / 2.0);
     let z = depth_key(at, elev) + 2;
-    Box::new(
+    standing_on(
         el("div", ())
             .attr("class", "fog-shroud")
-            .attr("style", format!("left: {x}px; top: {y}px; z-index: {z};")),
+            .attr("style", placed(ui, (x, y), TILE_BOX, z)),
+        at,
     )
 }
 
@@ -179,12 +238,16 @@ fn prop_tiles(ui: &UiState) -> Vec<UiChild> {
         let (cx, cy) = geo.tile_to_screen(at, elev);
         let z = depth_key(at, elev) + 1;
         let class = format!("prop prop-{}", kind_name(map, *kind));
-        // 20x24 body, base at the diamond center.
-        let (x, y) = (cx - 10.0, cy - 24.0);
-        out.push(Box::new(el("div", ()).attr("class", class).attr(
-            "style",
-            format!("left: {x}px; top: {y}px; z-index: {z};"),
-        )));
+        // 20x24 body, base at the diamond center. The anchor rides the board's
+        // own scale with the box, or a scaled prop would float off its tile.
+        let s = ui.board_scale;
+        let (x, y) = (cx - PROP_BOX.0 / 2.0 * s, cy - PROP_BOX.1 * s);
+        out.push(standing_on(
+            el("div", ())
+                .attr("class", class)
+                .attr("style", placed(ui, (x, y), PROP_BOX, z)),
+            at,
+        ));
     }
     out
 }
@@ -198,8 +261,10 @@ fn token_el(ui: &UiState, token: &Token) -> UiChild {
         .unwrap_or(&0) as i32;
     let (cx, cy) = geo.tile_to_screen(token.at, elev);
     let z = depth_key(token.at, elev) + 2;
-    // 8x12 sprite at 3x (24x36), feet at the diamond center.
-    let (x, y) = (cx - 12.0, cy - 32.0);
+    // 8x12 sprite at 3x (24x36), feet at the diamond center. The anchor takes
+    // the board's scale with the box: the feet must stay on the diamond.
+    let s = ui.board_scale;
+    let (x, y) = (cx - TOKEN_BOX.0 / 2.0 * s, cy - 32.0 * s);
     let mut class = format!("token token-{}", token.sprite);
     // Equipment appearance remains pack CSS: public layer keys become stable
     // token classes, while the future voxel compositor can replace the same
@@ -216,10 +281,11 @@ fn token_el(ui: &UiState, token: &Token) -> UiChild {
     }
     // One drawn side, mirrored for the other two facings (the GBA
     // economy): E/N flip, S/W stay.
-    if matches!(
+    let flipped = matches!(
         token.facing,
         isometry_core::Facing::East | isometry_core::Facing::North
-    ) {
+    );
+    if flipped {
         class.push_str(" token-flip");
     }
     let id = token.id;
@@ -256,21 +322,42 @@ fn token_el(ui: &UiState, token: &Token) -> UiChild {
     if ui.picking_target() && !down {
         wrapper.push_str(" beat-targetable");
     }
-    let sprite: Vec<UiChild> = vec![Box::new(el("div", ()).attr("class", class))];
-    Box::new(clickable(
-        el("div", sprite)
-            .attr("class", wrapper)
-            .attr("style", format!("left: {x}px; top: {y}px; z-index: {z};")),
-        move |ui: &mut UiState, _| {
-            // In target-pick mode a click on a token names the victim rather
-            // than selecting it.
-            if ui.picking_target() {
-                ui.pick_action_target(id);
-            } else {
-                ui.click_token(id);
-            }
-        },
-    ))
+    // The sprite is the one board box whose size is not the whole story: it
+    // also carries `.token-flip`'s mirror, and that transform pre-translates by
+    // the sprite's own width (genet conjugates at the box origin). A scaled
+    // sprite therefore needs a scaled translate, so both ride the same inline
+    // declaration rather than the class. At scale 1 nothing is emitted and the
+    // sheet's rule stands untouched.
+    let sprite_el = el("div", ()).attr("class", class);
+    let sprite: Vec<UiChild> = vec![if s == 1.0 {
+        Box::new(sprite_el)
+    } else {
+        let mut style = format!("width: {}px; height: {}px;", TOKEN_BOX.0 * s, TOKEN_BOX.1 * s);
+        if flipped {
+            style.push_str(&format!(
+                " transform: translateX({}px) scaleX(-1);",
+                TOKEN_BOX.0 * s
+            ));
+        }
+        Box::new(sprite_el.attr("style", style))
+    }];
+    standing_on(
+        clickable(
+            el("div", sprite)
+                .attr("class", wrapper)
+                .attr("style", placed(ui, (x, y), TOKEN_BOX, z)),
+            move |ui: &mut UiState, _| {
+                // In target-pick mode a click on a token names the victim rather
+                // than selecting it.
+                if ui.picking_target() {
+                    ui.pick_action_target(id);
+                } else {
+                    ui.click_token(id);
+                }
+            },
+        ),
+        token.at,
+    )
 }
 
 /// Make a pack layer key safe for the CSS-class vocabulary. Different raw
@@ -381,11 +468,13 @@ fn marker_el(ui: &UiState, token_id: isometry_core::TokenId, class: &str) -> Opt
         .unwrap_or(&0) as i32;
     let (cx, cy) = ui.geo.tile_to_screen(token.at, elev);
     let z = depth_key(token.at, elev) + 1;
-    let (x, y) = (cx - 14.0, cy - 7.0);
-    Some(Box::new(
+    let s = ui.board_scale;
+    let (x, y) = (cx - MARKER_BOX.0 / 2.0 * s, cy - MARKER_BOX.1 / 2.0 * s);
+    Some(standing_on(
         el("div", ())
             .attr("class", class.to_owned())
-            .attr("style", format!("left: {x}px; top: {y}px; z-index: {z};")),
+            .attr("style", placed(ui, (x, y), MARKER_BOX, z)),
+        token.at,
     ))
 }
 
@@ -410,7 +499,10 @@ enum TokenMenuAction {
 /// emotable (a `name` plus an `emote` label in its manifest), so a campaign can
 /// add a rude gesture or remove one without the app knowing. The condition rows
 /// only *ask*; the host recomputes what the token can do.
-fn token_menu(ui: &UiState, id: isometry_core::TokenId) -> (Vec<CommandItem>, Vec<TokenMenuAction>) {
+fn token_menu(
+    ui: &UiState,
+    id: isometry_core::TokenId,
+) -> (Vec<CommandItem>, Vec<TokenMenuAction>) {
     let mut items = Vec::new();
     let mut actions = Vec::new();
 
@@ -457,23 +549,42 @@ fn token_menu(ui: &UiState, id: isometry_core::TokenId) -> (Vec<CommandItem>, Ve
 
 /// The right-click context menu, or `None` when closed.
 ///
-/// The catalog's `command_menu` (adopted 2026-07-25) replaces the hand-rolled
-/// card: it brings `role="menu"` / `menuitem`, `aria-activedescendant`,
-/// disabled-with-reason rows, and arrow-key navigation, none of which the
-/// hand-roll had.
+/// The catalog's `command_menu` (adopted 2026-07-25) draws the card: it brings
+/// `role="menu"` / `menuitem`, `aria-activedescendant`, disabled-with-reason
+/// rows, and arrow-key navigation, none of which the hand-roll had. It sits
+/// inside the catalog's `overlay_surface` (adopted 2026-09-03), which supplies
+/// the half the component cannot: a transparent dismissal layer over the whole
+/// window, so a press *anywhere* outside the card closes the menu.
 ///
-/// Two halves of "dismissal" that the obviation lane treated as one:
-/// **Escape** is the component's (it reports `CommandEvent::Dismiss`), but
-/// **outside-click is still the host's**, because a DOM subtree cannot observe
-/// a click outside itself without a backdrop element the component does not
-/// render. The winit host keeps its left-click-off branch. The keyboard half
-/// stays inert until the host routes keys into the DOM at all -- see the
-/// key-routing finding in the perf/cambification plan.
+/// That layer is why this hangs off `.app` rather than `.pane`, and why the
+/// anchor gains [`PANEL_W`]: `.pane` is `overflow: hidden`, so a layer sized to
+/// the window inside it would be clipped back to the pane and a press on the
+/// side panel would go on missing the menu — which is exactly the regression
+/// the migration left behind when the host's own left-click-off branch went
+/// away with `input.rs`. Pane-local stays the space
+/// [`UiState::open_context_menu`] records; the translation happens here, once.
+///
+/// The surface is anchored at the window origin with a zero-size panel, so the
+/// card lands at exactly the pane point the press recorded: `command_menu`
+/// positions itself absolutely inside the panel box, the same as before. The
+/// surface's own Escape listener is passive (it needs a focused descendant),
+/// so the Escape half is `hooks::key_intercept`'s.
 fn context_menu_overlay(ui: &UiState) -> Option<UiChild> {
     let (id, (mx, my)) = ui.context_menu?;
     ui.map.token(id)?;
     let (items, actions) = token_menu(ui, id);
-    Some(Box::new(map_action(
+    // Window coordinates: the pane starts at the panel's edge.
+    let (mx, my) = (mx + PANEL_W, my);
+    let (pane_w, pane_h) = ui.viewport;
+    let surface = OverlaySurface::new(
+        (0.0, 0.0, 0.0, 0.0),
+        (0.0, 0.0),
+        (0.0, 0.0, pane_w + PANEL_W, pane_h),
+    )
+    .with_placement(Placement::Below)
+    .with_role(OverlayRole::Region)
+    .with_label("Token actions");
+    let menu = map_action(
         lens(
             move |cmd: &mut CommandState| command_menu(cmd, &items, mx, my),
             |ui: &mut UiState| &mut ui.context_menu_state,
@@ -497,6 +608,11 @@ fn context_menu_overlay(ui: &UiState) -> Option<UiChild> {
             // already closes it; doing so twice is harmless.
             ui.close_context_menu();
         },
+    );
+    Some(Box::new(overlay_surface(
+        &surface,
+        menu,
+        |ui: &mut UiState, _reason: OverlayDismiss| ui.close_context_menu(),
     )))
 }
 
@@ -562,17 +678,50 @@ pub fn board_root(ui: &UiState) -> UiChild {
     if let Some(overlay) = crate::governance::governance_overlay(ui) {
         pane_children.push(overlay);
     }
+    // The token menu is the one overlay that is *not* a pane child: its
+    // dismissal layer has to cover the side panel too, and `.pane` clips.
+    let mut screen: Vec<UiChild> = vec![side_panel(ui), board_pane(pane_children)];
     if let Some(menu) = context_menu_overlay(ui) {
-        pane_children.push(menu);
+        screen.push(menu);
     }
-    Box::new(
-        el(
-            "div",
-            (
-                side_panel(ui),
-                el("div", pane_children).attr("class", "pane"),
-            ),
-        )
-        .attr("class", "app"),
-    )
+    Box::new(el("div", screen).attr("class", "app"))
+}
+
+/// The board pane, carrying the board's own pointer and wheel gestures.
+///
+/// Both handlers hang here rather than on the window, which is what keeps the
+/// side panel out of them: a drag can never spam the panel's buttons and a
+/// wheel notch over the panel never pans the board, by construction rather
+/// than by a coordinate test. `local` is measured against this element's
+/// painted box, so a handler receives the pointer in the pane's own
+/// coordinates — the space [`UiState::open_context_menu`] already anchors in,
+/// and the space every gesture on [`UiState`] takes.
+fn board_pane(children: Vec<UiChild>) -> UiChild {
+    let pane = el("div", children).attr("class", "pane");
+    let pane = on_wheel(pane, |ui: &mut UiState, event: WheelEvent| {
+        // The wheel pans, so the host's scrolling default must not also run:
+        // `.pane` is `overflow: hidden`, and an unconsumed notch would chain
+        // out to the document viewport and drag the whole board with it.
+        event.prevent_default();
+        ui.board_wheel(event.delta.0, event.delta.1);
+    });
+    Box::new(on_pointer(pane, |ui: &mut UiState, event: PointerEvent| {
+        match (event.phase, event.button) {
+            // A secondary press is one-shot: it captures nothing and no Move
+            // or Up follows it, so opening the menu is the whole gesture.
+            (PointerPhase::Down, PointerButton::Secondary) => ui.board_context_menu(event.local),
+            (PointerPhase::Down, PointerButton::Primary) => {
+                if std::env::var_os("ISOMETRY_PROFILE").is_some() {
+                    eprintln!(
+                        "[isometry] board press at {:?} tile {:?}",
+                        event.local,
+                        ui.tile_at_pane(event.local)
+                    );
+                }
+                ui.board_press(event.local);
+            }
+            (PointerPhase::Move, _) => ui.board_drag(event.local),
+            (PointerPhase::Up, _) => ui.board_release(event.local),
+        }
+    }))
 }

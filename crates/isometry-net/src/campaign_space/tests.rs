@@ -443,7 +443,16 @@ fn tampered_or_cross_campaign_operations_are_rejected() {
             None,
             vec![],
         );
-        tampered.header.extensions.campaign_id = [0xff; 32];
+        // Tamper the payload, not the extensions. p2panda 0.7.1 verifies the
+        // signature inside `Header::decode` and made `Header::verify`
+        // test-only, so `validate_operation` no longer re-checks it; and the
+        // header re-encodes from its cached CBOR, so writing to the decoded
+        // `extensions` view changes neither the signed bytes nor the digest and
+        // is invisible to any check. The body is still bound by `payload_hash`
+        // and `payload_size`, which `validate_operation` does check, so this is
+        // the same assertion — a signed operation altered after the fact is
+        // refused as invalid — against the guarantee the fork still makes.
+        tampered.body = Some(Body::from_bytes(b"forged campaign event"));
         let space = CampaignSpace::new(MemoryBackend::new(), CAMPAIGN, BRANCH);
         assert!(matches!(
             space.insert(&tampered).await,

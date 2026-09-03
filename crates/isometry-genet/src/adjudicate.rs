@@ -19,14 +19,13 @@ impl App {
     /// this process's own.
     pub(crate) fn adjudicate(
         &mut self,
+        ctx: &mut Ctx<'_>,
         (request, actor, target, key): (RequestId, TokenId, TokenId, String),
     ) {
         let Some(system) = self.system.as_mut() else {
             return;
         };
-        let Some(runner) = self.runner.as_mut() else {
-            return;
-        };
+        let runner = &mut *ctx.runner;
         // The host validates what the substrate can see (both tokens exist, it
         // is the actor's turn, the victim is in reach), and the system decides
         // everything else. Only the resolved outcome is replicated, so peers

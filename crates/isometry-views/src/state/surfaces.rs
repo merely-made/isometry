@@ -463,24 +463,13 @@ impl UiState {
 
     pub fn close_compendium(&mut self) {
         self.compendium_open = false;
-        self.compendium_search.clear();
+        self.compendium_search = cambium::TextInput::default();
     }
 
-    /// Append a character to the compendium filter.
-    pub fn search_char(&mut self, c: char) {
-        self.compendium_search.push(c);
-        self.compendium_scroll = 0.0;
-    }
-
-    /// Delete the last filter character.
-    pub fn search_backspace(&mut self) {
-        self.compendium_search.pop();
-        self.compendium_scroll = 0.0;
-    }
-
-    /// Clear the compendium filter.
+    /// Clear the compendium filter (the field's own clear button). Typing is
+    /// the field's; this is the one filter edit the chrome still owns.
     pub fn clear_compendium_search(&mut self) {
-        self.compendium_search.clear();
+        self.compendium_search = cambium::TextInput::default();
         self.compendium_scroll = 0.0;
     }
 
@@ -515,7 +504,7 @@ impl UiState {
         self.compendium_selected = None;
         self.compendium_sort = (0, false);
         self.compendium_scroll = 0.0;
-        self.compendium_search.clear();
+        self.compendium_search = cambium::TextInput::default();
     }
 
     /// Scroll the compendium grid by wheel `dy`, clamped to `max`.

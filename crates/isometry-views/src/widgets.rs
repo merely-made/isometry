@@ -3,7 +3,7 @@
 //! there is one implementation. View compositions, host-agnostic; promote to
 //! the cross-repo catalog only when another repo needs them.
 
-use cambium::{clickable, el, text};
+use cambium::{el, on_pointer, text, PointerEvent};
 
 use crate::board::UiChild;
 use crate::state::UiState;
@@ -15,6 +15,16 @@ use crate::state::UiState;
 /// A floating titled panel over the board: a header (title plus action
 /// buttons) above a body, positioned by `panel_class`. The compendium and the
 /// character sheet are both instances.
+///
+/// The panel root carries an `on_pointer` that does nothing, and that is the
+/// point: the host routes a pointer down to the *nearest* `on_pointer`
+/// ancestor of the hit element and captures there, so a press inside a panel
+/// stops at this handler instead of reaching `.pane` — a paint drag begun over
+/// an open sheet no longer paints the tiles beneath it, and the drag stays
+/// here for its whole life. It deliberately does not `prevent_default`: the
+/// host's click-to-caret still has to reach the compendium's filter field.
+/// Anything nested deeper with its own `on_pointer` (the overmap's canvas
+/// drag) is nearer and still wins.
 pub fn overlay_panel(
     panel_class: &'static str,
     title: String,
@@ -31,7 +41,10 @@ pub fn overlay_panel(
     .attr("class", "overlay-header");
     let mut kids: Vec<UiChild> = vec![Box::new(header)];
     kids.extend(body);
-    Box::new(el::<_, UiState, ()>("div", kids).attr("class", panel_class))
+    Box::new(on_pointer(
+        el::<_, UiState, ()>("div", kids).attr("class", panel_class),
+        |_ui: &mut UiState, _event: PointerEvent| {},
+    ))
 }
 
 /// A titled record: an entry name, an optional subtitle, then sections. The
@@ -49,26 +62,10 @@ pub fn record_card(name: &str, subtitle: &str, sections: Vec<UiChild>) -> UiChil
     Box::new(el::<_, UiState, ()>("div", kids))
 }
 
-/// A filter box showing the current `query` (or a hint) with a clear button.
-/// Keys route to the query at the host, so this only displays; the compendium
-/// is the first consumer, a list-heavy chrome surface the second.
-pub fn search_field(query: &str) -> UiChild {
-    let mut kids: Vec<UiChild> = Vec::new();
-    if query.is_empty() {
-        kids.push(Box::new(
-            el::<_, UiState, ()>("span", text("type to filter...")).attr("class", "search-hint"),
-        ));
-    } else {
-        kids.push(Box::new(
-            el::<_, UiState, ()>("span", text(query.to_owned())).attr("class", "search-text"),
-        ));
-        kids.push(Box::new(clickable(
-            el::<_, UiState, ()>("span", text("clear")).attr("class", "search-clear"),
-            |ui: &mut UiState, _| ui.clear_compendium_search(),
-        )));
-    }
-    Box::new(el::<_, UiState, ()>("div", kids).attr("class", "search-field"))
-}
+// The compendium's filter used to be a display-only `search_field` here, with
+// the host rebuilding the query one key at a time. It is a `caret_text_field`
+// over a `TextInput` in `compendium.rs` now (2026-09-03), so the widget is
+// gone rather than shimmed.
 
 /// One read-only labeled value: a muted label beside an emphasised value
 /// ("AC 13", "Reflex +2").

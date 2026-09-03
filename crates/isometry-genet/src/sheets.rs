@@ -14,31 +14,26 @@ impl App {
     /// them through the game system: bind a default sheet, apply a field
     /// edit, or roll an action; then recompute the open sheet's derived
     /// stats. Cheap-checks first so a normal frame does no work.
-    pub(crate) fn pump_sheets(&mut self) {
+    pub(crate) fn pump_sheets(&mut self, ctx: &mut Ctx<'_>) {
         if self.system.is_none() {
             return;
         }
-        let (bind, edit, action, inventory_request, open, intent, spawn_sheet, clear_condition) =
-            match self.runner.as_ref() {
-                Some(r) => {
-                    let s = r.state();
-                    (
-                        s.bind_sheet_request,
-                        s.sheet_edit.clone(),
-                        s.sheet_action.clone(),
-                        s.inventory_request.clone(),
-                        s.open_sheet,
-                        s.action_intent.clone(),
-                        s.spawn_sheet_request.clone(),
-                        s.clear_condition_request.clone(),
-                    )
-                }
-                None => return,
-            };
+        let (bind, edit, action, inventory_request, open, intent, spawn_sheet, clear_condition) = {
+            let r = &*ctx.runner;
+            let s = r.state();
+            (
+                s.bind_sheet_request,
+                s.sheet_edit.clone(),
+                s.sheet_action.clone(),
+                s.inventory_request.clone(),
+                s.open_sheet,
+                s.action_intent.clone(),
+                s.spawn_sheet_request.clone(),
+                s.clear_condition_request.clone(),
+            )
+        };
         let open_changed = open != self.last_sheet_open;
-        let effective_missing = self
-            .runner
-            .as_ref()
+        let effective_missing = Some(&*ctx.runner)
             .is_some_and(|runner| open.is_some() && runner.state().sheet_effective.is_none());
         if bind.is_none()
             && edit.is_none()
@@ -54,9 +49,7 @@ impl App {
         }
         self.last_sheet_open = open;
         let system = self.system.as_mut().expect("system present");
-        let Some(runner) = self.runner.as_mut() else {
-            return;
-        };
+        let runner = &mut *ctx.runner;
 
         // Bind a fresh default sheet.
         if let Some(tok) = bind {
@@ -327,16 +320,14 @@ impl App {
             }
         }
         for pending in own.into_iter().chain(queued) {
-            self.adjudicate(pending);
+            self.adjudicate(ctx, pending);
         }
 
         // Recompute derived stats for the open sheet.
         let Some(system) = self.system.as_mut() else {
             return;
         };
-        let Some(runner) = self.runner.as_mut() else {
-            return;
-        };
+        let runner = &mut *ctx.runner;
         if let Some(tok) = open {
             let (sheet, inventory) = {
                 let state = runner.state();
@@ -353,9 +344,6 @@ impl App {
                     ui.sheet_derived = derived;
                 });
             }
-        }
-        if let Some(window) = self.window.as_ref() {
-            window.request_redraw();
         }
     }
 }

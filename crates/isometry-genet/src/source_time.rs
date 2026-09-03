@@ -23,7 +23,7 @@ impl App {
     /// Give the view a fresh source adapter only when its append-only log has
     /// advanced (or a checkpoint changed origin). The view retains a selected
     /// historical cursor across this refresh.
-    pub(crate) fn refresh_source_history(&mut self) {
+    pub(crate) fn refresh_source_history(&mut self, ctx: &mut Ctx<'_>) {
         let source = self
             .history_origin
             .clone()
@@ -32,7 +32,8 @@ impl App {
         if self.source_history_attached && next_len == self.source_history_len {
             return;
         }
-        if let Some(runner) = self.runner.as_mut() {
+        {
+            let runner = &mut *ctx.runner;
             runner.update(|ui| ui.set_overmap_source_history(source));
         }
         self.source_history_len = next_len;

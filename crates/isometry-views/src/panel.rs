@@ -23,10 +23,17 @@ fn messages_section(ui: &UiState) -> UiChild {
         .whisper_target
         .clone()
         .unwrap_or_else(|| "table".to_owned());
-    let draft = if ui.composing {
-        format!("> {}_", ui.whisper_draft)
+    // The composer is the catalog field, the way the `>` line is: opening the
+    // lane requests the caret, and the host's text seam then owns the caret,
+    // the selection and IME. Closed, the row is the hint it always was.
+    let draft: UiChild = if ui.composing {
+        let field: UiChild = Box::new(lens(
+            |draft: &mut TextInput| request_focus(caret_text_field(draft, &[]), true),
+            |ui: &mut UiState| &mut ui.whisper_draft,
+        ));
+        Box::new(el("div", (text("> "), field)).attr("class", "compose-line"))
     } else {
-        "(w to whisper)".to_owned()
+        Box::new(el("div", text("(w to whisper)")).attr("class", "roll-line"))
     };
     Box::new(
         el(
@@ -46,7 +53,7 @@ fn messages_section(ui: &UiState) -> UiChild {
                     ),
                 )
                 .attr("class", "btn-row"),
-                el("div", text(draft)).attr("class", "roll-line"),
+                draft,
                 el(
                     "div",
                     ui.messages
@@ -68,6 +75,9 @@ fn messages_section(ui: &UiState) -> UiChild {
 
 /// Measure controls: template shape toggle, size stepper, and the
 /// distance readout (from the clicked anchor to the hovered tile).
+///
+/// Rides half the panel's width beside the dice, so the two short sections
+/// cost one heading between them rather than one each.
 fn measure_controls(ui: &UiState) -> UiChild {
     let dist = match ui.measured_distance() {
         Some(d) => format!("size {} · dist {d}", ui.template_size),
@@ -82,7 +92,7 @@ fn measure_controls(ui: &UiState) -> UiChild {
                     (
                         clickable(
                             el("div", text(format!("tpl: {}", ui.template_kind.label())))
-                                .attr("class", "btn"),
+                                .attr("class", "btn btn-mini"),
                             |ui: &mut UiState, _| {
                                 ui.template_kind = next_template_kind(ui.template_kind);
                             },
@@ -221,10 +231,58 @@ fn init_controls(ui: &UiState) -> UiChild {
 }
 
 fn action_button(label: &'static str, enabled: bool, act: fn(&mut UiState)) -> UiChild {
-    let class = if enabled { "btn" } else { "btn btn-dim" };
+    styled_action_button("btn", label, enabled, act)
+}
+
+/// A Map-row verb. Narrower than [`action_button`] because Undo, Redo, Save,
+/// Load and the pixel-grid toggle share one 200px line; at the full button
+/// scale the toggle wrapped to a second row, which is the panel diet's §3.2.
+fn map_button(label: &'static str, enabled: bool, act: fn(&mut UiState)) -> UiChild {
+    styled_action_button("btn btn-mini", label, enabled, act)
+}
+
+fn styled_action_button(
+    base: &'static str,
+    label: &'static str,
+    enabled: bool,
+    act: fn(&mut UiState),
+) -> UiChild {
+    let class = if enabled {
+        base.to_owned()
+    } else {
+        format!("{base} btn-dim")
+    };
     Box::new(clickable(
         el("div", text(label)).attr("class", class),
         move |ui: &mut UiState, _| act(ui),
+    ))
+}
+
+/// The board's pixel-grid setting, the one board *preference* the panel
+/// carries.
+///
+/// Isometry has no settings surface to hang it on: `theme` is a stylesheet
+/// rather than a preference, nothing else on [`UiState`] is user-configurable,
+/// and mere's configuration-ownership pattern (a settings umbrella projected
+/// through a contract) has no counterpart here because isometry persists no
+/// application settings at all. So it sits with the other Map verbs, and it is
+/// keyboard-free on purpose: the single-letter vocabulary is small and spent.
+/// `px-grid` is the class the harness receipt targets it by.
+///
+/// The label is `px` rather than `px grid: on` because the five Map verbs have
+/// to share one 200px line (the panel diet's §3.2); the state it used to spell
+/// out is carried by `btn-active`, which is how the row's other toggles read
+/// anyway.
+fn pixel_grid_button(ui: &UiState) -> UiChild {
+    let on = ui.integer_pixel_rounding;
+    let class = if on {
+        "btn btn-mini px-grid btn-active"
+    } else {
+        "btn btn-mini px-grid"
+    };
+    Box::new(clickable(
+        el("div", text("px")).attr("class", class),
+        |ui: &mut UiState, _| ui.toggle_integer_pixel_rounding(),
     ))
 }
 
@@ -256,6 +314,11 @@ pub fn side_panel(ui: &UiState) -> UiChild {
     // `segmented_control`. It writes only `mode_selection`; the host's
     // `pump_selection_rows` sees the divergence from `ui.mode` and commits it,
     // the same bridge the pace and stance rows use.
+    //
+    // `mode-grid` lays the same nine verbs two to a row (see `theme`): stacked
+    // they cost 144 of the design's 820 logical pixels, which is what the panel
+    // diet's §3.1 went after first. The chips keep their verbs, their order and
+    // their click path; only the sheet changed.
     let mode_items = crate::state::mode_items();
     let modes: UiChild = Box::new(lens(
         move |sel: &mut cambium::SelectionState| segmented_control(sel, &mode_items),
@@ -279,7 +342,7 @@ pub fn side_panel(ui: &UiState) -> UiChild {
         }
         None => "selected: none".to_owned(),
     };
-    let children: Vec<UiChild> = vec![
+    let mut children: Vec<UiChild> = vec![
         Box::new(el("div", text("Isometry")).attr("class", "side-title")),
         Box::new(el("div", text(ui.map.name.clone())).attr("class", "side-line")),
         Box::new(
@@ -297,21 +360,22 @@ pub fn side_panel(ui: &UiState) -> UiChild {
         Box::new(el("div", text(selected)).attr("class", "side-line side-strong")),
         command_line(ui),
         Box::new(el("div", text("Mode")).attr("class", "side-heading")),
-        Box::new(el::<_, UiState, ()>("div", modes).attr("class", "btn-row")),
+        Box::new(el::<_, UiState, ()>("div", modes).attr("class", "mode-grid")),
         Box::new(el("div", text("Brush")).attr("class", "side-heading")),
         Box::new(el("div", swatches).attr("class", "swatch-row")),
         Box::new(el("div", text("Map")).attr("class", "side-heading")),
         Box::new(
             el(
                 "div",
-                (
-                    action_button("Undo", ui.can_undo(), |ui| ui.undo()),
-                    action_button("Redo", ui.can_redo(), |ui| ui.redo()),
-                    action_button("Save", true, |ui| ui.save_requested = true),
-                    action_button("Load", true, |ui| ui.load_requested = true),
-                ),
+                vec![
+                    map_button("Undo", ui.can_undo(), |ui| ui.undo()),
+                    map_button("Redo", ui.can_redo(), |ui| ui.redo()),
+                    map_button("Save", true, |ui| ui.save_requested = true),
+                    map_button("Load", true, |ui| ui.load_requested = true),
+                    pixel_grid_button(ui),
+                ],
             )
-            .attr("class", "btn-row"),
+            .attr("class", "btn-row map-row"),
         ),
         Box::new(el("div", text("Tokens")).attr("class", "side-heading")),
         Box::new(
@@ -387,15 +451,26 @@ pub fn side_panel(ui: &UiState) -> UiChild {
             )
             .attr("class", "btn-row"),
         ),
-        Box::new(el("div", text("Dice")).attr("class", "side-heading")),
+        // Dice and Measure share one heading and one line of the panel's width
+        // (the diet's §3.3): two short sections stacked cost two headings and
+        // the gap between them, and neither one fills 200px on its own. Every
+        // button is where it was, one click away, in the same order.
+        Box::new(el("div", text("Dice · Measure")).attr("class", "side-heading")),
         Box::new(
             el(
                 "div",
-                DICE.iter()
-                    .map(|(label, expr)| dice_button(label, expr))
-                    .collect::<Vec<UiChild>>(),
+                (
+                    el(
+                        "div",
+                        DICE.iter()
+                            .map(|(label, expr)| dice_button(label, expr))
+                            .collect::<Vec<UiChild>>(),
+                    )
+                    .attr("class", "btn-row dice-col"),
+                    el::<_, UiState, ()>("div", measure_controls(ui)).attr("class", "measure-col"),
+                ),
             )
-            .attr("class", "btn-row"),
+            .attr("class", "dice-measure"),
         ),
         Box::new(
             el(
@@ -414,18 +489,25 @@ pub fn side_panel(ui: &UiState) -> UiChild {
             )
             .attr("class", "roll-log"),
         ),
-        Box::new(el("div", text("Measure")).attr("class", "side-heading")),
-        measure_controls(ui),
         Box::new(el("div", text("Messages")).attr("class", "side-heading")),
         messages_section(ui),
         Box::new(el("div", text(ui.status.clone())).attr("class", "side-status")),
-        Box::new(
+    ];
+    // The key hints are a crib for the one state where a key does something
+    // other than what the buttons above already say: a target pick is armed and
+    // Escape has to be findable. Standing there always, they cost the panel two
+    // wrapped lines it does not have (the diet's §3.4). Not while composing:
+    // a text field holds the keyboard then, so pan, face and end-turn are not
+    // what the arrows and Enter do, and the status line already reads
+    // `whisper (enter send, esc cancel)` (Mark, 2026-09-03).
+    if ui.picking_target() {
+        children.push(Box::new(
             el(
                 "div",
                 text("arrows: pan / r: face / enter: end turn / f: fog view"),
             )
             .attr("class", "side-hint"),
-        ),
-    ];
+        ));
+    }
     Box::new(el("div", children).attr("class", "side"))
 }

@@ -1,28 +1,47 @@
-//! Isometry's genet desktop host (bootstrap plan I1).
+//! Isometry's desktop application.
 //!
-//! A winit window presenting the board screen over live state:
-//! `GenetAppRunner` diffs `isometry_views::board_root` into a
-//! `ScriptedDom`, a retained `IncrementalLayout` lays it out at logical
-//! size (incremental `apply` for attribute-only batches, so a camera pan
-//! stays off the rebuild path), paint emission lowers to a
-//! `netrender::Scene`, and `genet-winit-host`'s `SurfaceHost` rasterizes
-//! and composites onto the backbuffer. Borrowed from the woodshed-genet
-//! harness shape.
+//! There is no native host in this crate any more. `cambium-genet-winit-host`
+//! owns the winit lifecycle, the genet surface, the retained layout, the paint
+//! pass, hit testing, pointer/keyboard/IME/wheel routing, frame capture, and
+//! the AccessKit lifecycle — all of it extracted from woodshed's donor
+//! assembly, and all of it previously hand-assembled here in `host.rs`,
+//! `render.rs` and `input.rs`. Those three are gone; nothing shims them.
 //!
-//! Sessions (I4): `--host` binds an iroh session and prints a join
-//! ticket; `--join <ticket>` dials it. `--campaign <name>` restores that
-//! campaign's durable checkpoint before a host accepts peers. In a session the view is Remote —
-//! play routes through the host authority (`net` module bridges the
-//! async session to this sync loop). Env hooks: `ISOMETRY_PROFILE=1`
-//! (frame timers + net trace), `ISOMETRY_CAPTURE_DIR` (self-capture),
-//! `ISOMETRY_SYNTH=1` (stress board), `ISOMETRY_NET_SELFTEST=1` (fire one
-//! end-turn after warm-up to verify the session round-trip without OS
-//! input automation), `ISOMETRY_OVERMAP_SELFTEST=1` (overmap capture), and
-//! `ISOMETRY_OVERMAP_SOURCE_TIME_SELFTEST=1` (historical-overmap capture).
+//! What is left is isometry: which views to render, which state they run over,
+//! the campaign store, the session bridge, the self-tests, and the overmap's
+//! painted leaf. It reaches the host through seven plain closures
+//! ([`HostHooks`]) with its own state in their captured environment.
+//!
+//! | hook | isometry's half |
+//! |------|-----------------|
+//! | `frame` | pane viewport, overmap leaf, beat hold, capture arming ([`hooks`]) |
+//! | `after_dispatch` | save/load, the pumps, source-time attach, the net outbox ([`dispatch`]) |
+//! | `after_frame` | the `ISOMETRY_*_SELFTEST` drivers and the profile line ([`selftest`]) |
+//! | `after_wake` | drain the session bridge the armillary actor woke us for ([`net`]) |
+//! | `close_request` | exit: nothing here outlives the window |
+//! | `focused_text` | whichever of the three text lanes holds the caret ([`hooks`]) |
+//! | `key_intercept` | Escape policy, the text lanes, the single-letter verbs |
+//!
+//! Board gestures — drag painting, token drag, the path-preview hover, wheel
+//! pan and the token context menu — are not here either. They are `on_pointer`,
+//! `on_hover` and `on_wheel` handlers on the board pane in `isometry-views`,
+//! which is where the tile-under-a-pointer projection already lived.
+//!
+//! Sessions (I4): `--host` binds an iroh session and prints a join ticket;
+//! `--join <ticket>` dials it. `--campaign <name>` restores that campaign's
+//! durable checkpoint before a host accepts peers. In a session the view is
+//! Remote — play routes through the host authority (`net` bridges the async
+//! session to this sync loop). Env hooks: `ISOMETRY_PROFILE=1` (frame timers +
+//! net trace), `ISOMETRY_CAPTURE_DIR` (self-capture), `ISOMETRY_SYNTH=1`
+//! (stress board), `ISOMETRY_NET_SELFTEST=1` (fire one end-turn after warm-up
+//! to verify the session round-trip without OS input automation),
+//! `ISOMETRY_OVERMAP_SELFTEST=1` (overmap capture),
+//! `ISOMETRY_OVERMAP_SOURCE_TIME_SELFTEST=1` (historical-overmap capture),
+//! `ISOMETRY_COMPENDIUM_SELFTEST=1` and `ISOMETRY_WHISPER_SELFTEST=1` (the two
+//! M3 text lanes, typed through the field and held open for a capture).
 
 use std::cell::RefCell;
 use std::rc::Rc;
-use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use isometry_campaign::{
@@ -52,69 +71,55 @@ mod catalog;
 mod cleromancy_selection;
 mod dispatch;
 mod generators;
-mod host;
-mod input;
+mod hooks;
+// Host-routing receipts, driven through the shared host with no window.
+#[cfg(test)]
+mod host_routing;
+// The design fit and the board's pixel grid, on the same harness.
+#[cfg(test)]
+mod host_zoom;
 mod net;
 mod overmap;
-mod render;
 mod selection_rows;
 mod selftest;
 mod sheets;
 mod source_time;
 mod storylets;
 
-use cambium::{GenetAppRunner, HoverEvent, HoverPhase, PointerClick, Propagation};
-use cambium_winit::{ime_event_from_winit, key_event_from_winit, modifiers_from_winit};
 use campaign_store::{CampaignCheckpoint, CampaignRepository};
 use catalog::{bestiary_of, items_of, schema_of, spells_of};
-use genet_layout::{
-    Applied, IncrementalLayout, InteractionState, LeafPaintSource, ScrollOffsets, SourceNodeId,
-    VisualAffinity, VisualCaret,
-};
-use genet_scripted_dom::{NodeId, ScriptedDom};
-use genet_winit_host::SurfaceHost;
-use layout_dom_api::{DomMutation, LayoutDom as _, LayoutDomMut as _, LocalName, Namespace};
 use net::{NetBridge, Role};
-use netrender::{ColorLoad, ExternalTexturePlacement, NetrenderOptions};
-use paint_list_api::{DeviceIntSize, PaintCmd, PaintList as _};
-use sprigging::{ColorF, LeafRegistry, RenderedLeaves, Size};
-use winit::application::ApplicationHandler;
-use winit::dpi::{LogicalPosition, LogicalSize};
-use winit::event::{
-    ElementState, KeyEvent as WinitKeyEvent, MouseButton, MouseScrollDelta, WindowEvent,
-};
-use winit::event_loop::{ActiveEventLoop, ControlFlow, EventLoop};
-use winit::keyboard::{Key as WinitKey, ModifiersState, NamedKey as WinitNamedKey};
-use winit::window::{Window, WindowId};
+use sprigging::ColorF;
 
-type Runner = GenetAppRunner<UiState, fn(&UiState) -> UiChild, UiChild>;
+/// The view logic the runner diffs: one screen root over one state.
+pub(crate) type Logic = fn(&UiState) -> UiChild;
+/// The runner the shared host drives.
+pub(crate) type Runner = cambium_genet_winit_host::Runner<UiState, Logic, UiChild>;
+/// What a hook is handed: the runner, plus the host's per-frame handles.
+pub(crate) type Ctx<'a> = cambium_genet_winit_host::AppCtx<'a, UiState, Logic, UiChild>;
 
-fn command_field_node(runner: &Runner) -> Option<NodeId> {
-    let node = runner.focus()?;
-    let dom = runner.dom();
-    let dom = dom.borrow();
-    if dom.element_name(node)?.local.as_ref() != "input" {
-        return None;
-    }
-    let parent = dom.parent(node)?;
-    (dom.attribute(parent, &Namespace::from(""), &LocalName::from("class")) == Some("cmd-line"))
-        .then_some(node)
-}
+/// How long a staged beat is held on the board before its classes are dropped.
+///
+/// The old host asked its layout engine (`has_active_animations`) and cleared
+/// on the frame the last `@keyframes` expired. The shared host's retained
+/// layout reports no animation state to an application hook, so the hold is a
+/// wall clock instead, set past the longest beat the bundled packs declare
+/// (620ms, `cheer`). Its job is unchanged: drop the classes so the *next*
+/// strike is a genuine attribute change and re-triggers, rather than restyling
+/// nothing and standing still.
+pub(crate) const BEAT_HOLD: Duration = Duration::from_millis(750);
 
-/// Logical px per wheel notch, used to normalize trackpad pixel deltas.
-const WHEEL_NOTCH_PX: f32 = 48.0;
-/// Board pan in diagonal tile steps per wheel notch (over the board pane).
-const WHEEL_BOARD_TILES: f32 = 2.0;
-
-/// Bridges the neutral Sprigging leaf cache to the layout engine's paint splice:
-/// `emit_paint_list_with_leaves` asks this for each `<custom-leaf>`'s commands.
-struct RenderedLeafSource<'a>(&'a RenderedLeaves);
-
-impl LeafPaintSource for RenderedLeafSource<'_> {
-    fn leaf_commands(&self, key: u64) -> Option<&[PaintCmd]> {
-        self.0.get(key)
-    }
-}
+/// The logical size the interface is drawn for, and the design the host fits
+/// the window to.
+///
+/// The side panel is a fixed column of sections ending in the whisper composer,
+/// the status line and the key hint, and it needs 820 logical pixels of height
+/// to show all of them. The host clamps the window it opens to the display's
+/// height less 48, so this laptop (1280x800 logical) gives 752 and the composer
+/// used to fall off the bottom. Naming it as `fit_design` scales the whole
+/// interface to whatever the display offers instead of cutting it off; on a
+/// display that has the room the factor is 1 and nothing moves.
+pub(crate) const DESIGN_SIZE: (f32, f32) = (1_100.0, 820.0);
 
 /// The overmap palette: the party's place reads warm-green, the rest of the
 /// discovered map cool-gray. The host owns the palette so no product-specific
@@ -136,10 +141,15 @@ fn overmap_node_color(kind: &isometry_views::OvermapNodeKind) -> ColorF {
     }
 }
 
+/// Isometry's own state: everything the runner does not hold.
+///
+/// The host owns the window, the surface, the retained layout, the leaf
+/// registry and the `UiState` behind the runner. What is left here is the
+/// application's: the private campaign store, the authority's history, the
+/// session bridge, the rules system, the generator tape, and the self-test
+/// scaffolding. It lives in an `Rc<RefCell<..>>` captured by the hooks, which
+/// is how a plain-closure host lets an application keep state.
 struct App {
-    window: Option<Arc<Window>>,
-    host: Option<SurfaceHost>,
-    runner: Option<Runner>,
     /// GM-only state saved beside the public map through Muniment. It never
     /// enters the view, map JSON, or replicated snapshot.
     campaign: CampaignStore,
@@ -159,17 +169,6 @@ struct App {
     /// view. This distinguishes an unavailable source from a stale projection
     /// that still needs clearing after a checkpoint load.
     source_history_attached: bool,
-    /// Retained layout session in logical coordinates: hit-test target
-    /// and incremental-apply subject.
-    layout: Option<IncrementalLayout<NodeId>>,
-    layout_size: (f32, f32),
-    /// Cambium's retained custom-paint leaves, keyed by leaf key. The overmap's
-    /// painted graph (nodes + edges) is registered here when the surface is
-    /// open; paint splices each leaf's commands at its `<custom-leaf>` box.
-    leaves: LeafRegistry<u64>,
-    /// The leaf-tier paint cache: each registered leaf's last-rendered command
-    /// buffer, reused across frames when the leaf and its box are unchanged.
-    rendered_leaves: RenderedLeaves,
     /// The overmap swatch the registered leaf was last built from. Compared per
     /// frame while the surface is open so the leaf is re-registered (and thus
     /// repainted) only when the model actually changed; also the "any leaf is
@@ -182,47 +181,30 @@ struct App {
     /// across a close so reopening is free; the compare catches anything that
     /// moved while it was shut.
     last_storylet_inputs: Option<(CampaignWorld, Vec<String>)>,
-    /// Origin of the CSS animation clock. `tick_animations` takes seconds
-    /// since an arbitrary but monotonic zero; the process start is that zero.
-    clock: Instant,
     /// Host entropy for adjudication. Every die an action rolls comes from here,
     /// so a fixed seed replays a session's combat exactly; peers never roll.
     action_rng: Rng,
     /// Nonces for this process's *own* asks: the DM's swings and solo play,
-    /// which arrive over no connection and so carry [`PeerId::HOST`]. A joined
-    /// player's ask is numbered by its own `ClientSession` and attributed by the
-    /// host, so it never passes through here.
+    /// which arrive over no connection and so carry [`RequestId::host`]. A
+    /// joined player's ask is numbered by its own `ClientSession` and
+    /// attributed by the host, so it never passes through here.
     own_requests: u64,
-    /// True while a beat is on screen, so the beats can be cleared the moment
-    /// the engine's clock reports the last one finished. Without this the class
-    /// would still be set when the next strike lands, and an unchanged class
-    /// restyles nothing, so the second swing would never animate.
-    beats_playing: bool,
+    /// When the beat currently on screen should be dropped. `None` when the
+    /// board is still. See [`BEAT_HOLD`].
+    beat_until: Option<Instant>,
+    /// The stylesheet, from app CSS plus whatever the content packs declared.
+    /// Handed to the host once, by `init`.
     sheet: String,
-    cursor: (f32, f32),
-    modifiers: ModifiersState,
-    /// Left button held: paint-capable modes keep applying on entry
-    /// into each new tile (drag painting).
-    lmb_down: bool,
-    /// Opaque id of the last element a held drag dispatched to, so one
-    /// tile gets one application per crossing, not one per pixel.
-    last_drag: Option<u64>,
-    /// A token grabbed by a left-press (Select mode); the release moves it
-    /// to the tile under the cursor. `None` when no token drag is active.
-    drag_token: Option<isometry_core::TokenId>,
-    last_hover: Option<u64>,
-    last_focus: Option<u64>,
-    /// The view node a cambium `on_hover` handler last saw the pointer enter, so
-    /// a crossing dispatches one leave to it and one enter to the next. Drives
-    /// the overmap's painted hover emphasis (and any future hoverable widget).
-    hover_target_node: Option<NodeId>,
+    /// The pane size last pushed into the view, so an unchanged frame does not
+    /// rebuild the retained tree to write the same two floats.
+    last_viewport: (f32, f32),
     profile: bool,
     /// `ISOMETRY_CAPTURE_DIR`: overwrite `<dir>/isometry_capture.png`
     /// with every presented frame, read back from the app's own texture.
     /// Screen grabs lose to overlapping windows; this cannot.
     capture_dir: Option<std::path::PathBuf>,
     /// What session, if any, this process runs (from `--host`/`--join`),
-    /// consumed once at `resumed`.
+    /// consumed once by `init`.
     net_intent: Option<NetIntent>,
     /// True when this process is the authority. Only the host adjudicates, so a
     /// client must *ask* rather than resolve: otherwise two machines would each
@@ -272,6 +254,16 @@ struct App {
     /// capture its first durable source prefix. This stays opt-in so the C8
     /// screenshot mode remains a live exploration proof.
     overmap_source_time_selftest: bool,
+    /// `ISOMETRY_COMPENDIUM_SELFTEST`: open the compendium and type into its
+    /// filter through the field's own `TextInput`, then hold the surface open
+    /// for a capture. The headed half of M3's compendium lane.
+    compendium_selftest: bool,
+    compendium_fired: bool,
+    /// `ISOMETRY_WHISPER_SELFTEST`: open the whisper composer with `w` and type
+    /// a draft into it, then hold it open — unsent, caret in it — for a
+    /// capture. The headed half of M3's composer lane.
+    whisper_selftest: bool,
+    whisper_fired: bool,
     /// `ISOMETRY_COMBAT_SELFTEST`: drive a short adjudicated exchange on boot.
     combat_selftest: bool,
     /// Swings left to throw, when the last one landed, and whether the winner
@@ -445,108 +437,132 @@ fn parse_campaign() -> Option<String> {
         .cloned()
 }
 
+impl App {
+    /// Everything the command line and the environment decided, before a window
+    /// exists. The content packs are read here because the stylesheet the host
+    /// is handed in `init` is the app sheet plus whatever choreography they
+    /// declared.
+    fn boot() -> Self {
+        let generator_catalog = GeneratorCatalog::discover(generator_pack_roots());
+        // Choreography is pack data: the stylesheet the packs supply is appended
+        // to the app's, and the emote menu is built from whichever beats they
+        // marked emotable. A table with no packs still plays a correct game; it
+        // just plays it without flourishes, which is safe precisely because no
+        // rule may read a beat.
+        let (pack_beats, beat_diagnostics) = generator_catalog.choreography();
+        for diagnostic in &beat_diagnostics {
+            eprintln!("[isometry] choreography: {diagnostic}");
+        }
+        let mut sheet = board_css();
+        for beat in &pack_beats {
+            sheet.push('\n');
+            sheet.push_str(&beat.css);
+        }
+        let pack_emotes: Vec<(String, String)> = pack_beats
+            .iter()
+            .filter_map(|b| b.emote.clone().map(|label| (b.name.clone(), label)))
+            .collect();
+        Self {
+            campaign: CampaignStore::new(),
+            journal: Vec::new(),
+            history: Journal::new(),
+            history_origin: None,
+            source_history_len: None,
+            source_history_attached: false,
+            last_overmap_swatch: None,
+            last_storylet_inputs: None,
+            // A fixed seed keeps a solo session reproducible and makes the headed
+            // verification deterministic. A real table seeds this per session.
+            action_rng: Rng::new(0x15D_0BE),
+            own_requests: 0,
+            beat_until: None,
+            sheet,
+            last_viewport: (0.0, 0.0),
+            profile: std::env::var_os("ISOMETRY_PROFILE").is_some(),
+            capture_dir: std::env::var_os("ISOMETRY_CAPTURE_DIR").map(Into::into),
+            net_intent: parse_net_intent(),
+            net_is_host: false,
+            viewer_arg: parse_viewer(),
+            campaign_arg: parse_campaign(),
+            net: None,
+            last_net_version: 0,
+            net_selftest: std::env::var_os("ISOMETRY_NET_SELFTEST").is_some(),
+            travel_selftest: std::env::var_os("ISOMETRY_TRAVEL_SELFTEST").is_some(),
+            travel_fired: false,
+            cmd_selftest: std::env::var_os("ISOMETRY_CMD_SELFTEST").is_some(),
+            cmd_fired: false,
+            convince_selftest: std::env::var_os("ISOMETRY_CONVINCE_SELFTEST").is_some(),
+            convince_fired: false,
+            storylet_selftest: std::env::var_os("ISOMETRY_STORYLET_SELFTEST").is_some(),
+            storylet_fired: false,
+            overmap_selftest: std::env::var_os("ISOMETRY_OVERMAP_SELFTEST").is_some(),
+            overmap_fired: false,
+            overmap_source_time_selftest: std::env::var_os("ISOMETRY_OVERMAP_SOURCE_TIME_SELFTEST")
+                .is_some(),
+            compendium_selftest: std::env::var_os("ISOMETRY_COMPENDIUM_SELFTEST").is_some(),
+            compendium_fired: false,
+            whisper_selftest: std::env::var_os("ISOMETRY_WHISPER_SELFTEST").is_some(),
+            whisper_fired: false,
+            combat_selftest: std::env::var_os("ISOMETRY_COMBAT_SELFTEST").is_some(),
+            combat_swings: 4,
+            last_swing: None,
+            combat_emoted: false,
+            travel_emitted: Vec::new(),
+            started: None,
+            selftest_fired: false,
+            system: None,
+            last_sheet_open: None,
+            // `ISOMETRY_GEN_SEED` fixes the generator tape so `>gen` previews and
+            // rerolls are reproducible (headed verification, and a table that wants
+            // a deterministic session); otherwise the wall clock seeds it as before.
+            generation_tape: EntropyTape::from_seed(
+                std::env::var("ISOMETRY_GEN_SEED")
+                    .ok()
+                    .and_then(|s| s.parse::<u64>().ok())
+                    .unwrap_or_else(|| {
+                        std::time::SystemTime::now()
+                            .duration_since(std::time::UNIX_EPOCH)
+                            .map(|duration| duration.as_nanos() as u64)
+                            .unwrap_or(1)
+                    }),
+            ),
+            generation_ordinal: 0,
+            generator_catalog,
+            last_generator_selection: None,
+            faction_turn_batch: Vec::new(),
+            pack_emotes,
+        }
+    }
+}
+
 fn main() {
-    let event_loop = EventLoop::new().expect("event loop");
-    event_loop.set_control_flow(ControlFlow::Wait);
-    let generator_catalog = GeneratorCatalog::discover(generator_pack_roots());
-    // Choreography is pack data: the stylesheet the packs supply is appended to
-    // the app's, and the emote menu is built from whichever beats they marked
-    // emotable. A table with no packs still plays a correct game; it just plays
-    // it without flourishes, which is safe precisely because no rule may read a
-    // beat.
-    let (pack_beats, beat_diagnostics) = generator_catalog.choreography();
-    for diagnostic in &beat_diagnostics {
-        eprintln!("[isometry] choreography: {diagnostic}");
-    }
-    let mut sheet = board_css();
-    for beat in &pack_beats {
-        sheet.push('\n');
-        sheet.push_str(&beat.css);
-    }
-    let pack_emotes: Vec<(String, String)> = pack_beats
-        .iter()
-        .filter_map(|b| b.emote.clone().map(|label| (b.name.clone(), label)))
-        .collect();
-    let mut app = App {
-        window: None,
-        host: None,
-        runner: None,
-        campaign: CampaignStore::new(),
-        journal: Vec::new(),
-        history: Journal::new(),
-        history_origin: None,
-        source_history_len: None,
-        source_history_attached: false,
-        layout: None,
-        layout_size: (0.0, 0.0),
-        leaves: LeafRegistry::new(),
-        rendered_leaves: RenderedLeaves::new(),
-        last_overmap_swatch: None,
-        last_storylet_inputs: None,
-        clock: Instant::now(),
-        // A fixed seed keeps a solo session reproducible and makes the headed
-        // verification deterministic. A real table seeds this per session.
-        action_rng: Rng::new(0x15D_0BE),
-        own_requests: 0,
-        beats_playing: false,
-        sheet,
-        cursor: (0.0, 0.0),
-        modifiers: ModifiersState::empty(),
-        lmb_down: false,
-        last_drag: None,
-        drag_token: None,
-        last_hover: None,
-        last_focus: None,
-        hover_target_node: None,
-        profile: std::env::var_os("ISOMETRY_PROFILE").is_some(),
-        capture_dir: std::env::var_os("ISOMETRY_CAPTURE_DIR").map(Into::into),
-        net_intent: parse_net_intent(),
-        net_is_host: false,
-        viewer_arg: parse_viewer(),
-        campaign_arg: parse_campaign(),
-        net: None,
-        last_net_version: 0,
-        net_selftest: std::env::var_os("ISOMETRY_NET_SELFTEST").is_some(),
-        travel_selftest: std::env::var_os("ISOMETRY_TRAVEL_SELFTEST").is_some(),
-        travel_fired: false,
-        cmd_selftest: std::env::var_os("ISOMETRY_CMD_SELFTEST").is_some(),
-        cmd_fired: false,
-        convince_selftest: std::env::var_os("ISOMETRY_CONVINCE_SELFTEST").is_some(),
-        convince_fired: false,
-        storylet_selftest: std::env::var_os("ISOMETRY_STORYLET_SELFTEST").is_some(),
-        storylet_fired: false,
-        overmap_selftest: std::env::var_os("ISOMETRY_OVERMAP_SELFTEST").is_some(),
-        overmap_fired: false,
-        overmap_source_time_selftest: std::env::var_os("ISOMETRY_OVERMAP_SOURCE_TIME_SELFTEST")
-            .is_some(),
-        combat_selftest: std::env::var_os("ISOMETRY_COMBAT_SELFTEST").is_some(),
-        combat_swings: 4,
-        last_swing: None,
-        combat_emoted: false,
-        travel_emitted: Vec::new(),
-        started: None,
-        selftest_fired: false,
-        system: None,
-        last_sheet_open: None,
-        // `ISOMETRY_GEN_SEED` fixes the generator tape so `>gen` previews and
-        // rerolls are reproducible (headed verification, and a table that wants
-        // a deterministic session); otherwise the wall clock seeds it as before.
-        generation_tape: EntropyTape::from_seed(
-            std::env::var("ISOMETRY_GEN_SEED")
-                .ok()
-                .and_then(|s| s.parse::<u64>().ok())
-                .unwrap_or_else(|| {
-                    std::time::SystemTime::now()
-                        .duration_since(std::time::UNIX_EPOCH)
-                        .map(|duration| duration.as_nanos() as u64)
-                        .unwrap_or(1)
-                }),
-        ),
-        generation_ordinal: 0,
-        generator_catalog,
-        last_generator_selection: None,
-        faction_turn_batch: Vec::new(),
-        pack_emotes,
+    let app = Rc::new(RefCell::new(App::boot()));
+    let init_app = app.clone();
+    let options = cambium_genet_winit_host::HostOptions {
+        title: "Isometry".into(),
+        // The pre-migration window size, which every receipt under
+        // `testing/isometry/images` was taken at; the host's own default is
+        // shorter (1100x664) and cuts the side panel off below the Dice rows.
+        // The host clamps this to the primary monitor's logical height less
+        // 48, so a short display opens smaller than asked.
+        initial_logical_size: (DESIGN_SIZE.0 as f64, DESIGN_SIZE.1 as f64),
+        // ...and when it does, the interface is scaled to fit rather than cut
+        // off. The panel is laid out for 820 and this laptop offers 752, so
+        // the host lays out at `surface / fit` on every resize and isometry
+        // does no zoom arithmetic of its own: `AppCtx::logical_size`, the
+        // pointer, hit testing and the harness are all already in that space.
+        // On a display with the room the factor is 1 and this is inert.
+        fit_design: Some(DESIGN_SIZE),
+        // Host decorations: isometry draws no client-side chrome, so the
+        // platform's own title bar and window buttons stay (`WindowFrame::Host`,
+        // the default). `initial_geometry` stays unset: isometry does not
+        // persist window geometry in this pass.
+        ..Default::default()
     };
-    event_loop.run_app(&mut app).expect("run app");
+    cambium_genet_winit_host::run(
+        options,
+        move |window, _commands, wake| hooks::init(&init_app, window, wake),
+        hooks::hooks(&app),
+    )
+    .expect("run app");
 }

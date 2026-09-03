@@ -1,32 +1,23 @@
-//! The keystroke-captured text lanes: the `>` command line with its verbs
+//! The two side-panel text lanes: the `>` command line with its verbs
 //! (`>spawn`, `>gen`, `>find`, `>roll`, `>time`) and the whisper composer.
-//! These are the lanes the obviation work hands to `caret_text_field`.
 //!
-//! Split out of `play.rs` on 2026-08-08; behavior unchanged.
+//! Both drafts are `TextInput`s rendered by `caret_text_field` (the command
+//! line 2026-07-27, the composer 2026-09-03), so nothing here appends or
+//! deletes a character: the field owns text, caret, selection, undo and IME,
+//! and these methods only open, cancel and submit the lane.
+//!
+//! Split out of `play.rs` on 2026-08-08.
 
 use super::*;
 
 impl UiState {
-    /// Open the `>` command line (host keys route to the draft until submit or
-    /// cancel). Entered by the `>` key, the same way `w` opens a whisper.
+    /// Open the `>` command line. The lane's field takes the caret when it is
+    /// built. Entered by the `>` key, the same way `w` opens a whisper.
     pub fn start_command(&mut self) {
         self.command_active = true;
         self.command_draft = cambium::TextInput::default();
         self.command_results.clear();
         self.status = "> command (enter run, esc cancel)".to_owned();
-    }
-
-    pub fn command_char(&mut self, c: char) {
-        if self.command_active {
-            self.command_draft
-                .apply(cambium::TextCommand::Insert(c.to_string()));
-        }
-    }
-
-    pub fn command_backspace(&mut self) {
-        if self.command_active {
-            self.command_draft.apply(cambium::TextCommand::Backspace);
-        }
     }
 
     pub fn command_cancel(&mut self) {
@@ -207,40 +198,28 @@ impl UiState {
         };
     }
 
-    /// Start typing a whisper (host keys route to the draft until send or
-    /// cancel).
+    /// Open the whisper composer. The lane's field takes the caret when it is
+    /// built, and owns every key but the two the host keeps (Enter sends,
+    /// Escape cancels).
     pub fn start_compose(&mut self) {
         self.composing = true;
+        self.whisper_draft = cambium::TextInput::default();
         self.status = "whisper (enter send, esc cancel)".to_owned();
-    }
-
-    /// Append a typed character to the whisper draft.
-    pub fn compose_char(&mut self, c: char) {
-        if self.composing {
-            self.whisper_draft.push(c);
-        }
-    }
-
-    /// Delete the last draft character.
-    pub fn compose_backspace(&mut self) {
-        if self.composing {
-            self.whisper_draft.pop();
-        }
     }
 
     /// Cancel composing, discarding the draft.
     pub fn compose_cancel(&mut self) {
         self.composing = false;
-        self.whisper_draft.clear();
+        self.whisper_draft = cambium::TextInput::default();
         self.status = "whisper cancelled".to_owned();
     }
 
     /// Send the composed whisper to the current target: log it, and (as a
     /// networked host) queue it for directed delivery.
     pub fn compose_send(&mut self) {
-        let text = self.whisper_draft.trim().to_owned();
+        let text = self.whisper_draft.text().trim().to_owned();
         self.composing = false;
-        self.whisper_draft.clear();
+        self.whisper_draft = cambium::TextInput::default();
         if text.is_empty() {
             return;
         }

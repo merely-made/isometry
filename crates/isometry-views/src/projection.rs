@@ -45,6 +45,12 @@ pub fn tile_board_score(map: &MapDocument) -> Score {
             },
             layer: 0,
             visible: true,
+            // Placement here is authored or ordinal, never derived from a
+            // producer-side coordinate, so sceno's three optional placement
+            // hints (added 0.0.4) stay unset.
+            axis: None,
+            embedding: None,
+            weight: None,
         })
         .collect();
     score

@@ -101,6 +101,12 @@ pub fn overmap_score(overmap: &Overmap) -> Score {
             },
             layer: 0,
             visible: true,
+            // Placement here is authored or ordinal, never derived from a
+            // producer-side coordinate, so sceno's three optional placement
+            // hints (added 0.0.4) stay unset.
+            axis: None,
+            embedding: None,
+            weight: None,
         })
         .collect();
     score
@@ -661,8 +667,8 @@ pub fn overmap_overlay(ui: &UiState) -> Option<UiChild> {
         "historical projection: travel and exploration orders are disabled".to_owned()
     } else {
         match &here {
-        Some(node) => format!("here: {} — click a place to travel", name_of(node)),
-        None => "the party is not on the overmap yet".to_owned(),
+            Some(node) => format!("here: {} — click a place to travel", name_of(node)),
+            None => "the party is not on the overmap yet".to_owned(),
         }
     };
     body.push(Box::new(el("div", text(hint)).attr("class", "side-hint")));

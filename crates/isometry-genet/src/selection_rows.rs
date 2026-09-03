@@ -22,10 +22,8 @@ impl App {
     ///
     /// Cheap first, like every pump in this family: the common dispatch moves
     /// nothing, and comparing three small indices must not cost a clone.
-    pub(crate) fn pump_selection_rows(&mut self) {
-        let Some(runner) = self.runner.as_ref() else {
-            return;
-        };
+    pub(crate) fn pump_selection_rows(&mut self, ctx: &mut Ctx<'_>) {
+        let runner = &*ctx.runner;
         let ui = runner.state();
 
         let mode_index = ui.mode_selection.selected.first().copied().unwrap_or(0);
@@ -62,7 +60,8 @@ impl App {
         // Mode is local view state, so it commits here rather than through the
         // authority. Pace and stance are world state: the row only *asks*, and
         // the existing request flags carry it down the adjudicated path.
-        if let Some(runner) = self.runner.as_mut() {
+        {
+            let runner = &mut *ctx.runner;
             runner.update(|ui| {
                 if let Some(mode) = wanted_mode.filter(|_| mode_moved) {
                     ui.mode = mode;

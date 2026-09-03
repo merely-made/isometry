@@ -9,7 +9,7 @@
 use super::*;
 
 impl App {
-    pub(crate) fn pump_generators(&mut self) {
+    pub(crate) fn pump_generators(&mut self, ctx: &mut Ctx<'_>) {
         let mut action = None;
         let mut locks = Default::default();
         let mut can_edit = false;
@@ -20,7 +20,8 @@ impl App {
         let mut local_snapshot = None;
         let mut selection_request = None;
         let journal = self.journal.clone();
-        if let Some(runner) = self.runner.as_mut() {
+        {
+            let runner = &mut *ctx.runner;
             runner.update(|ui| {
                 action = ui.generation_request.take();
                 selection_request = ui.generator_selection_request.take();
@@ -57,7 +58,8 @@ impl App {
         }
         if let Some(request) = selection_request {
             if !can_edit {
-                if let Some(runner) = self.runner.as_mut() {
+                {
+                    let runner = &mut *ctx.runner;
                     runner.update(|ui| ui.status = "generation requires the host".to_owned());
                 }
                 return;
@@ -74,7 +76,8 @@ impl App {
                         .clone()
                         .unwrap_or_else(|| "unavailable".to_owned());
                     self.last_generator_selection = Some(selection);
-                    if let Some(runner) = self.runner.as_mut() {
+                    {
+                        let runner = &mut *ctx.runner;
                         runner.update(|ui| {
                             ui.generator_selected = choice_index;
                             ui.generator_preview = None;
@@ -90,15 +93,9 @@ impl App {
                     }
                 }
                 Err(error) => {
-                    if let Some(runner) = self.runner.as_mut() {
-                        runner.update(|ui| {
-                            ui.status = format!("generator selection failed: {error}")
-                        });
-                    }
+                    let runner = &mut *ctx.runner;
+                    runner.update(|ui| ui.status = format!("generator selection failed: {error}"));
                 }
-            }
-            if let Some(window) = self.window.as_ref() {
-                window.request_redraw();
             }
             return;
         }
@@ -106,7 +103,8 @@ impl App {
             return;
         };
         if !can_edit {
-            if let Some(runner) = self.runner.as_mut() {
+            {
+                let runner = &mut *ctx.runner;
                 runner.update(|ui| ui.status = "generation requires the host".to_owned());
             }
             return;
@@ -114,7 +112,8 @@ impl App {
         match action {
             GenerationRequest::Generate => {
                 let Some(choice) = choice else {
-                    if let Some(runner) = self.runner.as_mut() {
+                    {
+                        let runner = &mut *ctx.runner;
                         runner.update(|ui| ui.status = "no generator selected".to_owned());
                     }
                     return;
@@ -144,7 +143,8 @@ impl App {
                     &mut self.generation_tape,
                     GeneratorLimits::default(),
                 );
-                if let Some(runner) = self.runner.as_mut() {
+                {
+                    let runner = &mut *ctx.runner;
                     runner.update(|ui| match result {
                         Ok(record) => {
                             ui.generator_preview = Some(record);
@@ -168,7 +168,8 @@ impl App {
                     if remote {
                         if let Some(net) = self.net.as_mut() {
                             let request = net.commit_campaign(record, item_owner);
-                            if let Some(runner) = self.runner.as_mut() {
+                            {
+                                let runner = &mut *ctx.runner;
                                 runner.update(|ui| match request {
                                     Some(request) => {
                                         ui.status = format!(
@@ -194,7 +195,8 @@ impl App {
                                 self.history = host.history().clone();
                                 self.journal = host.state().journal.clone();
                                 let snapshot = host.state().clone();
-                                if let Some(runner) = self.runner.as_mut() {
+                                {
+                                    let runner = &mut *ctx.runner;
                                     runner.update(|ui| {
                                         ui.apply_snapshot(snapshot);
                                         ui.status = "committed campaign draft".to_owned();
@@ -202,17 +204,13 @@ impl App {
                                 }
                             }
                             Err(error) => {
-                                if let Some(runner) = self.runner.as_mut() {
-                                    runner.update(|ui| {
-                                        ui.generator_preview = Some(record);
-                                        ui.status = format!("campaign commit failed: {error}");
-                                    });
-                                }
+                                let runner = &mut *ctx.runner;
+                                runner.update(|ui| {
+                                    ui.generator_preview = Some(record);
+                                    ui.status = format!("campaign commit failed: {error}");
+                                });
                             }
                         }
-                    }
-                    if let Some(window) = self.window.as_ref() {
-                        window.request_redraw();
                     }
                     return;
                 }
@@ -226,7 +224,8 @@ impl App {
                             events.push(GameEvent::MapActivated { id });
                         }
                         Err(error) => {
-                            if let Some(runner) = self.runner.as_mut() {
+                            {
+                                let runner = &mut *ctx.runner;
                                 runner.update(|ui| {
                                     ui.generator_preview = Some(record.clone());
                                     ui.status = format!("generated map is invalid: {error}");
@@ -244,7 +243,8 @@ impl App {
                                 .or_else(|| snapshot.map.tokens.first().map(|token| token.id))
                         });
                         let Some(target) = target else {
-                            if let Some(runner) = self.runner.as_mut() {
+                            {
+                                let runner = &mut *ctx.runner;
                                 runner.update(|ui| {
                                     ui.generator_preview = Some(record.clone());
                                     ui.status =
@@ -268,7 +268,8 @@ impl App {
                             appearance_layers: Vec::new(),
                         };
                         if let Err(error) = inventory.insert(instance) {
-                            if let Some(runner) = self.runner.as_mut() {
+                            {
+                                let runner = &mut *ctx.runner;
                                 runner.update(|ui| {
                                     ui.generator_preview = Some(record.clone());
                                     ui.status = format!("generated item is invalid: {error:?}");
@@ -322,7 +323,8 @@ impl App {
                     _ => {}
                 }
                 if remote {
-                    if let Some(runner) = self.runner.as_mut() {
+                    {
+                        let runner = &mut *ctx.runner;
                         runner.update(|ui| {
                             ui.net_outbox.extend(events);
                             ui.status = "committing generated result".to_owned();
@@ -335,7 +337,8 @@ impl App {
                     match result {
                         Ok(()) => {
                             self.journal = snapshot.journal.clone();
-                            if let Some(runner) = self.runner.as_mut() {
+                            {
+                                let runner = &mut *ctx.runner;
                                 runner.update(|ui| {
                                     ui.apply_snapshot(snapshot);
                                     ui.status = "committed generated result".to_owned();
@@ -343,19 +346,15 @@ impl App {
                             }
                         }
                         Err(error) => {
-                            if let Some(runner) = self.runner.as_mut() {
-                                runner.update(|ui| {
-                                    ui.generator_preview = Some(record);
-                                    ui.status = format!("generation commit failed: {error:?}");
-                                });
-                            }
+                            let runner = &mut *ctx.runner;
+                            runner.update(|ui| {
+                                ui.generator_preview = Some(record);
+                                ui.status = format!("generation commit failed: {error:?}");
+                            });
                         }
                     }
                 }
             }
-        }
-        if let Some(window) = self.window.as_ref() {
-            window.request_redraw();
         }
     }
 }

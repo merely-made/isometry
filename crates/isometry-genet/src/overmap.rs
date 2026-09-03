@@ -14,41 +14,42 @@ impl App {
     /// the authority rolls the navigation (`resolve_travel`), spends the time,
     /// and emits a `TravelResolved` verdict every peer applies. If the party is
     /// not on the overmap yet, the first click simply places it there.
-    pub(crate) fn pump_overmap(&mut self) {
+    pub(crate) fn pump_overmap(&mut self, ctx: &mut Ctx<'_>) {
         // Cheap flag first: this pump runs after every dispatch, and cloning the
         // world to then discover there is no request would tax every click.
-        let (request, remote) = match self.runner.as_ref() {
-            Some(r) => {
-                let s = r.state();
-                (
-                    s.overmap_travel_request.clone(),
-                    s.net_mode == NetMode::Remote,
-                )
-            }
-            None => return,
+        let (request, remote) = {
+            let r = &*ctx.runner;
+            let s = r.state();
+            (
+                s.overmap_travel_request.clone(),
+                s.net_mode == NetMode::Remote,
+            )
         };
         let Some(to) = request else {
             return;
         };
-        let world = match self.runner.as_ref() {
-            Some(r) => r.state().world.clone(),
-            None => return,
+        let world = {
+            let r = &*ctx.runner;
+            r.state().world.clone()
         };
-        if let Some(runner) = self.runner.as_mut() {
+        {
+            let runner = &mut *ctx.runner;
             runner.update(|ui| ui.overmap_travel_request = None);
         }
         // Only the authority resolves travel. A joined client's click is a look,
         // not a verdict; routing its request as an ask is a later refinement.
         if remote && !self.net_is_host {
-            if let Some(runner) = self.runner.as_mut() {
+            {
+                let runner = &mut *ctx.runner;
                 runner.update(|ui| ui.status = "the DM guides the party".to_owned());
             }
             return;
         }
-        let party = self
+        let party = ctx
             .runner
-            .as_ref()
-            .and_then(|r| r.state().viewer.clone())
+            .state()
+            .viewer
+            .clone()
             .unwrap_or_else(|| "dm".to_owned());
         let from = world.party_at(&party).map(str::to_owned);
 
@@ -61,7 +62,8 @@ impl App {
             Some(here) if here == to => return,
             Some(here) => {
                 let Some((_, weight)) = world.overmap().route(&here, &to) else {
-                    if let Some(runner) = self.runner.as_mut() {
+                    {
+                        let runner = &mut *ctx.runner;
                         runner.update(|ui| ui.status = format!("no route to {to}"));
                     }
                     return;
@@ -73,20 +75,17 @@ impl App {
                 // its sheet and its exploration stance (E3), so Scouting or
                 // Searching colours the trip. A partyless-of-tokens party travels
                 // on a bare sheet at base.
-                let (nav_sheet, stance) = match self.runner.as_ref() {
-                    Some(r) => {
-                        let s = r.state();
-                        let tok = s
-                            .map
-                            .tokens
-                            .iter()
-                            .find(|t| t.owner.as_deref() == Some(party.as_str()));
-                        (
-                            tok.and_then(|t| s.map.sheet(t.id).cloned()),
-                            tok.and_then(|t| s.map.stance(t.id).map(str::to_owned)),
-                        )
-                    }
-                    None => (None, None),
+                let (nav_sheet, stance) = {
+                    let s = ctx.runner.state();
+                    let tok = s
+                        .map
+                        .tokens
+                        .iter()
+                        .find(|t| t.owner.as_deref() == Some(party.as_str()));
+                    (
+                        tok.and_then(|t| s.map.sheet(t.id).cloned()),
+                        tok.and_then(|t| s.map.stance(t.id).map(str::to_owned)),
+                    )
                 };
                 let Some(system) = self.system.as_mut() else {
                     return;
@@ -103,7 +102,8 @@ impl App {
                     res.encounter,
                     res.forage,
                 );
-                if let Some(runner) = self.runner.as_mut() {
+                {
+                    let runner = &mut *ctx.runner;
                     runner.update(|ui| {
                         ui.status = if lost {
                             format!("lost the way to {to} ({ticks})")
@@ -125,28 +125,27 @@ impl App {
             }
         };
 
-        self.emit_host_event(event);
+        self.emit_host_event(ctx, event);
     }
 
     /// Drain the overmap's pace and stance choices (E1/E3): host-recorded state,
     /// not a travel resolution. A pace sets the party's marching speed; a stance
     /// is set on the party's lead token, which the travel rule then reads.
-    pub(crate) fn pump_overmap_orders(&mut self) {
-        let (pace_req, stance_req, remote) = match self.runner.as_ref() {
-            Some(r) => {
-                let s = r.state();
-                (
-                    s.overmap_pace_request,
-                    s.overmap_stance_request.clone(),
-                    s.net_mode == NetMode::Remote,
-                )
-            }
-            None => return,
+    pub(crate) fn pump_overmap_orders(&mut self, ctx: &mut Ctx<'_>) {
+        let (pace_req, stance_req, remote) = {
+            let r = &*ctx.runner;
+            let s = r.state();
+            (
+                s.overmap_pace_request,
+                s.overmap_stance_request.clone(),
+                s.net_mode == NetMode::Remote,
+            )
         };
         if pace_req.is_none() && stance_req.is_none() {
             return;
         }
-        if let Some(runner) = self.runner.as_mut() {
+        {
+            let runner = &mut *ctx.runner;
             runner.update(|ui| {
                 ui.overmap_pace_request = None;
                 ui.overmap_stance_request = None;
@@ -155,19 +154,23 @@ impl App {
         if remote && !self.net_is_host {
             return;
         }
-        let party = self
+        let party = ctx
             .runner
-            .as_ref()
-            .and_then(|r| r.state().viewer.clone())
+            .state()
+            .viewer
+            .clone()
             .unwrap_or_else(|| "dm".to_owned());
         if let Some(pace) = pace_req {
-            self.emit_host_event(GameEvent::World(WorldEvent::PartyPaceSet {
-                party: party.clone(),
-                pace,
-            }));
+            self.emit_host_event(
+                ctx,
+                GameEvent::World(WorldEvent::PartyPaceSet {
+                    party: party.clone(),
+                    pace,
+                }),
+            );
         }
         if let Some(stance) = stance_req {
-            let nav = self.runner.as_ref().and_then(|r| {
+            let nav = (Some(&*ctx.runner)).and_then(|r| {
                 r.state()
                     .map
                     .tokens
@@ -176,7 +179,7 @@ impl App {
                     .map(|t| t.id)
             });
             if let Some(token) = nav {
-                self.emit_host_event(GameEvent::StanceSet { token, stance });
+                self.emit_host_event(ctx, GameEvent::StanceSet { token, stance });
             }
         }
     }
@@ -184,34 +187,34 @@ impl App {
     /// Study the party's maps (E6). Roll the lead token's literacy; on a pass,
     /// reveal the places just beyond the known frontier, so a lettered party sees
     /// further than it has walked and a dull-witted one learns nothing.
-    pub(crate) fn pump_overmap_read(&mut self) {
+    pub(crate) fn pump_overmap_read(&mut self, ctx: &mut Ctx<'_>) {
         // Cheap flag first; the world clone below is only for a live request.
-        let (read_req, remote) = match self.runner.as_ref() {
-            Some(r) => {
-                let s = r.state();
-                (s.overmap_read_request, s.net_mode == NetMode::Remote)
-            }
-            None => return,
+        let (read_req, remote) = {
+            let r = &*ctx.runner;
+            let s = r.state();
+            (s.overmap_read_request, s.net_mode == NetMode::Remote)
         };
         if !read_req {
             return;
         }
-        let world = match self.runner.as_ref() {
-            Some(r) => r.state().world.clone(),
-            None => return,
+        let world = {
+            let r = &*ctx.runner;
+            r.state().world.clone()
         };
-        if let Some(runner) = self.runner.as_mut() {
+        {
+            let runner = &mut *ctx.runner;
             runner.update(|ui| ui.overmap_read_request = false);
         }
         if remote && !self.net_is_host {
             return;
         }
-        let party = self
+        let party = ctx
             .runner
-            .as_ref()
-            .and_then(|r| r.state().viewer.clone())
+            .state()
+            .viewer
+            .clone()
             .unwrap_or_else(|| "dm".to_owned());
-        let reader = self.runner.as_ref().and_then(|r| {
+        let reader = (Some(&*ctx.runner)).and_then(|r| {
             let s = r.state();
             s.map
                 .tokens
@@ -228,7 +231,8 @@ impl App {
             system.read_map(&reader, &mut self.action_rng)
         };
         if !can_read {
-            if let Some(runner) = self.runner.as_mut() {
+            {
+                let runner = &mut *ctx.runner;
                 runner.update(|ui| ui.status = "you cannot make sense of the map".to_owned());
             }
             return;
@@ -237,7 +241,7 @@ impl App {
             world.party_known.get(&party).cloned().unwrap_or_default();
         let full = world.overmap();
         let mut reveal: Vec<String> = Vec::new();
-        let mut push = |node: &str, reveal: &mut Vec<String>| {
+        let push = |node: &str, reveal: &mut Vec<String>| {
             if !known.contains(node) && !reveal.iter().any(|r| r == node) {
                 reveal.push(node.to_owned());
             }
@@ -251,7 +255,8 @@ impl App {
         // Carried maps: a `map` item in the party's packs shows named places
         // (`ItemInstance::revealed_places`). Reading one is how a bought or looted
         // chart hands over somewhere far off the party has never been near.
-        if let Some(runner) = self.runner.as_ref() {
+        {
+            let runner = &*ctx.runner;
             let s = runner.state();
             for token in s
                 .map
@@ -267,7 +272,8 @@ impl App {
             }
         }
         if reveal.is_empty() {
-            if let Some(runner) = self.runner.as_mut() {
+            {
+                let runner = &mut *ctx.runner;
                 runner.update(|ui| ui.status = "the map shows nothing you do not know".to_owned());
             }
             return;
@@ -276,6 +282,7 @@ impl App {
         // discloses a dozen sites should cost one fog recompute, not twelve.
         let count = reveal.len();
         self.emit_host_events(
+            ctx,
             reveal
                 .into_iter()
                 .map(|node| {
@@ -286,7 +293,8 @@ impl App {
                 })
                 .collect(),
         );
-        if let Some(runner) = self.runner.as_mut() {
+        {
+            let runner = &mut *ctx.runner;
             runner.update(|ui| ui.status = format!("read the map: {count} place(s) revealed"));
         }
     }

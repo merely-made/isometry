@@ -114,14 +114,15 @@ fn drag_move_routes_out_in_remote_mode() {
 fn token_drag_candidate_finds_a_token_in_select_mode_only() {
     use isometry_core::TokenId;
     let mut ui = UiState::new(demo_map());
-    // Cursor over knight 1's tile (10, 14); default camera is (0, 0).
+    // Pointer over knight 1's tile (10, 14), in the pane's own coordinates;
+    // the default camera is (0, 0).
     let (sx, sy) = ui.geo.tile_to_screen((10, 14), 0);
-    let on_token = (sx + PANEL_W + ui.camera.0, sy + ui.camera.1);
+    let on_token = (sx + ui.camera.0, sy + ui.camera.1);
     assert_eq!(ui.mode, EditMode::Select);
     assert_eq!(ui.token_drag_candidate(on_token), Some(TokenId(1)));
     // An empty tile, or any non-Select mode, yields nothing.
     let (ex, ey) = ui.geo.tile_to_screen((0, 0), 0);
-    assert_eq!(ui.token_drag_candidate((ex + PANEL_W, ey)), None);
+    assert_eq!(ui.token_drag_candidate((ex, ey)), None);
     ui.mode = EditMode::Play;
     assert_eq!(ui.token_drag_candidate(on_token), None);
 }
@@ -436,19 +437,23 @@ fn roll_initiative_individual_and_side() {
     assert_eq!(boundaries, 1, "two sides act in blocks");
 }
 
+/// The draft is the field's now, so the edits here are the `TextCommand`s the
+/// host dispatches into it rather than the `compose_char` pair that used to
+/// stand between them — the same shape the `>` command line has taken since
+/// 2026-07-27. What is still this test's business is the lane around the
+/// field: opening, the send, the log line, and the outbox.
 #[test]
 fn compose_whisper_builds_draft_and_logs() {
     let mut ui = UiState::new(demo_map());
     ui.whisper_target = Some("alice".to_owned());
     ui.start_compose();
     assert!(ui.composing);
-    for c in "hi".chars() {
-        ui.compose_char(c);
-    }
-    ui.compose_backspace();
-    ui.compose_char('e');
-    ui.compose_char('y');
-    assert_eq!(ui.whisper_draft, "hey");
+    ui.whisper_draft
+        .apply(cambium::TextCommand::Insert("hi".to_owned()));
+    ui.whisper_draft.apply(cambium::TextCommand::Backspace);
+    ui.whisper_draft
+        .apply(cambium::TextCommand::Insert("ey".to_owned()));
+    assert_eq!(ui.whisper_draft.text(), "hey");
     ui.compose_send();
     assert!(!ui.composing);
     assert_eq!(ui.messages, vec!["to alice: hey".to_string()]);
@@ -864,11 +869,14 @@ fn compendium_tab_strip_mirrors_the_namespace() {
     // What the bridge has to run, and why poking the field would not do: a
     // namespace switch resets everything scoped to the old namespace.
     ui.compendium_selected = Some("goblin".to_owned());
-    ui.compendium_search = "gob".to_owned();
+    ui.compendium_search = cambium::TextInput::new("gob");
     ui.compendium_scroll = 40.0;
     ui.set_compendium_tab(CompendiumTab::Spells);
     assert!(ui.compendium_selected.is_none(), "the open page follows");
-    assert!(ui.compendium_search.is_empty(), "the filter follows");
+    assert!(
+        ui.compendium_search.text().is_empty(),
+        "the filter follows"
+    );
     assert_eq!(ui.compendium_scroll, 0.0, "the scroll follows");
 }
 

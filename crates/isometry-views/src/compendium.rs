@@ -11,7 +11,8 @@
 use std::rc::Rc;
 
 use cambium::{
-    clickable, data_grid, el, lens, on_wheel, tab_strip, text, GridColumn, GridSpec, TabStrip,
+    caret_text_field, clickable, data_grid, el, lens, on_wheel, request_focus, tab_strip, text,
+    GridColumn, GridSpec, TabStrip, TextInput,
 };
 
 use crate::board::UiChild;
@@ -79,7 +80,7 @@ pub fn compendium_overlay(ui: &UiState) -> Option<UiChild> {
 
     let mut body_children: Vec<UiChild> = vec![nav];
     if ui.compendium_selected.is_none() {
-        body_children.push(crate::widgets::search_field(&ui.compendium_search));
+        body_children.push(search_field(ui));
     }
     body_children.push(body);
     Some(crate::widgets::overlay_panel(
@@ -88,6 +89,31 @@ pub fn compendium_overlay(ui: &UiState) -> Option<UiChild> {
         actions,
         body_children,
     ))
+}
+
+/// The index filter: the third text lane, on the catalog field.
+///
+/// The wrapper's `search-field` class is the name the host's text seam
+/// recognises the focused `<input>` by (`hooks::focused_text`), so it is
+/// load-bearing, not decoration. Opening the index requests the caret; the
+/// clear button is the one filter edit the chrome still owns.
+fn search_field(ui: &UiState) -> UiChild {
+    let field: UiChild = Box::new(lens(
+        |query: &mut TextInput| request_focus(caret_text_field(query, &[]), true),
+        |ui: &mut UiState| &mut ui.compendium_search,
+    ));
+    let mut kids: Vec<UiChild> = vec![field];
+    if ui.compendium_search.text().is_empty() {
+        kids.push(Box::new(
+            el::<_, UiState, ()>("span", text("type to filter...")).attr("class", "search-hint"),
+        ));
+    } else {
+        kids.push(Box::new(clickable(
+            el::<_, UiState, ()>("span", text("clear")).attr("class", "search-clear"),
+            |ui: &mut UiState, _| ui.clear_compendium_search(),
+        )));
+    }
+    Box::new(el::<_, UiState, ()>("div", kids).attr("class", "search-field"))
 }
 
 // ---------- shared cell + grid helpers ----------
@@ -110,16 +136,20 @@ fn grid(
     scroll: f32,
     cell: impl Fn(usize, usize) -> UiChild,
 ) -> UiChild {
+    // Clamp at render, because the filter is the field's now: typing narrows
+    // the list without passing through `UiState`, so nothing is left to reset
+    // the offset the way `search_char` used to. A stale offset past the end of
+    // a filtered list would show empty rows.
+    let max = spec.max_scroll(total, 300.0);
     let g = data_grid::<UiState, ()>(
         spec,
         total,
         300.0,
-        scroll,
+        scroll.min(max),
         cell,
         |ui: &mut UiState, col| ui.sort_compendium(col),
         |_r| None,
     );
-    let max = spec.max_scroll(total, 300.0);
     let wrapped = el::<_, UiState, ()>("div", g);
     Box::new(on_wheel(wrapped, move |ui: &mut UiState, ev| {
         ui.scroll_compendium(ev.delta.1, max)
@@ -130,7 +160,7 @@ fn grid(
 
 fn monster_index(ui: &UiState) -> UiChild {
     let (col, desc) = ui.compendium_sort;
-    let q = ui.compendium_search.to_lowercase();
+    let q = ui.compendium_search.text().to_lowercase();
     let mut order: Vec<usize> = (0..ui.bestiary.len())
         .filter(|&i| q.is_empty() || ui.bestiary[i].name.to_lowercase().contains(&q))
         .collect();
@@ -180,7 +210,7 @@ fn monster_index(ui: &UiState) -> UiChild {
 
 fn spell_index(ui: &UiState) -> UiChild {
     let (col, desc) = ui.compendium_sort;
-    let q = ui.compendium_search.to_lowercase();
+    let q = ui.compendium_search.text().to_lowercase();
     let mut order: Vec<usize> = (0..ui.spells.len())
         .filter(|&i| q.is_empty() || ui.spells[i].name.to_lowercase().contains(&q))
         .collect();
@@ -226,7 +256,7 @@ fn spell_index(ui: &UiState) -> UiChild {
 
 fn item_index(ui: &UiState) -> UiChild {
     let (col, desc) = ui.compendium_sort;
-    let q = ui.compendium_search.to_lowercase();
+    let q = ui.compendium_search.text().to_lowercase();
     let mut order: Vec<usize> = (0..ui.items.len())
         .filter(|&i| q.is_empty() || ui.items[i].name.to_lowercase().contains(&q))
         .collect();

@@ -8,12 +8,80 @@
 //!
 //! Split out of `main.rs` on 2026-07-24; behavior unchanged.
 
+use cambium_genet_winit_host::{Key, KeyPress, NamedKey};
+use layout_dom_api::{LayoutDom as _, LocalName, Namespace};
+
 use super::*;
+
+/// Deliver one key press exactly as the host's key arm does: isometry's own
+/// `key_intercept` first, and only then the focused element's own handlers.
+///
+/// This is the self-driven twin of the harness's `key_char`, and it is
+/// deliberately not a shortcut around the text lanes: a letter that reaches a
+/// focused `caret_text_field` is turned into a [`cambium::TextCommand`] by the
+/// field itself, so these self-tests exercise the shipping path rather than a
+/// second editor of their own. No synthetic OS input is involved — the same
+/// reason the other self-tests drive the runner directly.
+fn deliver_key(runner: &mut Runner, press: &KeyPress) {
+    if hooks::key_intercept(runner, press) {
+        return;
+    }
+    if let Some(event) = press.to_runner_key() {
+        runner.dispatch_key(event);
+    }
+}
+
+/// Type a run of text, one press per character, the way a person would.
+///
+/// Space goes as the named key winit reports for it, not as a character, so a
+/// lane that ever stops accepting `NamedKey::Space` fails here rather than
+/// passing on a shape no keyboard produces.
+fn type_text(runner: &mut Runner, text: &str) {
+    for c in text.chars() {
+        let key = if c == ' ' {
+            Key::Named(NamedKey::Space)
+        } else {
+            Key::Character(c.to_string())
+        };
+        deliver_key(runner, &KeyPress::new(key));
+    }
+}
+
+/// The class of the wrapper around whichever `<input>` holds the caret.
+///
+/// The same name `hooks::focused_text` recognises a lane by, read straight off
+/// the retained tree: a receipt that says where the letters went should first
+/// say that they had somewhere to go.
+fn caret_lane(runner: &Runner) -> Option<String> {
+    let node = runner.focus()?;
+    let dom = runner.dom();
+    let dom = dom.borrow();
+    let parent = dom.parent(node)?;
+    dom.attribute(parent, &Namespace::from(""), &LocalName::from("class"))
+        .map(str::to_owned)
+}
+
+/// The rendered compendium index: how many entry rows the grid is drawing, and
+/// the first row's name.
+///
+/// Read off the DOM rather than recomputed from `bestiary`, because what the
+/// filter is for is fewer rows on screen — the same receipt the harness test
+/// `typing_in_the_compendium_filters_its_index` takes, in the headed run.
+fn compendium_index(runner: &Runner) -> (usize, Option<String>) {
+    let dom = runner.dom();
+    let dom = dom.borrow();
+    let rows = dom.all_with_class(dom.document(), "compendium-link");
+    let first = rows.first().and_then(|&node| {
+        dom.dom_children(node)
+            .find_map(|child| dom.text(child).map(str::to_owned))
+    });
+    (rows.len(), first)
+}
 
 impl App {
     /// The env-gated self-test: after a warm-up, emit one end-turn as if
     /// the user pressed it, exercising the full session round-trip.
-    pub(crate) fn maybe_selftest(&mut self) {
+    pub(crate) fn maybe_selftest(&mut self, ctx: &mut Ctx<'_>) {
         if !self.net_selftest || self.selftest_fired {
             return;
         }
@@ -24,10 +92,11 @@ impl App {
         if ready {
             self.selftest_fired = true;
             eprintln!("[isometry] selftest: firing end_turn");
-            if let Some(runner) = self.runner.as_mut() {
+            {
+                let runner = &mut *ctx.runner;
                 runner.update(|ui| ui.end_turn());
             }
-            self.pump_net();
+            self.pump_net(ctx);
         }
     }
 
@@ -43,7 +112,7 @@ impl App {
     /// the other side; the knight (the whole party: everyone else is demoted to
     /// DM furniture) walks onto the door through the normal Play-mode click
     /// path, and the board follows it through.
-    pub(crate) fn maybe_travel_selftest(&mut self) {
+    pub(crate) fn maybe_travel_selftest(&mut self, ctx: &mut Ctx<'_>) {
         if !self.travel_selftest || self.travel_fired {
             return;
         }
@@ -54,9 +123,7 @@ impl App {
             return;
         }
         self.travel_fired = true;
-        let Some(runner) = self.runner.as_mut() else {
-            return;
-        };
+        let runner = &mut *ctx.runner;
         runner.update(|ui| {
             // The party is the knight alone; the rest is the DM's furniture.
             for t in ui.map.tokens.iter_mut() {
@@ -132,14 +199,11 @@ impl App {
                 ui.clocks,
             );
         });
-        if let Some(window) = self.window.as_ref() {
-            window.request_redraw();
-        }
     }
 
     /// `ISOMETRY_CMD_SELFTEST=1` (pair with `ISOMETRY_GEN_SEED` for a fixed
     /// NPC): drive the whole `>` command surface once, focus-free.
-    pub(crate) fn maybe_cmd_selftest(&mut self) {
+    pub(crate) fn maybe_cmd_selftest(&mut self, ctx: &mut Ctx<'_>) {
         if !self.cmd_selftest || self.cmd_fired {
             return;
         }
@@ -150,20 +214,20 @@ impl App {
             return;
         }
         self.cmd_fired = true;
-        let before = self
-            .runner
-            .as_ref()
+        let before = Some(&*ctx.runner)
             .map(|r| r.state().map.tokens.len())
             .unwrap_or(0);
 
         // >spawn: a statted goblin, resolved from a free-text query.
-        if let Some(runner) = self.runner.as_mut() {
+        {
+            let runner = &mut *ctx.runner;
             runner.update(|ui| ui.spawn_query("gobl"));
         }
-        self.pump_sheets(); // binds the stat block
+        self.pump_sheets(ctx); // binds the stat block
 
         // >find: a unified compendium search.
-        if let Some(runner) = self.runner.as_mut() {
+        {
+            let runner = &mut *ctx.runner;
             runner.update(|ui| ui.find_query("sword"));
             eprintln!(
                 "[isometry] cmd selftest: find 'sword' -> {} results, first: {:?}",
@@ -174,7 +238,8 @@ impl App {
 
         // The receipt path only selects an existing declaration; the following
         // two pumps reuse the normal preview call. Its result stays host-local.
-        if let Some(runner) = self.runner.as_mut() {
+        {
+            let runner = &mut *ctx.runner;
             runner.update(|ui| {
                 ui.choose_generator(
                     "cmd-selftest".to_owned(),
@@ -183,35 +248,36 @@ impl App {
                 )
             });
         }
-        self.pump_generators(); // receipt -> selected declaration -> Generate
-        self.pump_generators(); // Generate -> preview
+        self.pump_generators(ctx); // receipt -> selected declaration -> Generate
+        self.pump_generators(ctx); // Generate -> preview
         eprintln!(
             "[isometry] cmd selftest: receipt selection = {:?}",
             self.last_generator_selection
                 .as_ref()
                 .map(|selection| (&selection.reading.candidate_id, &selection.reading.receipt))
         );
-        if let Some(runner) = self.runner.as_mut() {
+        {
+            let runner = &mut *ctx.runner;
             runner.update(|ui| ui.discard_generation_preview());
         }
 
         // >gen npc: open the generator, generate a preview, commit it.
-        if let Some(runner) = self.runner.as_mut() {
+        {
+            let runner = &mut *ctx.runner;
             runner.update(|ui| ui.start_generator("npc"));
         }
-        self.pump_generators(); // Generate -> preview
-        let previewed = self
-            .runner
-            .as_ref()
-            .and_then(|r| r.state().generator_preview.clone());
+        self.pump_generators(ctx); // Generate -> preview
+        let previewed = Some(&*ctx.runner).and_then(|r| r.state().generator_preview.clone());
         eprintln!("[isometry] cmd selftest: gen npc preview = {previewed:?}");
-        if let Some(runner) = self.runner.as_mut() {
+        {
+            let runner = &mut *ctx.runner;
             runner.update(|ui| ui.commit_generation_preview());
         }
-        self.pump_generators(); // Commit -> lower into a statted token
-        self.pump_sheets();
+        self.pump_generators(ctx); // Commit -> lower into a statted token
+        self.pump_sheets(ctx);
 
-        if let Some(runner) = self.runner.as_ref() {
+        {
+            let runner = &*ctx.runner;
             let ui = runner.state();
             let newest = ui.map.tokens.last();
             eprintln!(
@@ -228,16 +294,13 @@ impl App {
                 ui.status,
             );
         }
-        if let Some(window) = self.window.as_ref() {
-            window.request_redraw();
-        }
     }
 
     /// `ISOMETRY_CONVINCE_SELFTEST=1`: a bard recruits a goblin, then meets the
     /// party cap on the next. Focus-free.
     /// `ISOMETRY_STORYLET_SELFTEST=1`: seed a ready storylet and a locked one,
     /// open the surface, play the ready one, and confirm its fact committed.
-    pub(crate) fn maybe_storylet_selftest(&mut self) {
+    pub(crate) fn maybe_storylet_selftest(&mut self, ctx: &mut Ctx<'_>) {
         if !self.storylet_selftest || self.storylet_fired {
             return;
         }
@@ -280,7 +343,8 @@ impl App {
             roles: Vec::new(),
             effects: Vec::new(),
         };
-        if let Some(runner) = self.runner.as_mut() {
+        {
+            let runner = &mut *ctx.runner;
             runner.update(|ui| {
                 ui.world
                     .storylets
@@ -292,8 +356,9 @@ impl App {
             });
         }
         // Compute the rows.
-        self.pump_storylets();
-        if let Some(runner) = self.runner.as_ref() {
+        self.pump_storylets(ctx);
+        {
+            let runner = &*ctx.runner;
             for row in &runner.state().storylets {
                 eprintln!(
                     "[isometry] storylet selftest: {} available={} status={:?} entry={:?}",
@@ -302,7 +367,8 @@ impl App {
             }
         }
         // Select the ready one and play it.
-        if let Some(runner) = self.runner.as_mut() {
+        {
+            let runner = &mut *ctx.runner;
             runner.update(|ui| {
                 let idx = ui
                     .storylets
@@ -313,25 +379,20 @@ impl App {
                 ui.play_storylet();
             });
         }
-        self.pump_storylets();
+        self.pump_storylets(ctx);
         let committed = self.journal.iter().any(|f| f.id == "gate-met");
-        let status = self
-            .runner
-            .as_ref()
+        let status = Some(&*ctx.runner)
             .map(|r| r.state().status.clone())
             .unwrap_or_default();
         eprintln!(
             "[isometry] storylet selftest: played | journal has 'gate-met': {committed} | status: {status}"
         );
-        if let Some(window) = self.window.as_ref() {
-            window.request_redraw();
-        }
     }
 
     /// `ISOMETRY_OVERMAP_SELFTEST=1`: seed a small overmap (four places joined by
     /// roads), stand the party at the village, reveal the map it would know, and
     /// open the overmap surface. A focus-free proof the C8 render draws.
-    pub(crate) fn maybe_overmap_selftest(&mut self) {
+    pub(crate) fn maybe_overmap_selftest(&mut self, ctx: &mut Ctx<'_>) {
         if !self.overmap_selftest || self.overmap_fired {
             return;
         }
@@ -344,7 +405,8 @@ impl App {
         self.overmap_fired = true;
 
         use isometry_campaign::{ItemId, ItemInstance, WorldPlace, WorldRoute};
-        if let Some(runner) = self.runner.as_mut() {
+        {
+            let runner = &mut *ctx.runner;
             runner.update(|ui| {
                 // Positions left unset (`None`): the overmap relaxes a
                 // force-directed layout from the routes, proving that path.
@@ -422,7 +484,7 @@ impl App {
         // The `request_map_read` above only arms a read; its pump normally runs
         // on a window event, of which a headless selftest has none. Drive it once
         // here so the seeded chart resolves and the capture shows the outcome.
-        self.pump_overmap_read();
+        self.pump_overmap_read(ctx);
         if self.overmap_source_time_selftest {
             // The C8 fixture is deliberately assembled directly so it can
             // exercise discovery and a carried map without a content pack. For
@@ -430,22 +492,23 @@ impl App {
             // then append one real authority event through the normal host path.
             // Selecting its empty prefix is consequently a truthful source
             // projection, never a reconstruction from current state.
-            let origin = self
-                .runner
-                .as_ref()
-                .map(|runner| self.snapshot_of(runner.state()));
+            let origin = Some(&*ctx.runner).map(|runner| self.snapshot_of(runner.state()));
             if let Some(origin) = origin {
                 self.history = Journal::new();
                 self.history_origin = Some(origin);
                 self.source_history_len = None;
                 self.source_history_attached = false;
-                self.emit_host_event(GameEvent::Fact(WorldFact {
-                    id: "overmap-source-time-receipt".to_owned(),
-                    kind: "history".to_owned(),
-                    text: "The survey was filed after the route was drawn.".to_owned(),
-                    tags: vec!["receipt".to_owned()],
-                }));
-                if let Some(runner) = self.runner.as_mut() {
+                self.emit_host_event(
+                    ctx,
+                    GameEvent::Fact(WorldFact {
+                        id: "overmap-source-time-receipt".to_owned(),
+                        kind: "history".to_owned(),
+                        text: "The survey was filed after the route was drawn.".to_owned(),
+                        tags: vec!["receipt".to_owned()],
+                    }),
+                );
+                {
+                    let runner = &mut *ctx.runner;
                     runner.update(|ui| {
                         ui.overmap_source_slider.value = 0.0;
                         ui.sync_overmap_source_time();
@@ -461,12 +524,126 @@ impl App {
             "[isometry] overmap selftest: seeded 5 places, party at the village knowing 3, \
              carrying a chart to the citadel; reading the map reveals keep + citadel"
         );
-        if let Some(window) = self.window.as_ref() {
-            window.request_redraw();
-        }
     }
 
-    pub(crate) fn maybe_convince_selftest(&mut self) {
+    /// `ISOMETRY_COMPENDIUM_SELFTEST=1`: open the compendium and type "gob"
+    /// into its filter, then leave the surface open for the capture.
+    ///
+    /// M3 turned that filter into a `TextInput` under `caret_text_field`, and
+    /// the harness receipt for it can only assert that the field has a non-zero
+    /// box. This is the half a windowless test cannot reach: whether the lane
+    /// actually *draws* — chrome, caret, the typed query, and an index narrowed
+    /// to what the query matched — in a frame that was really presented.
+    ///
+    /// The letters ride the shipping key path, so the field's own `TextInput`
+    /// is what edits the query; nothing here appends a character, and the
+    /// per-character `search_char` this replaced is gone rather than shimmed.
+    pub(crate) fn maybe_compendium_selftest(&mut self, ctx: &mut Ctx<'_>) {
+        if !self.compendium_selftest || self.compendium_fired {
+            return;
+        }
+        if !self
+            .started
+            .is_some_and(|t| t.elapsed() > Duration::from_secs(2))
+        {
+            return;
+        }
+        self.compendium_fired = true;
+
+        {
+            let runner = &mut *ctx.runner;
+            runner.update(|ui| ui.open_compendium());
+        }
+        // Opening the index requests the caret, so the filter is focused before
+        // a single letter is sent. Printed first: without it the row counts
+        // below would be a receipt for keys that went nowhere.
+        let seam = hooks::focused_text(&*ctx.runner).is_some();
+        let lane = caret_lane(&*ctx.runner);
+        let (before, _) = compendium_index(&*ctx.runner);
+
+        {
+            let runner = &mut *ctx.runner;
+            type_text(runner, "gob");
+        }
+
+        let (rows, first) = compendium_index(&*ctx.runner);
+        let query = ctx.runner.state().compendium_search.text().to_owned();
+        eprintln!(
+            "[isometry] compendium selftest: caret in {lane:?} (host seam sees it: {seam}) | \
+             typed {query:?} | index {before} -> {rows} rows | first row {first:?}"
+        );
+    }
+
+    /// `ISOMETRY_WHISPER_SELFTEST=1`: open the whisper composer with `w`, type
+    /// a draft into it, and leave it open — unsent, with the caret in it — for
+    /// the capture.
+    ///
+    /// The composer is the other M3 lane, and the same gap applies: the harness
+    /// proves the keys land in the draft, and only a headed frame can show that
+    /// the field is legible with the caret sitting at the end of what was
+    /// typed. Enter is deliberately never pressed: sending would close the lane
+    /// and the capture would be of an empty panel row.
+    pub(crate) fn maybe_whisper_selftest(&mut self, ctx: &mut Ctx<'_>) {
+        if !self.whisper_selftest || self.whisper_fired {
+            return;
+        }
+        if !self
+            .started
+            .is_some_and(|t| t.elapsed() > Duration::from_secs(2))
+        {
+            return;
+        }
+        self.whisper_fired = true;
+
+        const DRAFT: &str = "meet me at the gate";
+        {
+            let runner = &mut *ctx.runner;
+            // `w` is the verb that opens the lane, and it goes through the same
+            // intercept a real press does — so the receipt covers the open as
+            // well as the typing.
+            deliver_key(runner, &KeyPress::new(Key::Character("w".to_owned())));
+        }
+        let opened = ctx.runner.state().composing;
+        let seam = hooks::focused_text(&*ctx.runner).is_some();
+        let lane = caret_lane(&*ctx.runner);
+
+        {
+            let runner = &mut *ctx.runner;
+            type_text(runner, DRAFT);
+        }
+
+        // The composer sits near the foot of the side panel, so this is also the
+        // headed receipt for Z5's fit: the layout height is what decides whether
+        // it is on screen at all, and it is `surface / zoom` rather than the
+        // window's own height. `AppCtx` carries no laid-out geometry, so the
+        // painted bottom edge of the panel's last elements is measured in the
+        // harness instead (`host_zoom.rs`) at this same surface — the same
+        // layout, since layout runs in CSS pixels and the device scale is not
+        // in it.
+        let (logical_w, logical_h) = ctx.logical_size;
+        let zoom = ctx.ui_zoom;
+        let runner = &*ctx.runner;
+        let ui = runner.state();
+        eprintln!(
+            "[isometry] whisper selftest: layout {logical_w:.1}x{logical_h:.1} at zoom \
+             {zoom:.4} (device scale {:.2}, board scale {:.5}, pixel grid {}) | \
+             `w` opened the lane: {opened} | caret in {lane:?} \
+             (host seam sees it: {seam}) at byte {} of {} | draft {:?} | to {:?} | \
+             unsent (messages {}, outbox {}) | status: {}",
+            ui.pixel_grid.0,
+            ui.board_scale,
+            if ui.integer_pixel_rounding { "on" } else { "off" },
+            ui.whisper_draft.caret(),
+            ui.whisper_draft.text().len(),
+            ui.whisper_draft.text(),
+            ui.whisper_target,
+            ui.messages.len(),
+            ui.whisper_outbox.len(),
+            ui.status,
+        );
+    }
+
+    pub(crate) fn maybe_convince_selftest(&mut self, ctx: &mut Ctx<'_>) {
         if !self.convince_selftest || self.convince_fired {
             return;
         }
@@ -498,7 +675,8 @@ impl App {
         };
         let (g1, g2) = (goblin(4), goblin(4));
 
-        if let Some(runner) = self.runner.as_mut() {
+        {
+            let runner = &mut *ctx.runner;
             runner.update(|ui| {
                 // Knight 1 is player A's; make it the bard. Goblins 2 and 4 are
                 // the DM's furniture (owner None) standing in talking range.
@@ -547,21 +725,24 @@ impl App {
         }
 
         // First pitch: goblin 2 joins A (A goes 2 -> 3 tokens, at the cap).
-        if let Some(runner) = self.runner.as_mut() {
+        {
+            let runner = &mut *ctx.runner;
             runner.update(|ui| {
                 ui.action_intent = Some((TokenId(1), TokenId(2), "convince".to_owned()))
             });
         }
-        self.pump_sheets();
+        self.pump_sheets(ctx);
         // Second pitch: goblin 4 would make 4 > cap 3, so it fails to hold.
-        if let Some(runner) = self.runner.as_mut() {
+        {
+            let runner = &mut *ctx.runner;
             runner.update(|ui| {
                 ui.action_intent = Some((TokenId(1), TokenId(4), "convince".to_owned()))
             });
         }
-        self.pump_sheets();
+        self.pump_sheets(ctx);
 
-        if let Some(runner) = self.runner.as_ref() {
+        {
+            let runner = &*ctx.runner;
             let ui = runner.state();
             let owner = |id| ui.map.token(id).and_then(|t| t.owner.clone());
             let a_here = ui
@@ -583,12 +764,9 @@ impl App {
                 ui.status,
             );
         }
-        if let Some(window) = self.window.as_ref() {
-            window.request_redraw();
-        }
     }
 
-    pub(crate) fn maybe_combat_selftest(&mut self) {
+    pub(crate) fn maybe_combat_selftest(&mut self, ctx: &mut Ctx<'_>) {
         if !self.combat_selftest || (self.combat_swings == 0 && self.combat_emoted) {
             return;
         }
@@ -611,15 +789,13 @@ impl App {
         // primitive, with no resolution behind it and nothing to adjudicate.
         if self.combat_swings == 0 {
             self.combat_emoted = true;
-            if let Some(runner) = self.runner.as_mut() {
+            {
+                let runner = &mut *ctx.runner;
                 runner.update(|ui| ui.emote(TokenId(1), "cheer"));
                 eprintln!(
                     "[isometry] combat selftest: emote | beats = {:?}",
                     runner.state().beats
                 );
-            }
-            if let Some(window) = self.window.as_ref() {
-                window.request_redraw();
             }
             return;
         }
@@ -641,9 +817,7 @@ impl App {
             eprintln!("[isometry] combat selftest: no goblin in the bestiary");
             return;
         };
-        let Some(runner) = self.runner.as_mut() else {
-            return;
-        };
+        let runner = &mut *ctx.runner;
         runner.update(|ui| {
             if first {
                 // Stand the goblin within reach of the knight, and stat them
@@ -674,8 +848,9 @@ impl App {
             let action = if swings_left == 2 { "trip" } else { "attack" };
             ui.action_intent = Some((TokenId(1), TokenId(2), action.to_owned()));
         });
-        self.pump_sheets();
-        if let Some(runner) = self.runner.as_ref() {
+        self.pump_sheets(ctx);
+        {
+            let runner = &*ctx.runner;
             let ui = runner.state();
             eprintln!(
                 "[isometry] combat selftest: {} | goblin hp {:?} conds {:?} mobility {:?} | beats = {:?}",
@@ -685,9 +860,6 @@ impl App {
                 ui.map.effective_mobility(TokenId(2), (5, 6)),
                 ui.beats,
             );
-        }
-        if let Some(window) = self.window.as_ref() {
-            window.request_redraw();
         }
     }
 }

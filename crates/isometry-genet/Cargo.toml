@@ -5,7 +5,7 @@ edition.workspace = true
 license.workspace = true
 authors.workspace = true
 repository.workspace = true
-description = "Isometry's genet desktop host: winit window + netrender present over the isometry-views view layer. Bootstrap plan I1."
+description = "Isometry's desktop application over the shared Cambium desktop host: state, hooks, the net bridge, and the self-tests. The native host itself is genet's."
 
 [dependencies]
 isometry-core = { workspace = true }
@@ -16,17 +16,17 @@ isometry-system = { workspace = true }
 cleromancy = { workspace = true }
 tokio = { version = "1", features = ["rt-multi-thread", "sync", "macros", "time"] }
 cambium = { workspace = true }
-cambium-winit = { workspace = true }
+# The shared single-root Cambium desktop host (genet G1). It owns the winit
+# lifecycle, the surface, layout, paint, hit testing, input routing, IME and
+# the AccessKit sync that host.rs / render.rs / input.rs used to assemble — so
+# the direct deps that assembly needed (genet-layout, genet-winit-host,
+# cambium-winit, netrender, paint_list_api, paint_list_render, wgpu, winit) are
+# gone from this manifest. They still arrive transitively; reaching around the
+# host to name them again would put the duplication straight back.
+cambium-genet-winit-host = { workspace = true }
 sprigging = { workspace = true }
 layout-dom-api = { workspace = true }
 genet-scripted-dom = { workspace = true }
-genet-layout = { workspace = true }
-genet-winit-host = { workspace = true }
-netrender = { workspace = true }
-paint_list_api = { workspace = true }
-paint_list_render = { workspace = true }
-wgpu = { workspace = true }
-winit = { workspace = true }
 serde_json = { workspace = true }
 serde = { workspace = true }
 muniment = { workspace = true, features = ["redb"] }
@@ -35,3 +35,10 @@ pollster = "0.4"
 # ISOMETRY_CAPTURE_DIR self-capture (headed-verify receipts without
 # screen grabs, which lose to overlapping windows).
 png = "0.17"
+
+[dev-dependencies]
+# Host-routing receipts run through `Harness`, the windowless twin of the
+# shipping host: a click, a right-click, a wheel notch and a key press take the
+# same hit test, capture and dispatch path the real window takes. `genet-probe`
+# supplies the semantic selectors those tests target controls by.
+genet-probe = { workspace = true }

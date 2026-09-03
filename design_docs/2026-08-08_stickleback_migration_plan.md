@@ -48,6 +48,27 @@ dispositions and the code matches them.
 - Pack distribution over Stickleback (campaign-packs residue) waits for
   K0-K1; it does not drive them.
 
+## Findings
+
+- **2026-09-03, from the host migration's p2panda fix, load-bearing for
+  K0.** In the owned fork at `mere-p2panda-net-0.7.2`, signature
+  verification happens once, in `AnyHeader::decode`; `Header::verify` is
+  test-only and `validate_operation`'s check is compile-time true in a
+  normal build. An `Operation` that exists was either decoded (verified)
+  or built locally by `Header::builder` (signed). The in-memory
+  `header.extensions` is a decoded view: mutating it changes neither the
+  signed bytes nor `header.hash()`, so a test that tampers an extension
+  field asserts a no-op. Isometry is safe today because network
+  operations reach `CampaignSpace::insert` through the decoded
+  subscription; K0 must not carry that assumption implicitly. The net
+  crate is now the published `mere-p2panda-net =0.7.2` and every consumer
+  must repeat mere-transport's exact dep line and feature set; keep the
+  fork tag in lockstep with mere's rather than a branch.
+  `CampaignSpace::to_operation` is already shaped like gemot's
+  `to_operation_seed`, so the `JoinedSpace` rebase is a lift; the one
+  isometry-only shape is the three-field `CampaignExt` with its `parents`
+  DAG, which gemot has no analogue for.
+
 ## Progress
 
 - **2026-08-08:** founded from the audit; shared-authority plan stamped.

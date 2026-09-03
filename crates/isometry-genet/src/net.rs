@@ -91,10 +91,14 @@ pub struct NetBridge {
 }
 
 impl NetBridge {
-    /// Spawn the session actor. The app already polls this bridge from the
-    /// winit loop, so its wake merely requests the next normal UI turn.
-    pub fn spawn(role: Role) -> Self {
-        let wake: Wake = std::sync::Arc::new(|| {});
+    /// Spawn the session actor.
+    ///
+    /// `wake` is the host's own wake handle, in the callback shape Armillary
+    /// takes. The bridge used to be polled from an idle tick with a no-op wake;
+    /// now the actor schedules one drain turn (`after_wake`) and one redraw
+    /// when it actually has something, so a still table costs nothing and a
+    /// peer's move arrives without waiting out a poll interval.
+    pub fn spawn(role: Role, wake: Wake) -> Self {
         let (actor, updates) =
             armillary::spawn_named("isometry-session", wake, move |commands, out| {
                 let rt = tokio::runtime::Builder::new_multi_thread()
@@ -492,11 +496,16 @@ mod tests {
 
     #[test]
     fn host_bridge_delivers_actor_state_to_the_kernel() {
-        let mut bridge = NetBridge::spawn(Role::Host {
-            state: snapshot(),
-            campaign: CampaignStore::new(),
-            history: Journal::new(),
-        });
+        let mut bridge = NetBridge::spawn(
+            Role::Host {
+                state: snapshot(),
+                campaign: CampaignStore::new(),
+                history: Journal::new(),
+            },
+            // The windowless test drives `poll` itself, so the wake has nowhere
+            // to go: the event loop it would schedule a turn on does not exist.
+            std::sync::Arc::new(|| {}),
+        );
 
         for _ in 0..100 {
             bridge.poll();
@@ -525,11 +534,16 @@ mod tests {
 
     #[test]
     fn rejected_campaign_is_correlated_without_failing_the_actor() {
-        let mut bridge = NetBridge::spawn(Role::Host {
-            state: snapshot(),
-            campaign: CampaignStore::new(),
-            history: Journal::new(),
-        });
+        let mut bridge = NetBridge::spawn(
+            Role::Host {
+                state: snapshot(),
+                campaign: CampaignStore::new(),
+                history: Journal::new(),
+            },
+            // The windowless test drives `poll` itself, so the wake has nowhere
+            // to go: the event loop it would schedule a turn on does not exist.
+            std::sync::Arc::new(|| {}),
+        );
         for _ in 0..100 {
             bridge.poll();
             if bridge.ticket().is_some() {

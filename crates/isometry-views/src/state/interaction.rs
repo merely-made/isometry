@@ -1,33 +1,156 @@
-//! Direct board manipulation: cursor hits, drags, the context menu, undo.
+//! Direct board manipulation: pointer gestures, the context menu, undo.
 //!
-//! The mouse-facing half of the state. Coordinates arrive in logical px and
-//! leave as `TileCoord` through the iso math, so a view never does the
-//! projection itself.
+//! The mouse-facing half of the state. Coordinates arrive in the **board
+//! pane's own space** — the pane's top-left is `(0, 0)` — and leave as
+//! `TileCoord` through the iso math, so a view never does the projection
+//! itself and no caller has to know where the side panel ends.
 //!
-//! Split out of `state.rs` on 2026-07-24; behavior unchanged.
+//! That coordinate space is the shared host's, not a convention this file
+//! invented: a Cambium `on_pointer` / `on_wheel` handler is handed `local`,
+//! the pointer measured against the handling element's own painted box, and
+//! the handlers sit on the `.pane` container. Pane-local is also what
+//! [`UiState::open_context_menu`] has always taken, because the menu is drawn
+//! inside that same container.
+//!
+//! Split out of `state.rs` on 2026-07-24; the gestures moved in from the
+//! desktop host on 2026-09-02 when it became the shared one.
 
 use super::*;
 
 impl UiState {
-    /// The board tile under a logical cursor position, from the inverse
+    /// The board tile under a pane-local pointer position, from the inverse
     /// projection (flat-ground picking; raised top faces resolve to the
     /// tile behind, a known limitation until elevation-aware picking).
-    pub fn tile_at_cursor(&self, cursor: (f32, f32)) -> Option<TileCoord> {
-        let x = cursor.0 - PANEL_W - self.camera.0;
-        let y = cursor.1 - self.camera.1;
+    pub fn tile_at_pane(&self, pane: (f32, f32)) -> Option<TileCoord> {
+        let x = pane.0 - self.camera.0;
+        let y = pane.1 - self.camera.1;
         let at = self.geo.screen_to_tile((x, y));
         self.map.ground.in_bounds(at.0, at.1).then_some(at)
     }
 
-    /// The token a left-press at `cursor` would start dragging: a token
-    /// under the cursor while in Select mode (free-move; Play movement stays
+    /// The token a primary press at `pane` would start dragging: a token
+    /// under the pointer while in Select mode (free-move; Play movement stays
     /// the gated click-a-reach-tile path). `None` otherwise.
-    pub fn token_drag_candidate(&self, cursor: (f32, f32)) -> Option<TokenId> {
+    pub fn token_drag_candidate(&self, pane: (f32, f32)) -> Option<TokenId> {
         if self.mode != EditMode::Select {
             return None;
         }
-        let tile = self.tile_at_cursor(cursor)?;
+        let tile = self.tile_at_pane(pane)?;
         self.map.tokens.iter().find(|t| t.at == tile).map(|t| t.id)
+    }
+
+    /// A primary press in the board pane.
+    ///
+    /// The tile or token element under the pointer has already had its own
+    /// click dispatched by the time this runs — the host routes the click
+    /// first, then the pointer-down that begins the drag — so this is only the
+    /// gesture's bookkeeping: dismiss an open menu, note what was grabbed, and
+    /// mark the tile the press itself already applied to.
+    pub fn board_press(&mut self, pane: (f32, f32)) {
+        // A press off the menu dismisses it. Since 2026-09-03 the menu's
+        // `overlay_surface` takes that press first — its dismissal layer covers
+        // the whole window, which is the only way a press on the *side panel*
+        // can reach it — so this rarely runs. It stays because it costs a
+        // comparison and it is still the right answer if a press ever reaches
+        // the pane with a menu open.
+        if self.context_menu.is_some() {
+            self.close_context_menu();
+        }
+        self.drag_token = self.token_drag_candidate(pane);
+        self.drag_tile = self.tile_at_pane(pane);
+    }
+
+    /// A pointer move while the primary button is held on the board.
+    ///
+    /// Drag painting: in a paint-capable mode, entering a new tile applies the
+    /// brush there. One application per tile crossing, not one per pixel —
+    /// hence [`drag_tile`](Self::drag_tile), which the press already seeded
+    /// with the tile its own click applied to.
+    ///
+    /// The side panel cannot be drag-painted, by construction rather than by a
+    /// coordinate test: this handler hangs off the board pane, so a drag that
+    /// wanders onto the panel is still routed here (the press captured the
+    /// pointer) and simply reports a tile off the map, if any.
+    pub fn board_drag(&mut self, pane: (f32, f32)) {
+        if !self.mode.drags() {
+            return;
+        }
+        let Some(at) = self.tile_at_pane(pane) else {
+            return;
+        };
+        if self.drag_tile == Some(at) {
+            return;
+        }
+        self.drag_tile = Some(at);
+        self.click_tile(at);
+    }
+
+    /// The primary button came up on the board: finish a token drag.
+    pub fn board_release(&mut self, pane: (f32, f32)) {
+        self.drag_tile = None;
+        let Some(id) = self.drag_token.take() else {
+            return;
+        };
+        let Some(from) = self.map.token(id).map(|t| t.at) else {
+            return;
+        };
+        let Some(to) = self.tile_at_pane(pane) else {
+            return;
+        };
+        if to != from {
+            self.drag_move_token(id, to);
+        }
+    }
+
+    /// A secondary press in the board pane: a token under the pointer opens
+    /// its context menu, anchored where the press landed.
+    ///
+    /// The host routes one `Down` marked
+    /// [`PointerButton::Secondary`](cambium::PointerButton::Secondary) and
+    /// nothing after it — a right press captures nothing and dispatches no
+    /// click — so the press is the whole gesture.
+    pub fn board_context_menu(&mut self, pane: (f32, f32)) {
+        let Some(tile) = self.tile_at_pane(pane) else {
+            return;
+        };
+        let Some(id) = self.map.tokens.iter().find(|t| t.at == tile).map(|t| t.id) else {
+            return;
+        };
+        self.open_context_menu(id, pane);
+    }
+
+    /// A wheel notch over the board pane snap-pans the board (wheel = pan,
+    /// the tactics-canvas convention). Over the side panel it never arrives:
+    /// the handler is on the pane, so the panel keeps the host's own scrolling
+    /// default.
+    ///
+    /// `dx`/`dy` are logical pixels in the direction the content moves, which
+    /// is what the host hands a wheel handler; a notch is
+    /// [`WHEEL_NOTCH_PX`](crate::state::WHEEL_NOTCH_PX) of them.
+    pub fn board_wheel(&mut self, dx: f32, dy: f32) {
+        let per_px = WHEEL_BOARD_TILES / WHEEL_NOTCH_PX;
+        self.pan_tiles(dx * per_px, dy * per_px);
+    }
+
+    /// The pointer entered the element standing on `at` (or left the board,
+    /// for `None`): move the play-mode path preview and the measure template.
+    ///
+    /// The host routes `on_hover` Enter and Leave as the *hit element*
+    /// changes, and deliberately routes no Move, so the granularity comes from
+    /// the tree: every board element that stands on a tile carries this, and a
+    /// crossing is one Leave plus one Enter. The gate is the same one the
+    /// desktop host used to apply before paying for a state update — Play mode
+    /// with a reach highlight showing, or Measure mode with an anchor set —
+    /// so an ordinary hover still rebuilds nothing.
+    pub fn hover_tile_enter(&mut self, at: Option<TileCoord>) {
+        if self.hover_tile == at {
+            return;
+        }
+        let play = self.mode == EditMode::Play && !self.reach.is_empty();
+        let measure = self.mode == EditMode::Measure && self.measure_anchor.is_some();
+        if play || measure {
+            self.hover_tile = at;
+        }
     }
 
     /// Free-move token `id` to `to` (the Select-mode drag release): emits a
@@ -83,21 +206,6 @@ impl UiState {
             self.reach.clear();
         }
         self.context_menu = None;
-    }
-
-    /// Whether the hovered tile changed in a way the board renders (the
-    /// path preview): the host calls this read-only before paying for a
-    /// state update.
-    pub fn hover_needs_update(&self, cursor: (f32, f32)) -> Option<Option<TileCoord>> {
-        let t = self.tile_at_cursor(cursor);
-        if t == self.hover_tile {
-            return None;
-        }
-        // Play mode redraws for the path preview; Measure mode for the
-        // template + distance readout once an anchor is set.
-        let play = self.mode == EditMode::Play && !self.reach.is_empty();
-        let measure = self.mode == EditMode::Measure && self.measure_anchor.is_some();
-        (play || measure).then_some(t)
     }
 
     /// Pan by whole tiles: one step is half a tile footprint on each

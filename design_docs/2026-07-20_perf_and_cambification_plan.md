@@ -390,7 +390,7 @@ Already adopted: `data_grid` (compendium), `summary_body` (downtime),
 | ~~`widgets::tab_strip` (compendium nav)~~ | `tabs::tab_strip` | **Adopted 2026-07-25.** The name collision is gone with the hand-roll. Brings roving-tabindex arrow keys and the ARIA tabs roles. |
 | ~~Mode row, pace row, stance row~~ | `segmented_control` | **Adopted 2026-07-24.** Three consumers at once. |
 | ~~Context menu (`board.rs::context_menu_overlay`)~~ | `command_menu` | **Adopted 2026-07-25.** Brings `role="menu"`, disabled-with-reason rows, submenus, and Escape. *Not* outside-click: the host branch stays, see Findings. |
-| `search_field` (display-only) + the `>` command line + the whisper composer (all host-routed key capture) | `caret_text_field` / `styled_field` | **Partly adopted 2026-07-27:** the command line is on the shared field and host-routing seam. Search and whisper remain local follow-through; the upstream blocker is gone. |
+| ~~`search_field` (display-only) + the `>` command line + the whisper composer (all host-routed key capture)~~ | `caret_text_field` / `styled_field` | **Adopted:** the command line 2026-07-27, the whisper composer and the compendium search 2026-09-03 (host-migration M3). All three are `TextInput`s on `caret_text_field`; `widgets::search_field` is deleted, and `focused_text` reports whichever of the three holds the caret. |
 | `record_card` + `stat_row`/`stat_list` | `summary_body` (title/eyebrow/facts) or `detail_panel` (`DetailRow`/`DetailSection`) | The facts vec is exactly the stat-list shape; one of the two components covers each consumer. |
 | Turn list / roll log / messages panes | `sectioned_list` | Moderate value; brings selection + row kinds. |
 | `overlay_panel` | keep the layout, adopt `overlay_surface` semantics | The catalog surface owns Escape/outside-click/roles; isometry surfaces currently hand-roll or lack dismissal. |
@@ -471,9 +471,14 @@ module's tests are what someone is actually reading.
 - [x] Obviation lane, `tab_strip` and `command_menu` (2026-07-25). The menu also
       settled the one-shot-action case the bridge ruling did not cover, and
       gained disabled-with-reason rows the hand-roll could not express.
-- [ ] Obviation lane, `caret_text_field`: command line adopted 2026-07-27 with
+- [x] Obviation lane, `caret_text_field`: command line adopted 2026-07-27 with
       focus, shared key/IME dispatch, undo, and retained-layout candidate
-      placement. Search and whisper remain; they are no longer blocked upstream.
+      placement. **Closed 2026-09-03** by the genet host migration's M3: the
+      whisper composer and the compendium search are `TextInput`s on the same
+      field, `widgets::search_field` is gone rather than shimmed, and the three
+      per-character capture branches in `key_intercept` collapsed into one that
+      asks the caret which lane is typing. Escape and Enter stay app commands
+      per that plan's §3.
 - [x] Split `isometry-net/src/session.rs`, `campaign_space.rs`, and
       `isometry-campaign/src/world.rs` (2026-07-24). Every non-test source file
       in the repo is now under the 600-LOC ceiling.

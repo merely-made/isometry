@@ -13,9 +13,19 @@ use isometry_net::{apply_game, GameEvent, GameSnapshot, ROLL_LOG_CAP};
 
 use cambium::{CommandState, SelectionItem, SelectionState, Slider, TabStrip, TextInput};
 
-/// Fixed side-panel width in logical px (CSS `.side` width plus its
-/// padding); the host uses it to keep drag painting off the panel.
+/// Fixed side-panel width in logical px (CSS `.side` width plus its padding).
+/// Board gestures no longer need it — they hang off the pane, so the panel is
+/// excluded by construction — but the host still sizes the board's viewport
+/// with it.
 pub const PANEL_W: f32 = 228.0;
+
+/// Logical px one wheel notch is worth. The shared host normalizes a wheel
+/// into logical pixels in the direction the content moves, at this many per
+/// line step, so a notch means the same thing on a mouse and a trackpad.
+pub const WHEEL_NOTCH_PX: f32 = 48.0;
+
+/// Board pan in diagonal tile steps per wheel notch (over the board pane).
+pub const WHEEL_BOARD_TILES: f32 = 2.0;
 
 /// Default move budget until system plugins supply speed stats (I6).
 /// Fallback move budget for a sheetless token. The real number is
@@ -26,6 +36,15 @@ const MOVE_BUDGET: u32 = 5;
 /// Default token sight radius until system plugins supply per-token
 /// senses. Configurable via [`UiState::sight_radius`].
 const SIGHT_RADIUS: u32 = 6;
+
+/// The board's finest geometric unit in CSS pixels: the elevation step, which
+/// is half a tile's height and a quarter of its width.
+///
+/// Rounding *this* onto a whole device pixel lands the tile height (twice it)
+/// and the tile width (four times it) on whole device pixels as well, so an
+/// elevation column stacks without a seam. Rounding the tile width instead
+/// would leave the height on a half pixel whenever the width came out odd.
+pub const BOARD_UNIT: f32 = 8.0;
 
 /// How many whispers [`UiState::messages`] keeps. Matches `ROLL_LOG_CAP`'s
 /// magnitude and stays far above the five the pane shows, so scrollback is
@@ -89,7 +108,24 @@ pub use rows::*;
 /// (camera, selection, editor).
 pub struct UiState {
     pub map: MapDocument,
+    /// The diamond projection the board is drawn and picked in. It carries
+    /// [`Self::board_scale`], so emission and hit testing are one geometry and
+    /// cannot disagree; write it through [`UiState::set_pixel_grid`].
     pub geo: IsoGeometry,
+    /// Board setting: lay the board out at a size that lands on whole device
+    /// pixels, so a fractional interface zoom does not put a pixel-art tile
+    /// edge halfway across a physical pixel. On by default; off is allowed,
+    /// because there are tables where the shimmer is no big deal.
+    pub integer_pixel_rounding: bool,
+    /// The board's own scale on top of the interface zoom, from
+    /// [`Self::pixel_grid`]. `1.0` is "the raw zoom applies", which is what the
+    /// setting off always gives and what an ordinary device scale at zoom 1
+    /// gives anyway.
+    pub board_scale: f32,
+    /// The `(device scale, interface zoom)` the board is being drawn under.
+    /// The host writes it once per change; the view never asks a window
+    /// anything, which is the boundary the migration drew.
+    pub pixel_grid: (f32, f32),
     /// Board-origin offset within the pane, logical px. Snap-scrolled by
     /// whole tile steps (the tactics references scroll in steps; the
     /// smooth-pan lane waits on the netrender camera-offset composite).
@@ -143,16 +179,19 @@ pub struct UiState {
     /// The message log (whispers sent and received), display strings. Bounded
     /// by [`MESSAGES_CAP`]; push through [`UiState::push_message`].
     pub messages: Vec<String>,
-    /// The `>` command line. `command_active` captures keystrokes into
-    /// `command_draft` (the whisper-composer pattern); `command_results` holds
-    /// the last `>find` list, shown until the next command.
+    /// The `>` command line. `command_active` opens the lane; the field owns
+    /// `command_draft`; `command_results` holds the last `>find` list, shown
+    /// until the next command.
     pub command_active: bool,
     pub command_draft: TextInput,
     pub command_results: Vec<String>,
-    /// Whether a whisper is being typed (keys route to the draft).
+    /// Whether a whisper is being composed (the lane's field is on screen and
+    /// holds the caret).
     pub composing: bool,
-    /// The whisper being typed.
-    pub whisper_draft: String,
+    /// The whisper being typed. A `TextInput` like the other two lanes, so the
+    /// field owns text, caret, selection, undo and IME rather than the host
+    /// rebuilding a string one key at a time.
+    pub whisper_draft: TextInput,
     /// Who a composed whisper goes to (a player name); the DM cycles it.
     pub whisper_target: Option<String>,
     /// Whispers to send: `(target, text)`, drained by the host bridge.
@@ -331,6 +370,14 @@ pub struct UiState {
     pub reach: HashMap<TileCoord, TileCoord>,
     /// Tile under the cursor (path preview follows it in Play mode).
     pub hover_tile: Option<TileCoord>,
+    /// A token grabbed by a Select-mode press on the board; the release moves
+    /// it to the tile under the pointer. Transient gesture state — it lives
+    /// here rather than on the host because the board's own handlers own the
+    /// gesture now, and a `<div>` cannot hold a field.
+    pub drag_token: Option<TokenId>,
+    /// The tile a held paint-drag last applied to, so one tile gets one
+    /// application per crossing rather than one per pointer move.
+    pub drag_tile: Option<TileCoord>,
     /// Right-click context menu: the token it targets and the pane-space
     /// position (logical px) to anchor it at. `None` when closed.
     pub context_menu: Option<(TokenId, (f32, f32))>,
@@ -351,8 +398,9 @@ pub struct UiState {
     pub compendium_sort: (usize, bool),
     /// The compendium's open entry page (its key), or `None` for the index.
     pub compendium_selected: Option<String>,
-    /// Current filter text for the compendium index (name substring).
-    pub compendium_search: String,
+    /// Current filter for the compendium index (name substring). The third
+    /// text lane: the field owns it, and the index reads `text()`.
+    pub compendium_search: TextInput,
     /// Which compendium namespace is showing.
     pub compendium_tab: CompendiumTab,
     /// Host-supplied compendium content for the Spells and Items tabs.
@@ -365,6 +413,9 @@ impl UiState {
         Self {
             map,
             geo: IsoGeometry::default(),
+            integer_pixel_rounding: true,
+            board_scale: 1.0,
+            pixel_grid: (1.0, 1.0),
             camera: (0.0, 0.0),
             viewport: (0.0, 0.0),
             selected: None,
@@ -380,6 +431,8 @@ impl UiState {
             selected_token: None,
             reach: HashMap::new(),
             hover_tile: None,
+            drag_token: None,
+            drag_tile: None,
             context_menu: None,
             context_menu_state: CommandState::default()
                 .with_id("token-menu")
@@ -402,7 +455,7 @@ impl UiState {
             command_draft: TextInput::default(),
             command_results: Vec::new(),
             composing: false,
-            whisper_draft: String::new(),
+            whisper_draft: TextInput::default(),
             whisper_target: None,
             whisper_outbox: Vec::new(),
             connected_players: Vec::new(),
@@ -476,12 +529,70 @@ impl UiState {
             compendium_scroll: 0.0,
             compendium_sort: (0, false),
             compendium_selected: None,
-            compendium_search: String::new(),
+            compendium_search: TextInput::default(),
             compendium_tab: CompendiumTab::Monsters,
             spells: Vec::new(),
             items: Vec::new(),
         }
     }
+}
+
+impl UiState {
+    /// State the device scale and interface zoom the board is being drawn
+    /// under, and recompute the board's own scale from them.
+    ///
+    /// The host calls this, from a hook, on a zoom change and at boot: the
+    /// window's scale factor and the effective zoom are the host's to know, and
+    /// a view that asked for either would be reaching back across the boundary
+    /// the migration drew.
+    pub fn set_pixel_grid(&mut self, grid: (f32, f32)) {
+        self.pixel_grid = grid;
+        self.apply_pixel_grid();
+    }
+
+    /// Flip the integer-rounding setting and lay the board out under it.
+    pub fn toggle_integer_pixel_rounding(&mut self) {
+        self.integer_pixel_rounding = !self.integer_pixel_rounding;
+        self.apply_pixel_grid();
+        self.status = format!(
+            "pixel grid: {}",
+            if self.integer_pixel_rounding {
+                "on"
+            } else {
+                "off"
+            }
+        );
+    }
+
+    /// Recompute [`Self::board_scale`] and the geometry it drives.
+    fn apply_pixel_grid(&mut self) {
+        self.board_scale = if self.integer_pixel_rounding {
+            board_scale_for(self.pixel_grid)
+        } else {
+            1.0
+        };
+        let base = IsoGeometry::default();
+        self.geo = IsoGeometry {
+            tile_w: base.tile_w * self.board_scale,
+            tile_h: base.tile_h * self.board_scale,
+            elev_step: base.elev_step * self.board_scale,
+        };
+    }
+}
+
+/// The board scale that lands [`BOARD_UNIT`] on a whole number of device
+/// pixels under a `(device scale, interface zoom)` pair.
+///
+/// `device = BOARD_UNIT * scale * zoom`, rounded to the nearest whole pixel
+/// (never below one), divided back. A pair whose product is already whole —
+/// every ordinary device scale at zoom 1 — gives exactly `1.0`, so the setting
+/// costs nothing at all until a fractional zoom is in play.
+fn board_scale_for((scale, zoom): (f32, f32)) -> f32 {
+    let device = BOARD_UNIT * scale * zoom;
+    if !device.is_finite() || device <= 0.0 {
+        return 1.0;
+    }
+    device.round().max(1.0) / device
 }
 
 /// Facing after a step from `from` to `to` (grid-axis neighbors; equal

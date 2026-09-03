@@ -11,44 +11,43 @@ use super::*;
 impl App {
     /// Consume one-shot state requests (save/load) and repaint: the
     /// tail of every dispatch.
-    pub(crate) fn after_dispatch(&mut self) {
-        if let Some(window) = self.window.as_ref() {
-            window.set_ime_allowed(
-                self.runner
-                    .as_ref()
-                    .is_some_and(|runner| command_field_node(runner).is_some()),
+    pub(crate) fn after_dispatch(&mut self, ctx: &mut Ctx<'_>) {
+        // No `set_ime_allowed` here any more: the host asks `focused_text`
+        // itself at the tail of every dispatch, which is the same question this
+        // used to answer by hand.
+        if self.profile {
+            let ui = ctx.runner.state();
+            eprintln!(
+                "[isometry] post-dispatch mode={:?} selected={:?} status={:?}",
+                ui.mode, ui.selected, ui.status
             );
         }
-        if let Some(runner) = self.runner.as_mut() {
-            runner.update(|ui| ui.sync_overmap_source_time());
-        }
+        ctx.runner.update(|ui| ui.sync_overmap_source_time());
         // Cheap flags first: this tail runs after every dispatch, and the save
         // path below starts by cloning the journal. An ordinary click asks for
         // neither and must not pay for either.
-        let wants_save_or_load = self
-            .runner
-            .as_ref()
-            .is_some_and(|r| r.state().save_requested || r.state().load_requested);
+        let wants_save_or_load = {
+            let ui = ctx.runner.state();
+            ui.save_requested || ui.load_requested
+        };
         if !wants_save_or_load {
-            if let Some(window) = self.window.as_ref() {
-                window.request_redraw();
-            }
-            self.pump_selection_rows();
-            self.pump_sheets();
-            self.pump_generators();
-            self.pump_storylets();
-            self.pump_faction_turn();
-            self.pump_overmap();
-            self.pump_overmap_orders();
-            self.pump_overmap_read();
-            self.pump_net();
-            self.refresh_source_history();
+            self.pump_selection_rows(ctx);
+            self.pump_sheets(ctx);
+            self.pump_generators(ctx);
+            self.pump_storylets(ctx);
+            self.pump_faction_turn(ctx);
+            self.pump_overmap(ctx);
+            self.pump_overmap_orders(ctx);
+            self.pump_overmap_read(ctx);
+            self.pump_net(ctx);
+            self.refresh_source_history(ctx);
             return;
         }
         let mut save: Option<(std::path::PathBuf, String, String, GameSnapshot)> = None;
         let mut load: Option<(std::path::PathBuf, String)> = None;
         let journal = self.journal.clone();
-        if let Some(runner) = self.runner.as_mut() {
+        {
+            let runner = &mut *ctx.runner;
             runner.update(|ui| {
                 if std::mem::take(&mut ui.save_requested) {
                     match serde_json::to_string_pretty(&ui.map) {
@@ -107,7 +106,8 @@ impl App {
                 CampaignCheckpoint::new(public, campaign, history, self.history_origin.clone());
             let campaign_result = CampaignRepository::open(campaign_path(&name))
                 .and_then(|repository| repository.save_checkpoint(&checkpoint));
-            if let Some(runner) = self.runner.as_mut() {
+            {
+                let runner = &mut *ctx.runner;
                 runner.update(|ui| {
                     ui.status = match (map_result.as_ref(), campaign_result.as_ref()) {
                         (Ok(()), Ok(())) => format!("saved {}", path.display()),
@@ -132,16 +132,14 @@ impl App {
                 self.history_origin = checkpoint.history_origin;
                 self.source_history_len = None;
                 self.source_history_attached = false;
-                if let Some(runner) = self.runner.as_mut() {
+                {
+                    let runner = &mut *ctx.runner;
                     runner.update(|ui| {
                         ui.apply_snapshot(checkpoint.public);
                         ui.status = format!("loaded checkpoint {}", path.display());
                     });
                 }
-                if let Some(window) = self.window.as_ref() {
-                    window.request_redraw();
-                }
-                self.refresh_source_history();
+                self.refresh_source_history(ctx);
                 return;
             }
             let checkpoint_error = checkpoint.err();
@@ -159,7 +157,8 @@ impl App {
                     if let Ok(campaign) = campaign.as_ref() {
                         self.campaign = campaign.clone();
                     }
-                    if let Some(runner) = self.runner.as_mut() {
+                    {
+                        let runner = &mut *ctx.runner;
                         runner.update(|ui| {
                             ui.replace_map(map);
                             ui.status = match (campaign, checkpoint_error) {
@@ -175,42 +174,40 @@ impl App {
                     }
                 }
                 Err(error) => {
-                    if let Some(runner) = self.runner.as_mut() {
-                        runner.update(|ui| ui.status = format!("load failed: {error}"));
-                    }
+                    let runner = &mut *ctx.runner;
+                    runner.update(|ui| ui.status = format!("load failed: {error}"));
                 }
             }
         }
-        if let Some(window) = self.window.as_ref() {
-            window.request_redraw();
-        }
-        self.pump_selection_rows();
-        self.pump_sheets();
-        self.pump_generators();
-        self.pump_storylets();
-        self.pump_faction_turn();
-        self.pump_overmap();
-        self.pump_overmap_orders();
-        self.pump_overmap_read();
-        self.pump_net();
-        self.refresh_source_history();
+        self.pump_selection_rows(ctx);
+        self.pump_sheets(ctx);
+        self.pump_generators(ctx);
+        self.pump_storylets(ctx);
+        self.pump_faction_turn(ctx);
+        self.pump_overmap(ctx);
+        self.pump_overmap_orders(ctx);
+        self.pump_overmap_read(ctx);
+        self.pump_net(ctx);
+        self.refresh_source_history(ctx);
     }
 
     /// In networked mode: ship the UI's queued game events to the
     /// session, and pull the latest replicated snapshot into the view
     /// when the session advanced. No-op when solo.
-    pub(crate) fn pump_net(&mut self) {
+    pub(crate) fn pump_net(&mut self, ctx: &mut Ctx<'_>) {
         if self.net.is_none() {
             return;
         }
         // Drain the outbox and submit each event.
         let mut events = Vec::new();
-        if let Some(runner) = self.runner.as_mut() {
+        {
+            let runner = &mut *ctx.runner;
             runner.update(|ui| events = std::mem::take(&mut ui.net_outbox));
         }
         // Drain queued whispers (host-side) too.
         let mut whispers = Vec::new();
-        if let Some(runner) = self.runner.as_mut() {
+        {
+            let runner = &mut *ctx.runner;
             runner.update(|ui| whispers = std::mem::take(&mut ui.whisper_outbox));
         }
         let mut received = Vec::new();
@@ -242,7 +239,8 @@ impl App {
             || !campaign_outcomes.is_empty()
             || failure.is_some()
         {
-            if let Some(runner) = self.runner.as_mut() {
+            {
+                let runner = &mut *ctx.runner;
                 runner.update(|ui| {
                     for (from, text) in &received {
                         ui.receive_whisper(from, text);
@@ -262,11 +260,6 @@ impl App {
                         ui.status = error.clone();
                     }
                 });
-                if !received.is_empty() || !campaign_outcomes.is_empty() || failure.is_some() {
-                    if let Some(window) = self.window.as_ref() {
-                        window.request_redraw();
-                    }
-                }
             }
         }
         // Mirror in a new snapshot when the session version bumped.
@@ -274,7 +267,8 @@ impl App {
         if version != self.last_net_version {
             self.last_net_version = version;
             let snap = self.net.as_ref().and_then(|n| n.latest());
-            if let (Some(snap), Some(runner)) = (snap, self.runner.as_mut()) {
+            if let Some(snap) = snap {
+                let runner = &mut *ctx.runner;
                 self.journal = snap.journal.clone();
                 if let Some(history) = self.net.as_ref().and_then(NetBridge::history) {
                     self.history = history;
@@ -337,9 +331,6 @@ impl App {
                         });
                     }
                     self.travel_emitted = on_doors;
-                }
-                if let Some(window) = self.window.as_ref() {
-                    window.request_redraw();
                 }
             }
         }

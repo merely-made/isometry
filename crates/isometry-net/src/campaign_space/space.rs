@@ -36,28 +36,32 @@ pub fn to_operation(
 ) -> Operation<CampaignExt> {
     let signing_key = SigningKey::from_bytes(&keypair.to_seed());
     let body_bytes = encode_cbor(event).expect("campaign events always CBOR-encode");
-    let body = Body::new(&body_bytes);
-    let mut header = Header {
-        version: 1,
-        verifying_key: signing_key.verifying_key(),
-        signature: None,
-        payload_size: body.size(),
-        payload_hash: Some(body.hash()),
-        // p2panda 0.7 dropped Header.timestamp. Isometry orders a branch by
-        // seq_num + backlink + parents (a DAG), never the header clock, and the
-        // event body still carries at_ms(), so nothing here is lost. Fresh-data
-        // prototype: no stored operations to keep hash-stable across the bump.
-        seq_num,
-        backlink: backlink.map(Hash::from),
-        extensions: CampaignExt {
-            campaign_id,
-            branch_id,
-            parents,
-        },
-    };
-    header.sign(&signing_key);
+    let body = Body::from_bytes(&body_bytes);
+    // p2panda 0.7 dropped Header.timestamp. Isometry orders a branch by
+    // seq_num + backlink + parents (a DAG), never the header clock, and the
+    // event body still carries at_ms(), so nothing here is lost. Fresh-data
+    // prototype: no stored operations to keep hash-stable across the bump.
+    //
+    // 0.7.1 then made the header's CBOR cache, size and digest private and
+    // folded signing into the builder, so the struct-literal + `sign` pair has
+    // no equivalent: `build` encodes, signs and caches the digest in one step,
+    // and `body` sets payload_size and payload_hash. Same shape as gemot's
+    // `to_operation_seed`.
+    let header = Header::builder()
+        .body(&body_bytes)
+        .seq_num(seq_num)
+        .backlink(backlink.map(Hash::from))
+        .build(
+            &signing_key,
+            CampaignExt {
+                campaign_id,
+                branch_id,
+                parents,
+            },
+        );
+    let hash = header.hash();
     Operation {
-        hash: header.hash(),
+        hash,
         header,
         body: Some(body),
     }

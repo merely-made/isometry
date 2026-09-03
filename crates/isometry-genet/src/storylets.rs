@@ -35,11 +35,9 @@ impl App {
     /// complete input set (`resolve_storylet` reads factions, laws, and
     /// characters, all of them world state), so a compare cannot go stale. It is
     /// also the shape the overmap's leaf gate already uses.
-    pub(crate) fn refresh_storylet_rows(&mut self) {
+    pub(crate) fn refresh_storylet_rows(&mut self, ctx: &mut Ctx<'_>) {
         let secret_ids: Vec<String> = self.campaign.secret_ids().map(str::to_owned).collect();
-        let Some(runner) = self.runner.as_ref() else {
-            return;
-        };
+        let runner = &*ctx.runner;
         let world = &runner.state().world;
         if self
             .last_storylet_inputs
@@ -53,7 +51,8 @@ impl App {
         // The one clone, on the path that actually changed something.
         self.last_storylet_inputs = Some((world.clone(), secret_ids));
 
-        if let Some(runner) = self.runner.as_mut() {
+        {
+            let runner = &mut *ctx.runner;
             runner.update(|ui| {
                 // Only replace on change, to keep the DM's selection stable.
                 if ui.storylets != rows {
@@ -66,19 +65,17 @@ impl App {
         }
     }
 
-    pub(crate) fn pump_storylets(&mut self) {
+    pub(crate) fn pump_storylets(&mut self, ctx: &mut Ctx<'_>) {
         // Cheap flags first: with the surface closed and no request pending
         // (every ordinary dispatch), this returns before touching the world.
-        let (open, request, can_edit) = match self.runner.as_ref() {
-            Some(r) => {
-                let s = r.state();
-                (
-                    s.storylet_open,
-                    s.storylet_request.clone(),
-                    s.can_edit_inventory,
-                )
-            }
-            None => return,
+        let (open, request, can_edit) = {
+            let r = &*ctx.runner;
+            let s = r.state();
+            (
+                s.storylet_open,
+                s.storylet_request.clone(),
+                s.can_edit_inventory,
+            )
         };
         if !can_edit || (!open && request.is_none()) {
             return;
@@ -87,7 +84,7 @@ impl App {
         // Refresh the rows while the surface is open: which storylets are
         // playable now (requirements met, roles cast) and which are still locked.
         if open {
-            self.refresh_storylet_rows();
+            self.refresh_storylet_rows(ctx);
         }
 
         // Play a storylet: commit its effects. A storylet Item effect wants a
@@ -95,31 +92,28 @@ impl App {
         let Some(key) = request else {
             return;
         };
-        let (item_owner, snapshot, any_storylets) = match self.runner.as_ref() {
-            Some(r) => {
-                let s = r.state();
-                let owner = s
-                    .turns
-                    .active()
-                    .or_else(|| s.map.tokens.first().map(|t| t.id));
-                (owner, self.snapshot_of(s), !s.world.storylets.is_empty())
-            }
-            None => return,
+        let (item_owner, snapshot, any_storylets) = {
+            let r = &*ctx.runner;
+            let s = r.state();
+            let owner = s
+                .turns
+                .active()
+                .or_else(|| s.map.tokens.first().map(|t| t.id));
+            (owner, self.snapshot_of(s), !s.world.storylets.is_empty())
         };
-        if let Some(runner) = self.runner.as_mut() {
+        {
+            let runner = &mut *ctx.runner;
             runner.update(|ui| ui.storylet_request = None);
         }
         if !any_storylets {
             return;
         }
-        let remote = matches!(
-            self.runner.as_ref().map(|r| r.state().net_mode),
-            Some(NetMode::Remote)
-        );
+        let remote = matches!(Some(ctx.runner.state().net_mode), Some(NetMode::Remote));
         if remote {
             if let Some(net) = self.net.as_mut() {
                 let request = net.commit_storylet(key.clone(), item_owner);
-                if let Some(runner) = self.runner.as_mut() {
+                {
+                    let runner = &mut *ctx.runner;
                     runner.update(|ui| {
                         ui.status = match request {
                             Some(request) => format!("playing storylet (request {request})"),
@@ -137,7 +131,8 @@ impl App {
                     self.history = host.history().clone();
                     self.journal = host.state().journal.clone();
                     let snapshot = host.state().clone();
-                    if let Some(runner) = self.runner.as_mut() {
+                    {
+                        let runner = &mut *ctx.runner;
                         runner.update(|ui| {
                             ui.apply_snapshot(snapshot);
                             ui.status = format!("played storylet: {key}");
@@ -145,14 +140,10 @@ impl App {
                     }
                 }
                 Err(error) => {
-                    if let Some(runner) = self.runner.as_mut() {
-                        runner.update(|ui| ui.status = format!("storylet failed: {error}"));
-                    }
+                    let runner = &mut *ctx.runner;
+                    runner.update(|ui| ui.status = format!("storylet failed: {error}"));
                 }
             }
-        }
-        if let Some(window) = self.window.as_ref() {
-            window.request_redraw();
         }
     }
 
@@ -164,34 +155,32 @@ impl App {
     /// entropy, gated on `can_edit_inventory` upstream. In a live session the DM
     /// hosts (net_mode Remote), so the commit routes through the bridge; solo it
     /// runs a local HostSession. Either way the moves land as ordinary events.
-    pub(crate) fn pump_faction_turn(&mut self) {
+    pub(crate) fn pump_faction_turn(&mut self, ctx: &mut Ctx<'_>) {
         // Cheap flags first: neither a roll nor a commit pending is the ordinary
         // case for every dispatch, and it must not cost a world clone.
-        let (roll, commit, tick, can_edit, remote) = match self.runner.as_ref() {
-            Some(r) => {
-                let s = r.state();
-                let tick = s
-                    .active_map
-                    .as_ref()
-                    .and_then(|m| s.clocks.get(m))
-                    .copied()
-                    .unwrap_or(0) as i64;
-                (
-                    s.downtime_roll_request,
-                    s.downtime_commit_request,
-                    tick,
-                    s.can_edit_inventory,
-                    s.net_mode == NetMode::Remote,
-                )
-            }
-            None => return,
+        let (roll, commit, tick, can_edit, remote) = {
+            let r = &*ctx.runner;
+            let s = r.state();
+            let tick = s
+                .active_map
+                .as_ref()
+                .and_then(|m| s.clocks.get(m))
+                .copied()
+                .unwrap_or(0) as i64;
+            (
+                s.downtime_roll_request,
+                s.downtime_commit_request,
+                tick,
+                s.can_edit_inventory,
+                s.net_mode == NetMode::Remote,
+            )
         };
         if !can_edit || (!roll && !commit) {
             return;
         }
-        let world = match self.runner.as_ref() {
-            Some(r) => r.state().world.clone(),
-            None => return,
+        let world = {
+            let r = &*ctx.runner;
+            r.state().world.clone()
         };
 
         // Roll a fresh tick: draw a move per faction (proportional to banked
@@ -213,7 +202,8 @@ impl App {
                 })
                 .collect();
             self.faction_turn_batch = moves;
-            if let Some(runner) = self.runner.as_mut() {
+            {
+                let runner = &mut *ctx.runner;
                 runner.update(|ui| {
                     ui.downtime_roll_request = false;
                     ui.downtime_selected = 0;
@@ -234,9 +224,7 @@ impl App {
         // Commit: keep the moves whose row the DM did not strike, drop the rest.
         // The rows are index-aligned with the batch, so a struck row drops its
         // move. Extra batch entries (should not happen) default to kept.
-        let struck: Vec<bool> = self
-            .runner
-            .as_ref()
+        let struck: Vec<bool> = Some(&*ctx.runner)
             .map(|r| r.state().faction_moves.iter().map(|m| m.struck).collect())
             .unwrap_or_default();
         let kept: Vec<FactionMove> = std::mem::take(&mut self.faction_turn_batch)
@@ -245,7 +233,8 @@ impl App {
             .filter(|(index, _)| !struck.get(*index).copied().unwrap_or(false))
             .map(|(_, m)| m)
             .collect();
-        if let Some(runner) = self.runner.as_mut() {
+        {
+            let runner = &mut *ctx.runner;
             runner.update(|ui| {
                 ui.downtime_commit_request = false;
                 ui.faction_moves.clear();
@@ -259,7 +248,8 @@ impl App {
         if remote {
             if let Some(net) = self.net.as_mut() {
                 let request = net.commit_faction_turn(kept);
-                if let Some(runner) = self.runner.as_mut() {
+                {
+                    let runner = &mut *ctx.runner;
                     runner.update(|ui| {
                         ui.status = match request {
                             Some(request) => format!("downtime committed (request {request})"),
@@ -269,9 +259,9 @@ impl App {
                 }
             }
         } else {
-            let snapshot = match self.runner.as_ref() {
-                Some(r) => self.snapshot_of(r.state()),
-                None => return,
+            let snapshot = {
+                let r = &*ctx.runner;
+                self.snapshot_of(r.state())
             };
             self.ensure_history_origin(&snapshot);
             let mut host =
@@ -282,7 +272,8 @@ impl App {
                     self.history = host.history().clone();
                     self.journal = host.state().journal.clone();
                     let snapshot = host.state().clone();
-                    if let Some(runner) = self.runner.as_mut() {
+                    {
+                        let runner = &mut *ctx.runner;
                         runner.update(|ui| {
                             ui.apply_snapshot(snapshot);
                             ui.status = "downtime committed".to_owned();
@@ -290,14 +281,10 @@ impl App {
                     }
                 }
                 Err(error) => {
-                    if let Some(runner) = self.runner.as_mut() {
-                        runner.update(|ui| ui.status = format!("downtime failed: {error}"));
-                    }
+                    let runner = &mut *ctx.runner;
+                    runner.update(|ui| ui.status = format!("downtime failed: {error}"));
                 }
             }
-        }
-        if let Some(window) = self.window.as_ref() {
-            window.request_redraw();
         }
     }
 
@@ -305,8 +292,8 @@ impl App {
     /// (copying its campaign/history/journal back and mirroring the snapshot),
     /// in a live session through the host bridge. Leaves `status` alone, which
     /// `apply_snapshot` preserves, so a caller may set it before or after.
-    pub(crate) fn emit_host_event(&mut self, event: GameEvent) {
-        self.emit_host_events(vec![event]);
+    pub(crate) fn emit_host_event(&mut self, ctx: &mut Ctx<'_>, event: GameEvent) {
+        self.emit_host_events(ctx, vec![event]);
     }
 
     /// Emit several events as one authority step.
@@ -320,13 +307,11 @@ impl App {
     /// Order is preserved and each event still goes through `local_event`, so
     /// this is the same adjudication the single-event path performs, not a
     /// shortcut around it.
-    pub(crate) fn emit_host_events(&mut self, events: Vec<GameEvent>) {
+    pub(crate) fn emit_host_events(&mut self, ctx: &mut Ctx<'_>, events: Vec<GameEvent>) {
         if events.is_empty() {
             return;
         }
-        let remote = self
-            .runner
-            .as_ref()
+        let remote = Some(&*ctx.runner)
             .map(|r| r.state().net_mode == NetMode::Remote)
             .unwrap_or(false);
         if remote {
@@ -338,9 +323,9 @@ impl App {
                 }
             }
         } else {
-            let snapshot = match self.runner.as_ref() {
-                Some(r) => self.snapshot_of(r.state()),
-                None => return,
+            let snapshot = {
+                let r = &*ctx.runner;
+                self.snapshot_of(r.state())
             };
             let mut host =
                 HostSession::with_history(snapshot, self.campaign.clone(), self.history.clone());
@@ -351,13 +336,11 @@ impl App {
             self.history = host.history().clone();
             self.journal = host.state().journal.clone();
             let snapshot = host.state().clone();
-            if let Some(runner) = self.runner.as_mut() {
+            {
+                let runner = &mut *ctx.runner;
                 runner.update(|ui| ui.apply_snapshot(snapshot));
             }
-            self.refresh_source_history();
-        }
-        if let Some(window) = self.window.as_ref() {
-            window.request_redraw();
+            self.refresh_source_history(ctx);
         }
     }
 }
