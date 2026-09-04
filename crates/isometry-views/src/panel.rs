@@ -4,7 +4,8 @@
 //! board uses, so the palette can never drift from the tileset.
 
 use cambium::{
-    caret_text_field, clickable, el, lens, request_focus, segmented_control, text, TextInput,
+    caret_text_field, clickable, disclosure_with, el, lens, request_focus, segmented_control,
+    text, TextInput,
 };
 use isometry_core::{TemplateKind, TileKindId, TokenId};
 
@@ -309,6 +310,111 @@ fn command_line(ui: &UiState) -> UiChild {
     Box::new(el("div", rows).attr("class", "cmd-box"))
 }
 
+/// Turns, behind the catalog `disclosure` — the panel diet's cut 5.
+///
+/// The whole section rides in the panel: the round-and-time line, the
+/// initiative list, the turn verbs, the initiative controls, and the row of
+/// overlay verbs that has always sat with them. At 258 logical px it was the
+/// panel's largest section and the diet's last cut, and
+/// `design_docs/2026-09-03_side_panel_diet_plan.md` stopped it on the catalog
+/// boundary: cambium's `disclosure` was `View<DisclosureState, ()>`, so a row
+/// calling `ui.select_token(id)` could not live in its panel, and neither
+/// `lens` nor `map_state` projects *up* from the child state to reach one.
+///
+/// It is state-generic now (mere `crates/cambium/cambium/src/disclosure.rs`):
+/// the [`cambium::DisclosureState`] is an input the caller owns and the toggle
+/// comes back through `on_toggle`, so the rows below stay ordinary views over
+/// [`UiState`] and the cut lands with every control still calling its own verb.
+///
+/// Expanded by default, so nothing moved for a table that never touches the
+/// trigger; the room is there for one that does. `disclosure_with` rather than
+/// `disclosure` because the trigger carries its own open/closed marker as
+/// text — the catalog draws that marker with a `::before`, and a glyph the
+/// application emits is one less thing riding on the sheet.
+///
+/// The marker is `[-]` / `[+]` rather than the catalog's `▾` / `▸` because the
+/// headed capture of 2026-09-04 rendered those two as tofu: this stack's font
+/// fallback resolves Latin-1 (the panel's own `·` in `Dice · Measure` paints)
+/// but not Geometric Shapes. ASCII is what is proven to render here, and the
+/// bracketed pair says expand/collapse without borrowing `>`, which already
+/// means "whose turn" one row below and "command line" three sections up.
+fn turns_section(ui: &UiState) -> UiChild {
+    let rows: Vec<UiChild> = vec![
+        // The location's time: round from the turn order, ticks from the clock.
+        // Only meaningful once a campaign map is active; a bare board keeps no
+        // clock, so this line stays quiet there.
+        Box::new(
+            el(
+                "div",
+                text(if ui.active_map.is_some() {
+                    format!(
+                        "round {} · time {} ({})",
+                        ui.turns.round() + 1,
+                        ui.clock_now(),
+                        ui.active_map.as_deref().unwrap_or("?"),
+                    )
+                } else {
+                    format!("round {}", ui.turns.round() + 1)
+                }),
+            )
+            .attr("class", "side-line"),
+        ),
+        Box::new(
+            el(
+                "div",
+                ui.map
+                    .tokens
+                    .iter()
+                    .map(|t| turn_row(ui, t.id))
+                    .collect::<Vec<UiChild>>(),
+            )
+            .attr("class", "turn-list"),
+        ),
+        Box::new(
+            el(
+                "div",
+                (
+                    action_button("End turn", true, |ui| ui.end_turn()),
+                    // The downtime verb: rounds tick the clock by themselves;
+                    // these are for the stretches no turn order measures. DM
+                    // controls, like the other authoring buttons.
+                    action_button("+1 time", ui.can_edit_inventory, |ui| ui.pass_time(1)),
+                    action_button("+10 time", ui.can_edit_inventory, |ui| ui.pass_time(10)),
+                ),
+            )
+            .attr("class", "btn-row"),
+        ),
+        init_controls(ui),
+        Box::new(
+            el(
+                "div",
+                (
+                    action_button("Sheet", true, |ui| ui.open_or_bind_sheet()),
+                    action_button("Bestiary", true, |ui| ui.open_compendium()),
+                    action_button("Generate", ui.can_edit_inventory, |ui| ui.open_generator()),
+                    action_button("Story", ui.can_edit_inventory, |ui| ui.open_storylets()),
+                    action_button("Downtime", ui.can_edit_inventory, |ui| ui.open_downtime()),
+                    action_button("Overmap", true, |ui| ui.open_overmap()),
+                    action_button("Resolve", ui.governance_conflict.is_some(), |ui| {
+                        ui.open_governance_conflict()
+                    }),
+                ),
+            )
+            .attr("class", "btn-row"),
+        ),
+    ];
+    Box::new(disclosure_with(
+        &ui.turns_disclosure,
+        text(if ui.turns_disclosure.expanded {
+            "[-] Turns"
+        } else {
+            "[+] Turns"
+        }),
+        rows,
+        |ui: &mut UiState| ui.turns_disclosure.toggle(),
+    ))
+}
+
 pub fn side_panel(ui: &UiState) -> UiChild {
     // The mode row is a one-of-N choice, so it is the catalog's
     // `segmented_control`. It writes only `mode_selection`; the host's
@@ -388,69 +494,7 @@ pub fn side_panel(ui: &UiState) -> UiChild {
             )
             .attr("class", "swatch-row"),
         ),
-        Box::new(el("div", text("Turns")).attr("class", "side-heading")),
-        // The location's time: round from the turn order, ticks from the clock.
-        // Only meaningful once a campaign map is active; a bare board keeps no
-        // clock, so this line stays quiet there.
-        Box::new(
-            el(
-                "div",
-                text(if ui.active_map.is_some() {
-                    format!(
-                        "round {} · time {} ({})",
-                        ui.turns.round() + 1,
-                        ui.clock_now(),
-                        ui.active_map.as_deref().unwrap_or("?"),
-                    )
-                } else {
-                    format!("round {}", ui.turns.round() + 1)
-                }),
-            )
-            .attr("class", "side-line"),
-        ),
-        Box::new(
-            el(
-                "div",
-                ui.map
-                    .tokens
-                    .iter()
-                    .map(|t| turn_row(ui, t.id))
-                    .collect::<Vec<UiChild>>(),
-            )
-            .attr("class", "turn-list"),
-        ),
-        Box::new(
-            el(
-                "div",
-                (
-                    action_button("End turn", true, |ui| ui.end_turn()),
-                    // The downtime verb: rounds tick the clock by themselves;
-                    // these are for the stretches no turn order measures. DM
-                    // controls, like the other authoring buttons.
-                    action_button("+1 time", ui.can_edit_inventory, |ui| ui.pass_time(1)),
-                    action_button("+10 time", ui.can_edit_inventory, |ui| ui.pass_time(10)),
-                ),
-            )
-            .attr("class", "btn-row"),
-        ),
-        init_controls(ui),
-        Box::new(
-            el(
-                "div",
-                (
-                    action_button("Sheet", true, |ui| ui.open_or_bind_sheet()),
-                    action_button("Bestiary", true, |ui| ui.open_compendium()),
-                    action_button("Generate", ui.can_edit_inventory, |ui| ui.open_generator()),
-                    action_button("Story", ui.can_edit_inventory, |ui| ui.open_storylets()),
-                    action_button("Downtime", ui.can_edit_inventory, |ui| ui.open_downtime()),
-                    action_button("Overmap", true, |ui| ui.open_overmap()),
-                    action_button("Resolve", ui.governance_conflict.is_some(), |ui| {
-                        ui.open_governance_conflict()
-                    }),
-                ),
-            )
-            .attr("class", "btn-row"),
-        ),
+        turns_section(ui),
         // Dice and Measure share one heading and one line of the panel's width
         // (the diet's §3.3): two short sections stacked cost two headings and
         // the gap between them, and neither one fills 200px on its own. Every

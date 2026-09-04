@@ -92,54 +92,74 @@ graphshell-stdio = { git = "https://github.com/merely-made/mere.git", branch = "
 # .cargo/config.toml source-specific [patch] entries. Cambium supplies the view
 # toolkit; `cambium-genet-winit-host` supplies the whole native assembly.
 # **Git, not crates.io** (Mark's ruling, 2026-07-26): the family resolves from
-# genet.git until there is an actual GitHub release to consume, and crates.io
-# releases keep being cut for external consumers rather than for us. Isometry was
-# the only repo still taking these from the registry, and it was the one carrying
-# the hazard: published cambium/sprigging resolve `paint_list_api` from crates.io
-# while this workspace git-deps netrender's, so `sprigging::PaintCmd` was not
-# `paint_list_api::PaintCmd`. The gitignored [patch] file hid that here by
-# redirecting sprigging to a path; a clean checkout would not have.
+# the owning repo until there is an actual GitHub release to consume, and
+# crates.io releases keep being cut for external consumers rather than for us.
+# Isometry was the only repo still taking these from the registry, and it was
+# the one carrying the hazard: published cambium/sprigging resolve
+# `paint_list_api` from crates.io while this workspace git-deps netrender's, so
+# `sprigging::PaintCmd` was not `paint_list_api::PaintCmd`. The gitignored
+# [patch] file hid that here by redirecting sprigging to a path; a clean
+# checkout would not have.
 #
-# The node-label floor the registry pin used to state is carried by the pin
-# below: `with_node_labels` labels only carry node state from 0.3.2 on, and
-# `eff0cb6` is well past it.
+# **The Cambium family moved out of genet into mere on 2026-09-03.**
+# `genet/components/cambium` no longer exists — cambium, cambium-rootstock,
+# cambium-winit, cambium-winit-a11y, cambium-genet-winit-host, sprigging and
+# meristem are mere workspace members under `crates/cambium/` now. So Cambium
+# joins every other mere dependency above on `branch = "main"`, the *same*
+# reference: Cargo keys a git source by URL plus reference, so a rev beside a
+# branch on one URL lands two copies of Cambium and its host types.
 #
-# Every Genet crate takes the SAME reference, and that reference is the one
-# Mere main pins (`eff0cb6`, 2026-09-02). Isometry follows Mere's Genet
-# reference, which is the rule woodshed's own manifest states; the family
-# either agrees on one revision or Cargo keys two git sources by URL+reference
-# and lands two copies of Cambium and its host types. The gitignored local
-# patch table unifies both onto one checkout and can hide that split, which is
-# why the committed manifest must align with the consumer pin.
-cambium = { git = "https://github.com/merely-made/genet.git", rev = "86019eacccc63fe41b6f859d55b7ab49e2aad87c" }
-# The single-root Cambium desktop host (genet G1, 2026-08-09). It owns the
-# winit lifecycle, the surface, layout, paint, hit testing, input routing and
-# the AccessKit sync isometry used to assemble by hand — so the direct deps
-# that assembly needed (genet-layout, genet-winit-host, cambium-winit,
-# netrender, paint_list_*, wgpu, winit) are gone from this workspace. They
-# still arrive transitively; only what isometry may *name* changed.
-cambium-genet-winit-host = { git = "https://github.com/merely-made/genet.git", rev = "86019eacccc63fe41b6f859d55b7ab49e2aad87c" }
+# The node-label floor the old registry pin used to state is long past —
+# `with_node_labels` labels carry node state from cambium 0.3.2 on, and mere
+# main is 0.3.3.
+cambium = { git = "https://github.com/merely-made/mere.git", branch = "main" }
+# The single-root Cambium desktop host (genet G1, 2026-08-09; mere's since
+# 2026-09-03). It owns the winit lifecycle, the surface, layout, paint, hit
+# testing, input routing and the AccessKit sync isometry used to assemble by
+# hand — so the direct deps that assembly needed (genet-layout,
+# genet-winit-host, cambium-winit, netrender, paint_list_*, wgpu, winit) are
+# gone from this workspace. They still arrive transitively; only what isometry
+# may *name* changed.
+cambium-genet-winit-host = { git = "https://github.com/merely-made/mere.git", branch = "main" }
 # Cambium's retained custom-paint leaves (the graph-canvas swatch's painted
 # nodes + edges). A host wires them directly, the pelt-desktop pattern. From the
 # same git source as cambium, which is what keeps one `PaintCmd` in the graph.
-sprigging = { git = "https://github.com/merely-made/genet.git", rev = "86019eacccc63fe41b6f859d55b7ab49e2aad87c" }
-layout-dom-api = { git = "https://github.com/merely-made/genet.git", rev = "86019eacccc63fe41b6f859d55b7ab49e2aad87c", version = "=0.1.0" }
-genet-scripted-dom = { git = "https://github.com/merely-made/genet.git", rev = "86019eacccc63fe41b6f859d55b7ab49e2aad87c", version = "=0.1.0" }
+sprigging = { git = "https://github.com/merely-made/mere.git", branch = "main" }
+
+# The DOM seams that stayed in genet when Cambium left. Their revision is not
+# free: mere's `cambium-genet-winit-host` takes `layout-dom-api` (as
+# `layout_dom_api`), `genet-scripted-dom`, `genet-probe`, `genet-winit-host`
+# and `genet-livery` from genet at `115d348d`, so isometry must name that same
+# revision. One reference per git source, or two copies of the DOM seams land
+# and the host's `LayoutDom` stops being the one isometry's views and receipts
+# build. Bump this when mere's genet pin moves, and only then.
+layout-dom-api = { git = "https://github.com/merely-made/genet.git", rev = "115d348deddc344d949754e63beaece47cf49f34", version = "=0.1.0" }
+genet-scripted-dom = { git = "https://github.com/merely-made/genet.git", rev = "115d348deddc344d949754e63beaece47cf49f34", version = "=0.1.0" }
 # The shared automatability substrate: selector resolution, so isometry's
 # host-routing receipts target a control by role and label rather than pixel.
-genet-probe = { git = "https://github.com/merely-made/genet.git", rev = "86019eacccc63fe41b6f859d55b7ab49e2aad87c" }
+genet-probe = { git = "https://github.com/merely-made/genet.git", rev = "115d348deddc344d949754e63beaece47cf49f34" }
 
-# Mirror of genet's [patch.crates-io] entries this workspace's genet
-# graph needs; patches are per-workspace-root and do NOT inherit through
-# a git dep. The genet half takes the same pin as the deps above.
+# Mirror of the [patch.crates-io] entries this workspace's genet graph needs;
+# patches are per-workspace-root and do NOT inherit through a git dep, so both
+# genet's and mere's own tables have to be restated here. Every genet entry
+# takes the revision the deps above take, for the same one-source-one-reference
+# reason.
 [patch.crates-io]
 # `murm-replication` (from mere) depends on the *published* muniment, while this
 # workspace tracks the repo. Two sources means two `muniment::Backend` traits and
 # `MunimentStore`'s bounds stop matching, so redirect the registry edge at the
 # same git source: exactly one muniment lands. Track the branch, not a pin.
 muniment = { git = "https://github.com/merely-made/mere.git", branch = "main" }
-layout-dom-api = { git = "https://github.com/merely-made/genet.git", rev = "86019eacccc63fe41b6f859d55b7ab49e2aad87c", version = "=0.1.0" }
-genet-scripted-dom = { git = "https://github.com/merely-made/genet.git", rev = "86019eacccc63fe41b6f859d55b7ab49e2aad87c", version = "=0.1.0" }
+# The two DOM seams again, from the registry side: published Buckram and Livery
+# reach them through crates.io, and a registry copy beside the git one is the
+# same two-`LayoutDom` split the workspace dep above guards against. Same
+# revision as mere's Cambium consumes, necessarily.
+layout-dom-api = { git = "https://github.com/merely-made/genet.git", rev = "115d348deddc344d949754e63beaece47cf49f34", version = "=0.1.0" }
+genet-scripted-dom = { git = "https://github.com/merely-made/genet.git", rev = "115d348deddc344d949754e63beaece47cf49f34", version = "=0.1.0" }
+# There is deliberately no `cambium` or `sprigging` entry here. Both are
+# published, but nothing in this graph reaches them through the registry —
+# mere's members take them by path inside mere's own checkout — so an entry
+# would be a permanent "patch was not used" line.
 # NO stylo / stylo_atoms / stylo_taffy patch. Genet retired Stylo and the
 # incumbent layout cone on 2026-08-21 (`55c05d11`), so genet.git no longer
 # provides `stylo_taffy` at any revision the family pins and the entry that
@@ -153,15 +173,15 @@ genet-scripted-dom = { git = "https://github.com/merely-made/genet.git", rev = "
 # different: Buckram and Livery consume the renamed `genet-taffy` package, so
 # the patch below names that package explicitly while keeping the dependency
 # alias Cargo expects.
-taffy = { package = "genet-taffy", git = "https://github.com/merely-made/genet.git", rev = "86019eacccc63fe41b6f859d55b7ab49e2aad87c", version = "=0.14.0" }
+taffy = { package = "genet-taffy", git = "https://github.com/merely-made/genet.git", rev = "115d348deddc344d949754e63beaece47cf49f34", version = "=0.14.0" }
 # Genet Livery uses AlignmentOptions::last_line_alignment and
 # StyleProperty::TabSize from Genet's Parley fork. Published Parley 0.10.0 has
 # the same version but not those APIs, so a clean consumer must restate the
 # workspace patch.
-parley = { git = "https://github.com/merely-made/genet.git", rev = "86019eacccc63fe41b6f859d55b7ab49e2aad87c" }
+parley = { git = "https://github.com/merely-made/genet.git", rev = "115d348deddc344d949754e63beaece47cf49f34" }
 # ipc-channel: genet's in-process fork (force-inprocess default; drops the
 # windows 0.61 pin that broke gpu-allocator/wgpu-hal unification).
-ipc-channel = { git = "https://github.com/merely-made/genet.git", rev = "86019eacccc63fe41b6f859d55b7ab49e2aad87c" }
+ipc-channel = { git = "https://github.com/merely-made/genet.git", rev = "115d348deddc344d949754e63beaece47cf49f34" }
 # `murm-replication` (stickleback) and `mere-transport` are written against the
 # **owned p2panda fork**, not the published crates. mere's manifest repoints the
 # family there; this workspace must mirror it, or it resolves stock p2panda from

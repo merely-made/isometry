@@ -84,6 +84,30 @@ pub fn board_css() -> String {
 }
 .side-status { color: #9fd48a; font-size: 12px; margin-top: 10px; min-height: 14px; }
 
+/* Turns rides the catalog `disclosure` (the diet's cut 5). Cambium ships the
+   button, the panel, the ids and the ARIA; this is the paint, and it is
+   `.side-heading`'s exactly, so a section that collapses still reads as one of
+   the panel's headings. `display: block` plus the full width make the whole
+   heading row the hit target — the UA sheet gives a `button` `inline-block`
+   and nothing else, so the trigger would otherwise only take a click across
+   its text. Scoped under `.side`: the overlays are not on this diet. */
+.side .disclosure-trigger {
+    display: block;
+    width: 100%;
+    background-color: transparent; border: 0; padding: 0;
+    color: #8b91a0;
+    font-size: 11px;
+    margin-top: 12px;
+    margin-bottom: 4px;
+}
+.side .disclosure-trigger:hover { color: #cfd3dd; }
+/* A collapsed panel keeps its rows in the tree and marks itself `hidden`, and
+   nothing in `CAMBIUM_UA_DEFAULTS` acts on that attribute. `display: none`
+   rather than a zero height because it must generate no box at all:
+   `host_zoom::panel_bottom` maximises over the panel's painted rects, and a
+   hidden row reporting one would hold the column open. */
+.side .disclosure-panel[hidden="true"] { display: none; }
+
 /* The > command line and its find-results. Amber to read as a live prompt,
    distinct from the whisper composer's chrome. */
 .cmd-box { margin-top: 4px; }

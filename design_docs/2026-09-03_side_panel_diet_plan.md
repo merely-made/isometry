@@ -1,9 +1,10 @@
 # Side panel diet
 
-**Status:** in progress (2026-09-03) — P0 and P1 landed, both open decisions
-closed by Mark (three-column mode grid kept; hints only for a target pick),
-one recorded stop (cut 5 needs a cambium `disclosure` that can carry app
-state). Founded when host UI zoom (genet's
+**Status:** in progress (2026-09-04) — P0, P1 and cut 5 landed, both open
+decisions closed by Mark (three-column mode grid kept; hints only for a
+target pick). The recorded stop is lifted: cambium's `disclosure` became
+generic over its content's state on 2026-09-03, which is exactly what cut 5
+needed, so Turns now collapses. Founded when host UI zoom (genet's
 `2026-09-03_host_ui_zoom_plan.md`, Z5) measured the side panel at 1038
 logical pixels against a declared design height of 820.
 
@@ -132,7 +133,7 @@ Applied in §3's order. Every figure is a measured delta on the same board.
 | 2 | Map row and `px grid` on one line | the panel's own `.btn` clickables, at the mini scale | 50 | 19 | **31** |
 | 3 | Dice and Measure abreast | flex columns under one heading | 137 | 72 | **65** |
 | 4 | Key hints only while relevant | none — a conditional row | 35 | 0 | **35** |
-| 5 | `disclosure` on Turns | — | 92 | — | **stopped, see below** |
+| 5 | `disclosure` on Turns | catalog `disclosure_with` | 258 | 13 | **245 on demand** |
 
 A further 4 px came off the Messages boundary as a margin collapse the merge
 in cut 3 changed. **Last painted bottom edge: 796** (810 with the column's
@@ -163,17 +164,30 @@ longest label, reads well in a 66px chip. One number in `theme.rs`
 (`.mode-grid .selection-item { width: 33.333% }`) reverts it, and the
 target then needs the 59 px from somewhere else.
 
-**Cut 5 stops at the catalog boundary, and was not needed.** Cambium's
-`disclosure` (and `accordion`) are `View<DisclosureState, ()>`: their
-content is a `ViewSequence` over `DisclosureState`, and both `lens` and
-`map_state` only project *down* from the parent state
-(`Fn(&mut Parent) -> &mut Child`). So a turn row that calls
-`ui.select_token(id)` cannot live inside a disclosure panel. Collapsing
-Turns behind the catalog widget needs cambium to grow a disclosure generic
-over its content's state, which §5 stops on. The rows would fit
-`data_grid`, which *is* state-generic, but a grid does not collapse. Turns
-is untouched at 258 px, still the panel's largest section, and is where the
-next diet would start.
+**Cut 5 stopped at the catalog boundary on 2026-09-03, and landed on
+2026-09-04 when the boundary moved.** The stop was real: cambium's
+`disclosure` (and `accordion`) were `View<DisclosureState, ()>`, their
+content a `ViewSequence` over `DisclosureState`, and both `lens` and
+`map_state` project only *down* from the parent state
+(`Fn(&mut Parent) -> &mut Child`). So a turn row calling
+`ui.select_token(id)` could not live inside a disclosure panel, and §5 says
+a cut that needs a new cambium widget stops and is recorded rather than
+growing one here. It was recorded, and cambium then grew it: `disclosure`
+and `disclosure_with` are generic over `State` now
+(mere `crates/cambium/cambium/src/disclosure.rs`), taking the
+`DisclosureState` as an input the caller owns and reporting the toggle back
+through an `on_toggle` handler. The rows are ordinary views over `UiState`
+again and the cut went in unchanged.
+
+It takes the **whole** 258 px section — the round-and-time line, the
+initiative list, the turn verbs, the initiative controls and the row of
+overlay verbs — rather than §3.5's narrower "the initiative list can
+collapse to its current entry", which was worth 69. The section opens
+expanded, so the idle figure is **796**, unchanged to the pixel: the
+trigger occupies the row the `.side-heading` div occupied. Collapsed it is
+**551**. Nothing is removed and no control loses its function; the panel
+hides on a click and comes back on the next one, which is the one place
+§3.5 allows hiding.
 
 **The transient states still overrun the design, and the hint line is why.**
 §2 states the target for "every section in its default state", which is the
@@ -191,8 +205,9 @@ the hint line costs 35 with its margin. So on this laptop's 820-logical fit
 the whisper capture shows the composer, the caret and the status line inside
 the frame, and the key hints just under it. Dropping the hints from the
 composing state alone would not close it either (823), because the wrap is
-the composer's own growth. The 69 px cut 5 would free from Turns is what
-covers both transients, which is the second argument for it. Worth Mark's
+the composer's own growth. Cut 5 is what covers both transients, which is
+the second argument for it — and it does, on a click: see the cut 5
+measurements below. Worth Mark's
 eye separately: while a text field holds the keyboard, `arrows: pan / r:
 face / enter: end turn` is not true, and the status line already reads
 `whisper (enter send, esc cancel)` — so composing may be the wrong half of
@@ -234,10 +249,45 @@ The 35 px is the hint row and its margin, and 823 is the figure the P1 note
 predicted for dropping it. Composing still overruns the 820 design by 3 px —
 the composer's field wraps to a second line as the draft grows, which is the
 composer's own growth and not the hint's — so the transient case still wants
-the 69 px cut 5 would free from Turns. Target pick is unchanged, as it must
+cut 5, which landed the next day and closes it. Target pick is unchanged, as it must
 be: nothing about that state's DOM moved. (The 831 is measured with the
 panel's default empty status line, the way P1 measured it; with the real
 `pick a target (Esc to cancel)` status painted it is 832.)
+
+### Cut 5 — Turns behind a `disclosure` (2026-09-04)
+
+Same instrument as P0 and P1: the harness on the demo skirmish at zoom 1.0
+in a design-sized window (1100x820, no fit), `host_zoom::panel_bottom`, in
+logical pixels. "Collapsed" is reached through the shipping click path —
+`click_on(".disclosure-trigger")` — not by writing the flag.
+
+| State | expanded | collapsed | freed |
+| --- | ---: | ---: | ---: |
+| Idle (the plan's target) | **796** | **551** | 245 |
+| Composing a 19-character whisper | 823 | **578** | 245 |
+| Target pick armed | 831 | **586** | 245 |
+
+Three things this says. **Expanded costs nothing**: 796 is the figure the
+diet already had, to the pixel, so a table that never touches the trigger
+sees the panel it had. **Expanded does not close the transients**: 823 and
+831 still overrun the 820 design by 3 and 11, exactly as before, because a
+section that opens by default frees nothing by default. **Collapsed closes
+them with room to spare**: 578 and 586 against a target of 800, 245 rather
+than the 69 §3.5 projected, because the cut took the section rather than
+the list.
+
+The saving is the same 245 in all three states, which is the check that it
+is the section coming out and not something state-dependent.
+
+A collapsed panel keeps its rows in the retained tree and marks itself
+`hidden`. `CAMBIUM_UA_DEFAULTS` has no rule for that attribute, so
+`theme.rs` supplies `.side .disclosure-panel[hidden="true"] { display:
+none; }` — and `display: none` rather than a zero height on purpose:
+`panel_bottom` maximises over the painted rects of the panel's rows, so a
+hidden row that still reported a box would leave the column measuring as
+tall as it was open, and the cut would be a no-op that measured like a win.
+`collapsing_turns_takes_the_section_off_the_panel` asserts the hidden
+panel's `painted_rect` is `None` for exactly that reason.
 
 ## Progress
 
@@ -283,3 +333,45 @@ panel's default empty status line, the way P1 measured it; with the real
   maximum over the panel's rows and is indifferent to which state paints last.
   Tests 313 under all features, 0 failures — the same count as before, since
   the change is a condition rather than a receipt.
+- **2026-09-04, cut 5 landed; the recorded stop is lifted.** Cambium made
+  `disclosure` and `disclosure_with` generic over their content's state, so
+  the reason §5 stopped the cut is gone and Turns — the panel's largest
+  section at 258 px — now rides `disclosure_with` with the round line, the
+  initiative list, the turn verbs, the initiative controls and the overlay
+  row in its panel. `UiState` grows one field, `turns_disclosure`, opening
+  expanded; the toggle is `DisclosureState::toggle` handed back through
+  `on_toggle`, so every row inside is still a view over `UiState` calling its
+  own verb. The trigger is `disclosure_with` rather than `disclosure` so the
+  open/closed marker is a glyph the application emits rather than a `::before`
+  the sheet draws, and `.side .disclosure-trigger` paints it as the section
+  headings beside it are painted — same colour, same 11px, same margins — so
+  a collapsible section does not read as a control from another app. The
+  marker is `[-]` / `[+]`: the catalog's `▾` / `▸` were tried first and
+  the first headed capture came back with **tofu boxes**, so this stack's
+  font fallback covers Latin-1 (the panel's own `·` paints) but not
+  Geometric Shapes. Worth knowing before the next non-ASCII glyph goes
+  into a view.
+  Measurements in the dated Findings section above: idle unchanged at **796**
+  expanded and **551** collapsed, and the two transients close on a click
+  (823 → 578, 831 → 586). Three new receipts in `host_zoom.rs`:
+  `collapsing_turns_takes_the_section_off_the_panel` (the figures, the
+  symmetry of reopening, and the hidden panel's absent box),
+  `a_turn_row_inside_the_disclosure_still_selects_its_token` (the state-generic
+  fact the stop was recorded on, driven through the real host), and
+  `collapsing_turns_brings_the_transient_states_inside_the_design`. Tests 316
+  under all features, 0 failures (313 + 3); `cargo check --workspace
+  --all-features --all-targets` green with no unused-patch lines. Two headed
+  self-driven captures in `Code/testing/isometry/images/`
+  (`2026-09-04_isometry_whisper_cut5.png`,
+  `2026-09-04_isometry_combat_cut5.png`), both 2200x1504 physical: the
+  trigger sits in the row the heading sat in and reads as one of the
+  panel's headings, and the panel is otherwise where it was, composer and
+  status line inside the frame. Neither shows the *collapsed* panel —
+  nothing self-drives a click on the trigger and the headed harness takes
+  no synthetic OS input, so a collapsed capture wants an
+  `ISOMETRY_TURNS_SELFTEST` alongside the eight that exist. Not added: it
+  is scope past this cut, and the collapsed figures are harness-measured
+  instead. **Open, Mark's:** whether the section should open *collapsed*
+  instead — that is what would close the transients without a click, at
+  the cost of hiding the initiative list from a table that wants it
+  standing. And whether the collapsed state is worth its own capture.

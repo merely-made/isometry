@@ -360,3 +360,179 @@ fn a_click_still_lands_on_the_tile_under_it_at_a_fractional_zoom() {
         "the tile under the pointer is the one that got selected"
     );
 }
+
+
+/// A whisper draft typed into the composer, the state the diet's transient
+/// table measures. The same 19 characters `selftest::maybe_whisper_selftest`
+/// types headed, so the figure here and the figure in that capture are of one
+/// layout.
+fn composing_a_whisper(window: (f32, f32)) -> BoardHarness {
+    let mut harness = board(window, false);
+    harness.update(|ui| {
+        ui.start_compose();
+        ui.whisper_draft.insert_str("meet me at the gate");
+    });
+    harness.relayout();
+    harness
+}
+
+/// Collapse the Turns section through the shipping click path.
+///
+/// `click_on` rather than writing `turns_disclosure.expanded`: the point of the
+/// receipt is that cambium's trigger, its `on_click`, and the application's own
+/// `DisclosureState::toggle` are wired to each other, which a direct write
+/// would step over.
+fn collapse_turns(harness: &mut BoardHarness) {
+    assert!(
+        harness.click_on(&Selector::class("disclosure-trigger")),
+        "the Turns trigger is painted and hittable"
+    );
+    assert!(
+        !harness.state().turns_disclosure.expanded,
+        "and the click reached the application's own toggle"
+    );
+}
+
+/// The panel diet's cut 5, landed: Turns collapses, and the column shortens by
+/// the whole section.
+///
+/// Expanded is **796** — the exact figure the diet left behind, so the widget
+/// costs nothing to a table that never touches it: the trigger occupies the row
+/// the `.side-heading` div occupied, to the pixel. Collapsed is **551**, which
+/// is the 258 px section (245 of it, the rest being the trigger row that stays)
+/// off the bottom of a 200px column.
+///
+/// The hidden panel is asserted to have *no painted box at all*, not merely a
+/// short one. `panel_bottom` maximises over the panel's rows, so a hidden row
+/// that still reported a rect would leave the column measuring as tall as it
+/// was open and this whole cut would be a no-op that looked like a win. The
+/// `display: none` that makes it true is the application's own rule in
+/// `theme.rs` — `CAMBIUM_UA_DEFAULTS` has nothing for `[hidden]`.
+#[test]
+fn collapsing_turns_takes_the_section_off_the_panel() {
+    let mut harness = board(DESIGN_SIZE, false);
+    assert_eq!(harness.ui_zoom(), 1.0, "the plan's figure is a zoom-1 one");
+    let expanded = panel_bottom(&harness);
+    assert!(
+        (expanded - 796.0).abs() < 0.5,
+        "expanded is the figure the diet already had: {expanded}"
+    );
+
+    collapse_turns(&mut harness);
+    let collapsed = panel_bottom(&harness);
+    assert!(
+        (collapsed - 551.0).abs() < 0.5,
+        "collapsed drops the whole section: {collapsed}"
+    );
+
+    let panel = harness
+        .with_dom(|dom| {
+            genet_probe::matching(dom, &Selector::class("disclosure-panel"))
+                .first()
+                .copied()
+        })
+        .expect("the panel is still in the retained tree, marked hidden");
+    assert_eq!(
+        harness.painted_rect(panel),
+        None,
+        "a hidden panel generates no box, so it cannot hold the column open"
+    );
+
+    // And it reopens to exactly where it was: the toggle is symmetric, and the
+    // section is hidden rather than discarded.
+    assert!(harness.click_on(&Selector::class("disclosure-trigger")));
+    assert!(harness.state().turns_disclosure.expanded);
+    let reopened = panel_bottom(&harness);
+    assert!(
+        (reopened - expanded).abs() < 0.01,
+        "reopening restores the panel exactly: {reopened} vs {expanded}"
+    );
+}
+
+/// A turn row inside the disclosure panel still calls `UiState`'s own verb.
+///
+/// This is the receipt the cut was *stopped* on. Until 2026-09-03 cambium's
+/// `disclosure` was `View<DisclosureState, ()>`: its content could only act on
+/// the widget's own state, and neither `lens` nor `map_state` projects up from
+/// a child state to reach the parent, so a row calling `ui.select_token(id)`
+/// could not live in the panel and the diet recorded cut 5 as blocked. The
+/// widget is state-generic now, and this drives the click through the real host
+/// to say so — the row is a view over `UiState`, inside the panel, and the
+/// selection it makes is the application's.
+///
+/// The collapsed half is the other side of the same fact: once hidden the row
+/// has no box, so nothing resolves and nothing can be clicked by accident.
+#[test]
+fn a_turn_row_inside_the_disclosure_still_selects_its_token() {
+    let mut harness = board(DESIGN_SIZE, false);
+    let first = harness
+        .state()
+        .map
+        .tokens
+        .first()
+        .expect("the demo skirmish stands tokens")
+        .id;
+    assert!(harness.state().selected_token.is_none());
+
+    assert!(
+        harness.click_on(&Selector::class("turn-label")),
+        "the first turn row is painted inside the open panel"
+    );
+    assert_eq!(
+        harness.state().selected_token,
+        Some(first),
+        "a row inside the disclosure panel reached `UiState::select_token`"
+    );
+
+    collapse_turns(&mut harness);
+    assert!(
+        !harness.click_on(&Selector::class("turn-label")),
+        "collapsed, the row has no box to resolve, so nothing is clickable"
+    );
+}
+
+/// The two transient states the diet could not close, measured against the 820
+/// design with the section open and shut.
+///
+/// | state | expanded | collapsed |
+/// | --- | ---: | ---: |
+/// | composing a 19-character whisper | 823 | 578 |
+/// | target pick armed | 831 | 586 |
+///
+/// Expanded, both are the figures the diet's table already recorded and both
+/// still overrun the 820 design — by 3 and 11. That is the honest reading of
+/// this cut: opening expanded by default means it does not close them on its
+/// own. What it adds is that one click now does, with room to spare rather than
+/// the 69 px §3.5 projected, because the cut took the whole 258 px section
+/// rather than collapsing the initiative list to its current entry.
+#[test]
+fn collapsing_turns_brings_the_transient_states_inside_the_design() {
+    let mut composing = composing_a_whisper(DESIGN_SIZE);
+    let open = panel_bottom(&composing);
+    assert!(
+        (open - 823.0).abs() < 0.5,
+        "composing is the diet's figure, still over the design: {open}"
+    );
+    collapse_turns(&mut composing);
+    let shut = panel_bottom(&composing);
+    assert!(
+        (shut - 578.0).abs() < 0.5 && shut <= 800.0,
+        "and collapsed it is well inside the 800 target: {shut}"
+    );
+
+    let mut picking = board(DESIGN_SIZE, false);
+    picking.update(|ui| ui.action_pick = Some((TokenId(1), "attack".to_owned())));
+    picking.relayout();
+    assert!(picking.state().picking_target());
+    let open = panel_bottom(&picking);
+    assert!(
+        (open - 831.0).abs() < 0.5,
+        "a target pick is the diet's figure too: {open}"
+    );
+    collapse_turns(&mut picking);
+    let shut = panel_bottom(&picking);
+    assert!(
+        (shut - 586.0).abs() < 0.5 && shut <= 800.0,
+        "and collapsed it is inside as well: {shut}"
+    );
+}

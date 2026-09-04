@@ -11,7 +11,9 @@ use isometry_core::{
 };
 use isometry_net::{apply_game, GameEvent, GameSnapshot, ROLL_LOG_CAP};
 
-use cambium::{CommandState, SelectionItem, SelectionState, Slider, TabStrip, TextInput};
+use cambium::{
+    CommandState, DisclosureState, SelectionItem, SelectionState, Slider, TabStrip, TextInput,
+};
 
 /// Fixed side-panel width in logical px (CSS `.side` width plus its padding).
 /// Board gestures no longer need it — they hang off the pane, so the panel is
@@ -363,6 +365,11 @@ pub struct UiState {
     pub token_sprite: String,
     /// Play state: the substrate turn order.
     pub turns: TurnList,
+    /// Whether the panel's Turns section is open (the diet's cut 5). The widget
+    /// does not own it: cambium's `disclosure` takes the state as an input and
+    /// reports the toggle back, so the section's rows stay views over `UiState`
+    /// and still call `select_token`. Opens expanded.
+    pub turns_disclosure: DisclosureState,
     /// Play state: the token being moved.
     pub selected_token: Option<TokenId>,
     /// Play state: reach of the selected token (tile -> previous tile
@@ -428,6 +435,7 @@ impl UiState {
             load_requested: false,
             token_sprite: "knight".to_owned(),
             turns: TurnList::new(),
+            turns_disclosure: DisclosureState::new("turns", "Turns").expanded(true),
             selected_token: None,
             reach: HashMap::new(),
             hover_tile: None,
