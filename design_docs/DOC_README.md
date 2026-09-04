@@ -31,10 +31,16 @@ Rebuilt 2026-08-08 after the wing audit's archive pass: ten plans moved to
 | [2026-08-02_overmap_presentation_plan.md](2026-08-02_overmap_presentation_plan.md) | **Active**, with two audit prerequisites reopened: a neutral region-paint seam (sprigging's `GraphCanvas` privately owns paint order; Mesocosm's minimap is the second consumer justifying the neutral layer) and hulls derived from final displayed positions incl. overrides, with uniform-position/unplaced/override/parallel-route/headed receipts. Also carries the recorded product direction: **source-time as a feature** (believed-then vs known-now vs retconned), the wing's claim carrier at campaign scale. |
 | [2026-07-09_shared_authority_and_collaborative_building_plan.md](2026-07-09_shared_authority_and_collaborative_building_plan.md) | Re-scoped 2026-08-08: the **no-second-runtime sequencing gate stands**; the earlier tiers (host-owned stores, peer Lua revalidation, secrets, commit-reveal) are superseded by the Stickleback migration plan. Kept for the gate and the campaign grammars. |
 | [2026-07-08_environmental_surfaces_plan.md](2026-07-08_environmental_surfaces_plan.md) | Design lane, **active only after its authority rewrite**: core stores surfaces and applies explicit deltas; Lua/system resolution chooses propagation once. |
-| [2026-07-20_perf_and_cambification_plan.md](2026-07-20_perf_and_cambification_plan.md) | **Narrowed** to search/whisper text-field adoption and current file-size debt. |
 | [2026-07-07_optional_intelligence_vision.md](2026-07-07_optional_intelligence_vision.md) | Vision record, **parked**; refresh authority and model assumptions only when activated. |
 
 ## Archive
+
+`archive_docs/2026-09-04/`: the perf and cambification plan, retired with every
+done-condition met. Its two last live items closed on 2026-09-03 (the search
+and whisper text fields onto `caret_text_field`) and 2026-09-04 (the file-size
+debt: the last seven over-ceiling files split, nothing in the repo above 600
+lines). The 600-LOC ledger and the rule for how a file splits moved to
+`CLAUDE.md` beside the ceiling itself rather than retiring with the plan.
 
 `archive_docs/2026-08-08/` (audit pass; residues in the extracted-receipts
 ledger): bootstrap (I0-I6 landed), next-horizons landscape, board

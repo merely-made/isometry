@@ -1,7 +1,7 @@
 # Performance and cambification
 
 **Date:** 2026-07-20
-**Status:** ACTIVE, **narrowed (audit 2026-08-08)** to search/whisper text-field adoption and current file-size debt; nothing else in this plan is live. Every performance regression is
+**Status:** RETIRED 2026-09-04, every done-condition met. Archived on Mark's word; the 600-LOC ceiling's ledger and the rule for how a file splits moved to `CLAUDE.md`, beside the ceiling itself, so someone approaching the limit reads them without opening a retired plan. Was ACTIVE, **narrowed (audit 2026-08-08)** to search/whisper text-field adoption and current file-size debt; nothing else in this plan is live. Both of those have since closed -- the text field on 2026-09-03, the file-size debt on 2026-09-04 -- so every done-condition below is met and the plan is a candidate for archival on Mark's word. Every performance regression is
 fixed and receipted, the files are split, and the catalog lane is adopted. The
 text-routing blocker cleared 2026-07-27 and the `>` command line now uses
 Cambium's field; the search and whisper capture lanes remain. The plan also
@@ -438,20 +438,64 @@ suite is untouched and green (`--all-features`, 18 targets). Method bodies moved
 into `impl` blocks in sibling modules, which needed `pub(crate)` on items that
 now cross a module boundary and were previously private within one file.
 
-Every non-test source file is now under the ceiling. What remains over it:
+Every non-test source file was under the ceiling from that point. The table
+that stood here listed six that were not, three of them source files
+(`isometry-net/src/session.rs`, `campaign_space.rs`,
+`isometry-campaign/src/world.rs`) that the done-conditions below record as
+split later the same day — so the table went stale within hours of being
+written, and stayed that way.
 
-| file | lines | note |
-| --- | ---: | --- |
-| `isometry-net/tests/replication.rs` | 1970 | test file |
-| `isometry-net/src/session.rs` | 1325 | **not yet split**, next candidate |
-| `isometry-system/src/tests.rs` | 1285 | test file |
-| `isometry-net/src/campaign_space.rs` | 1271 | **not yet split** |
-| `isometry-campaign/src/world.rs` | 860 | **not yet split** |
-| `isometry-views/src/state/tests.rs` | 768 | test file |
+**Done 2026-09-04.** The test-file carve-out is lifted. It read: *the test
+files were moved wholesale rather than distributed across the new modules;
+splitting them follows the code they cover, and is worth doing when a module's
+tests are what someone is actually reading.* Mark ruled on 2026-09-04 that all
+three are in scope, and that the carve-out's own condition is now the rule for
+**how**: a test file splits along the module boundaries its subject already
+has, never into equal chunks by line count.
 
-The test files were moved wholesale rather than distributed across the new
-modules; splitting them follows the code they cover, and is worth doing when a
-module's tests are what someone is actually reading.
+Seven files were over the ceiling. All seven are split, and **no file in the
+repo is over 600 lines now** — the largest is `isometry-views/src/theme.rs` at
+599.
+
+| file | before | roof after | modules |
+| --- | ---: | ---: | --- |
+| `isometry-net/tests/replication.rs` | 2127 | 248 (`replication/main.rs`) | `replication/{convergence,authority,adjudication,travel,secrets,items,generation,world,storylets}` |
+| `isometry-system/src/tests.rs` | 1285 | 37 | `tests/{generator,packs,actions,pf2e}` |
+| `isometry-views/src/state/tests.rs` | 902 | 18 | `state/tests/{interaction,lanes,play,session,surfaces}` |
+| `isometry-genet/src/selftest.rs` | 865 | 92 | `selftest/{session,surfaces,world,adjudicate}` |
+| `isometry-views/src/overmap.rs` | 729 | 80 | `overmap/{scene,swatch,overlay}` |
+| `isometry-views/src/board.rs` | 727 | 256 | `board/{tiles,tokens,menu}` |
+| `isometry-views/src/state.rs` | 618 | 525 | new `state/pixels.rs`, plus the row vocabularies into the existing `state/rows.rs` |
+
+The seam in each case was one the code already had. `replication.rs` splits by
+what a group of tests proves (ordering, ownership, adjudication, door
+crossings, secrets, items, generation, the campaign world, storylets); the two
+unit-test files by the subject module each test drives; `selftest.rs` by what
+each env-gated lane drives, grouped so no lane is cut in half; `board.rs` and
+`overmap.rs` by drawing pass; and `state.rs` by what was left over once the
+2026-07-24 submodules had taken their share — the integer-pixel-rounding lane
+(`BOARD_UNIT`, `set_pixel_grid`, `toggle_integer_pixel_rounding`,
+`apply_pixel_grid`, `board_scale_for`) is a module, and the pace/stance/mode
+row vocabularies belonged in `rows.rs` all along.
+
+Mechanical again, and verifiable as such: every test count is exactly what it
+was (net 11 + 5 + 43 + 5, system 48, views 50 + 6, everything else untouched).
+Only `board.rs` forced a visibility change — `ground_tiles`, `prop_tiles`,
+`token_el`, `marker_el` and `context_menu_overlay` went from private to
+`pub(super)`, because `board_root` stayed at the roof and now reaches them
+across a module boundary. Nothing widened to `pub(crate)` or beyond, and no
+public item was renamed. `overmap::overmap_positions_relaxed` is the one
+surface that narrowed: it is `overmap_positions`' own knob, only `scene.rs`
+calls it, and re-exporting it at the roof was a dead import.
+
+One pre-existing bug surfaced and was fixed in passing, because the split would
+otherwise have filed the comments under the wrong module: two doc comments in
+`selftest.rs` had drifted one lane up the file. The `ISOMETRY_COMBAT_SELFTEST`
+block sat on `maybe_travel_selftest` and the `ISOMETRY_CONVINCE_SELFTEST` block
+on `maybe_storylet_selftest`, leaving the combat and convince lanes undocumented.
+Each is now on the lane it names. `board/tokens.rs` also puts its test module
+last, which clears a `clippy::items_after_test_module` that `board.rs` had been
+carrying.
 
 ## Done conditions
 
@@ -466,6 +510,9 @@ module's tests are what someone is actually reading.
 - [x] Adopt `GRAPH_CANVAS_SWATCH_CSS` and drop the no-op Expand route
       (2026-07-24).
 - [x] Split the three oversized files (2026-07-24); see the file-size note.
+- [x] Split the seven files still over the ceiling, the three test files
+      included (2026-09-04); see the file-size note. No file in the repo is
+      over 600 lines.
 - [x] Obviation lane, `segmented_control`: the mode, pace, and stance rows
       migrated on the ruled pump-side bridge (2026-07-24).
 - [x] Obviation lane, `tab_strip` and `command_menu` (2026-07-25). The menu also
@@ -555,3 +602,16 @@ module's tests are what someone is actually reading.
   at `--all-features`: core 56, campaign 28, net 10 + 42, system 48, views 40 +
   6, voxel 7, genet 5, graphshell 2 (244 total, plus the ignored receipt). The
   "core 58" in the measurement notes above was already stale when quoted.
+- **2026-09-04:** The last of the file-size debt cleared. Mark lifted the
+  test-file carve-out and ruled its own condition into the rule for *how*: a
+  test file splits along the module boundaries its subject already has. Seven
+  files went over the ceiling to none -- `replication.rs` 2127, system
+  `tests.rs` 1285, `state/tests.rs` 902, `selftest.rs` 865, `overmap.rs` 729,
+  `board.rs` 727, `state.rs` 618 -- each into a directory module beside its
+  roof. Behaviour-preserving: the test counts are identical
+  (net 11 + 5 + 43 + 5, system 48, views 50 + 6), five `board.rs` items went
+  private -> `pub(super)` for the roof to reach them, and nothing else
+  changed visibility. `isometry-genet`'s check is outstanding: the workspace
+  cannot build it while the git `mere-canvas` at `653df6ea` meets a
+  path-overridden `seiche` that has gained a `LayoutSnapshot::energy` field
+  it does not set. That blocker predates this pass and is not isometry's.

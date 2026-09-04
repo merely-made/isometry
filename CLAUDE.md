@@ -96,7 +96,16 @@ file I/O. Event log semantics live in core; transport lives in
 ## General Guidelines
 
 - Rust: standard idioms. No `unsafe` without documented justification.
-- 600-LOC ceiling per source file. Split before adding when approaching it.
+- 600-LOC ceiling per source file, tests included. Split before adding when
+  approaching it. A file over the ceiling grows into a directory module with
+  focused siblings, the shape `state/`, `board/`, `overmap/`, `selftest/`,
+  `campaign_space/` and `session/` already use: shared imports and fixtures at
+  the roof, children on `use super::*`, and visibility widened no further than
+  `pub(super)`. **Split along seams the code already has, not by line count**,
+  and for a test file that means the module boundaries of the subject it
+  drives, one file per subject. Ruled 2026-09-04, when the last seven
+  over-ceiling files came down; the pass is recorded in
+  `design_docs/archive_docs/2026-09-04/2026-07-20_perf_and_cambification_plan.md`.
 - Plans go in `design_docs/` per the date-keyword-plan convention with
   done-conditions, not time estimates. Never `.claude/plans/`.
 - Follow `DOC_POLICY.md` for documentation changes.

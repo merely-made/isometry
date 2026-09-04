@@ -311,3 +311,39 @@ pub enum GovernanceResolutionRequest {
     Adopt { selected: [u8; 32] },
     Branch { candidates: Vec<[u8; 32]> },
 }
+
+// The row vocabularies moved here from `state.rs` on 2026-09-04. Their
+// order *is* the selection index, which is the same plain-data contract
+// the types above keep.
+
+/// Travel pace as a percent of normal, in the order the row presents them.
+/// The index into this array *is* the selection index, so the array is the
+/// single place the row's order is decided.
+pub const PACE_PCTS: [i64; 3] = [50, 100, 200];
+
+/// Marching stance keys, in row order. The empty key is "no stance": walking.
+pub const STANCE_KEYS: [&str; 4] = ["scout", "search", "forage", ""];
+
+/// The pace row's labels, paired with [`PACE_PCTS`] by index.
+pub fn pace_items() -> Vec<SelectionItem> {
+    ["Fast", "Normal", "Slow"]
+        .into_iter()
+        .map(SelectionItem::new)
+        .collect()
+}
+
+/// The stance row's labels, paired with [`STANCE_KEYS`] by index.
+pub fn stance_items() -> Vec<SelectionItem> {
+    ["Scout", "Search", "Forage", "Walk"]
+        .into_iter()
+        .map(SelectionItem::new)
+        .collect()
+}
+
+/// The mode row's labels, paired with [`EditMode::ALL`] by index.
+pub fn mode_items() -> Vec<SelectionItem> {
+    EditMode::ALL
+        .iter()
+        .map(|mode| SelectionItem::new(mode.label()))
+        .collect()
+}

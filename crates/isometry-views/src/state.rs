@@ -39,15 +39,6 @@ const MOVE_BUDGET: u32 = 5;
 /// senses. Configurable via [`UiState::sight_radius`].
 const SIGHT_RADIUS: u32 = 6;
 
-/// The board's finest geometric unit in CSS pixels: the elevation step, which
-/// is half a tile's height and a quarter of its width.
-///
-/// Rounding *this* onto a whole device pixel lands the tile height (twice it)
-/// and the tile width (four times it) on whole device pixels as well, so an
-/// elevation column stacks without a seam. Rounding the tile width instead
-/// would leave the height on a half pixel whenever the width came out odd.
-pub const BOARD_UNIT: f32 = 8.0;
-
 /// How many whispers [`UiState::messages`] keeps. Matches `ROLL_LOG_CAP`'s
 /// magnitude and stays far above the five the pane shows, so scrollback is
 /// still there when the pane grows one.
@@ -63,41 +54,10 @@ fn point_selection(state: &mut SelectionState, index: usize) {
     state.selected = vec![index];
 }
 
-/// Travel pace as a percent of normal, in the order the row presents them.
-/// The index into this array *is* the selection index, so the array is the
-/// single place the row's order is decided.
-pub const PACE_PCTS: [i64; 3] = [50, 100, 200];
-
-/// Marching stance keys, in row order. The empty key is "no stance": walking.
-pub const STANCE_KEYS: [&str; 4] = ["scout", "search", "forage", ""];
-
-/// The pace row's labels, paired with [`PACE_PCTS`] by index.
-pub fn pace_items() -> Vec<SelectionItem> {
-    ["Fast", "Normal", "Slow"]
-        .into_iter()
-        .map(SelectionItem::new)
-        .collect()
-}
-
-/// The stance row's labels, paired with [`STANCE_KEYS`] by index.
-pub fn stance_items() -> Vec<SelectionItem> {
-    ["Scout", "Search", "Forage", "Walk"]
-        .into_iter()
-        .map(SelectionItem::new)
-        .collect()
-}
-
-/// The mode row's labels, paired with [`EditMode::ALL`] by index.
-pub fn mode_items() -> Vec<SelectionItem> {
-    EditMode::ALL
-        .iter()
-        .map(|mode| SelectionItem::new(mode.label()))
-        .collect()
-}
-
 mod interaction;
 mod lanes;
 mod play;
+mod pixels;
 mod rows;
 mod session;
 mod source_time;
@@ -105,6 +65,11 @@ mod surfaces;
 
 use rows::Step;
 pub use rows::*;
+
+// The 2026-09-04 split sent the row vocabularies to `rows.rs` and the
+// pixel-rounding lane to `pixels.rs`. `BOARD_UNIT` went with the rounding it
+// explains, and is re-exported so `state::BOARD_UNIT` still names it.
+pub use pixels::BOARD_UNIT;
 
 /// Runner state: the substrate document plus view-layer concerns
 /// (camera, selection, editor).
@@ -543,64 +508,6 @@ impl UiState {
             items: Vec::new(),
         }
     }
-}
-
-impl UiState {
-    /// State the device scale and interface zoom the board is being drawn
-    /// under, and recompute the board's own scale from them.
-    ///
-    /// The host calls this, from a hook, on a zoom change and at boot: the
-    /// window's scale factor and the effective zoom are the host's to know, and
-    /// a view that asked for either would be reaching back across the boundary
-    /// the migration drew.
-    pub fn set_pixel_grid(&mut self, grid: (f32, f32)) {
-        self.pixel_grid = grid;
-        self.apply_pixel_grid();
-    }
-
-    /// Flip the integer-rounding setting and lay the board out under it.
-    pub fn toggle_integer_pixel_rounding(&mut self) {
-        self.integer_pixel_rounding = !self.integer_pixel_rounding;
-        self.apply_pixel_grid();
-        self.status = format!(
-            "pixel grid: {}",
-            if self.integer_pixel_rounding {
-                "on"
-            } else {
-                "off"
-            }
-        );
-    }
-
-    /// Recompute [`Self::board_scale`] and the geometry it drives.
-    fn apply_pixel_grid(&mut self) {
-        self.board_scale = if self.integer_pixel_rounding {
-            board_scale_for(self.pixel_grid)
-        } else {
-            1.0
-        };
-        let base = IsoGeometry::default();
-        self.geo = IsoGeometry {
-            tile_w: base.tile_w * self.board_scale,
-            tile_h: base.tile_h * self.board_scale,
-            elev_step: base.elev_step * self.board_scale,
-        };
-    }
-}
-
-/// The board scale that lands [`BOARD_UNIT`] on a whole number of device
-/// pixels under a `(device scale, interface zoom)` pair.
-///
-/// `device = BOARD_UNIT * scale * zoom`, rounded to the nearest whole pixel
-/// (never below one), divided back. A pair whose product is already whole —
-/// every ordinary device scale at zoom 1 — gives exactly `1.0`, so the setting
-/// costs nothing at all until a fractional zoom is in play.
-fn board_scale_for((scale, zoom): (f32, f32)) -> f32 {
-    let device = BOARD_UNIT * scale * zoom;
-    if !device.is_finite() || device <= 0.0 {
-        return 1.0;
-    }
-    device.round().max(1.0) / device
 }
 
 /// Facing after a step from `from` to `to` (grid-axis neighbors; equal
