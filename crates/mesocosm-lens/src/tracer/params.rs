@@ -352,9 +352,9 @@ mod tests {
         assert!(ROSTER_BUFFER_BYTES < limit);
         assert!((size_of::<TraceParams>() as u64) < limit);
         // Both bindings are live at once, and each has to fit the same limit
-        // on its own. The frame uniform (header 208 B + pose) spends 51.7%,
+        // on its own. The frame uniform (header 224 B + pose, including the slab wall) spends 51.7%,
         // the roster 93.8%.
-        assert_eq!(size_of::<TraceParams>(), 8464);
+        assert_eq!(size_of::<TraceParams>(), 8480);
         assert_eq!(ROSTER_BUFFER_BYTES * 100 / limit, 93);
         // The budget §3 writes as `M × (C + 1) ≤ 511`, checked rather than
         // recited: 40 members at 11 capsules is 480, and one more capsule each

@@ -10,7 +10,7 @@
 
 use std::path::PathBuf;
 
-use crate::played::PlayedTrace;
+use crate::played::{PlayedTrace, SceneMode};
 use crate::section::{self, CameraMode};
 
 #[derive(Clone, Debug)]
@@ -59,6 +59,9 @@ pub struct HostConfig {
     /// no state hash. The measured slice replays one golden trace under all
     /// three and asserts the same hash from each.
     pub camera: CameraMode,
+    pub camera_explicit: bool,
+    pub terrarium_pitch: f32,
+    pub cutaway: section::Cutaway,
     /// Voxel anatomy or the legacy capsule comparison, presentation only.
     pub body_mode: section::BodyMode,
     pub body_budget: usize,
@@ -66,6 +69,7 @@ pub struct HostConfig {
     pub generated_content: bool,
     /// New-world recipe set. A replay always uses its recorded choice.
     pub body_layout: crate::played::BodyLayout,
+    pub scene: SceneMode,
     /// Off by default (DT1). On, the dev lane draws and its keys go live;
     /// recorded in the receipt either way.
     pub dev: bool,
@@ -85,6 +89,10 @@ impl HostConfig {
         self.replay
             .as_ref()
             .map_or(self.body_layout, |trace| trace.body_layout)
+    }
+
+    pub fn effective_scene(&self) -> SceneMode {
+        self.replay.as_ref().map_or(self.scene, |trace| trace.scene)
     }
 }
 
@@ -113,10 +121,14 @@ impl Default for HostConfig {
             scenario: None,
             slab_half_height: section::SLAB_HALF_HEIGHT,
             camera: CameraMode::default(),
+            camera_explicit: false,
+            terrarium_pitch: section::TERRARIUM_DEGREES,
+            cutaway: section::Cutaway::Occupied,
             body_mode: section::BodyMode::default(),
             body_budget: section::DEFAULT_BODY_BUDGET,
             generated_content: true,
             body_layout: crate::played::BodyLayout::Spaced,
+            scene: SceneMode::default(),
             dev: false,
             follow: None,
         }
@@ -126,7 +138,7 @@ impl Default for HostConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::played::{BodyLayout, PlayedTrace};
+    use crate::played::{BodyLayout, PlayedTrace, SceneMode};
 
     #[test]
     fn old_trace_without_layout_stays_axial() {
@@ -149,5 +161,24 @@ mod tests {
         };
         assert_eq!(config.body_layout, BodyLayout::Spaced);
         assert_eq!(config.effective_body_layout(), BodyLayout::Jointed);
+    }
+
+    #[test]
+    fn old_trace_defaults_ecology_and_saved_scene_wins() {
+        let old: PlayedTrace = serde_json::from_str(
+            r#"{"seed":1,"organisms":1,"steps":0,"state_hash":0,"intents":[]}"#,
+        )
+        .unwrap();
+        assert_eq!(old.scene, SceneMode::Ecology);
+        let saved: PlayedTrace = serde_json::from_str(
+            r#"{"scene":"terrarium","seed":1,"organisms":1,"steps":0,"state_hash":0,"intents":[]}"#,
+        )
+        .unwrap();
+        let config = HostConfig {
+            scene: SceneMode::Ecology,
+            replay: Some(saved),
+            ..HostConfig::default()
+        };
+        assert_eq!(config.effective_scene(), SceneMode::Terrarium);
     }
 }

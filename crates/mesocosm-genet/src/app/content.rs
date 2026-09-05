@@ -8,6 +8,26 @@ use mesocosm_runtime::Runtime;
 
 use super::HostConfig;
 
+fn runtime(
+    config: &HostConfig,
+    founding: mesocosm_core::Founding,
+    palette: mesocosm_core::PartPalette,
+) -> Result<Runtime, String> {
+    let result = match config.effective_scene() {
+        crate::played::SceneMode::Ecology => Runtime::with_founding_palette(
+            config.seed,
+            config.organisms,
+            config.ticks_per_second,
+            founding,
+            palette,
+        ),
+        crate::played::SceneMode::Terrarium => {
+            Runtime::terrarium(config.seed, config.ticks_per_second, founding, palette)
+        },
+    };
+    result.map_err(|why| format!("founding refused: {why:?}"))
+}
+
 pub(super) fn start(
     config: &HostConfig,
 ) -> Result<(Runtime, Option<ContentPack>, VolumeMap), String> {
@@ -24,24 +44,10 @@ pub(super) fn start(
         let volumes = pack
             .resolve()
             .map_err(|why| format!("pack refused: {why:?}"))?;
-        let runtime = Runtime::with_founding_palette(
-            config.seed,
-            config.organisms,
-            config.ticks_per_second,
-            founding,
-            pack.palette,
-        )
-        .map_err(|why| format!("palette refused: {why:?}"))?;
+        let runtime = runtime(config, founding, pack.palette)?;
         Ok((runtime, Some(pack), volumes))
     } else {
-        let runtime = Runtime::with_founding_palette(
-            config.seed,
-            config.organisms,
-            config.ticks_per_second,
-            founding,
-            founding.palette(),
-        )
-        .map_err(|why| format!("founding refused: {why:?}"))?;
+        let runtime = runtime(config, founding, founding.palette())?;
         let volumes = crate::fixture::volumes_for(runtime.world());
         Ok((runtime, None, volumes))
     }

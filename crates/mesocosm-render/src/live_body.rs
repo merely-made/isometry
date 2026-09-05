@@ -57,11 +57,18 @@ pub struct ClipSlab {
     pub normal: [f32; 3],
     pub min: f32,
     pub max: f32,
+    /// Optional fixed world volume, independent of camera orientation.
+    pub bounds: Option<([f32; 3], [f32; 3])>,
 }
 
 impl ClipSlab {
     pub const fn new(normal: [f32; 3], min: f32, max: f32) -> Self {
-        Self { normal, min, max }
+        Self {
+            normal,
+            min,
+            max,
+            bounds: None,
+        }
     }
 }
 
@@ -160,6 +167,8 @@ struct FrameUniform {
     clip_from_world: [[f32; 4]; 4],
     slab_normal_min: [f32; 4],
     slab_max_enabled: [f32; 4],
+    bounds_min: [f32; 4],
+    bounds_max: [f32; 4],
 }
 
 /// Draws cached volume meshes into a pass that the caller owns.
@@ -351,6 +360,12 @@ impl LiveBodyRenderer {
         let slab = clip_slab.unwrap_or(ClipSlab::new([0.0; 3], 0.0, 0.0));
         let frame = FrameUniform {
             clip_from_world,
+            bounds_min: slab
+                .bounds
+                .map_or([0.0; 4], |(min, _)| [min[0], min[1], min[2], 1.0]),
+            bounds_max: slab
+                .bounds
+                .map_or([0.0; 4], |(_, max)| [max[0], max[1], max[2], 0.0]),
             slab_normal_min: [slab.normal[0], slab.normal[1], slab.normal[2], slab.min],
             slab_max_enabled: [
                 slab.max,

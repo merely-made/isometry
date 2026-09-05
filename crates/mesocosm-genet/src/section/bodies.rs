@@ -6,10 +6,12 @@
 use mesocosm_core::{Organism, OrganismId, World};
 use mesocosm_lens::{BodyLensProjection, BodyPlacement, CritterPose, MAX_ROSTER};
 use mesocosm_mesh::{LiveBodyProjection, LiveBodyProjector, VolumeMap};
-use mesocosm_render::live_body::{ClipSlab, LiveBody, LiveBodyRenderer};
+use mesocosm_render::live_body::{LiveBody, LiveBodyRenderer};
 use serde::Serialize;
 
-use super::{BodySelection, CameraMode, SLAB_DEPTH, SlabWindow};
+use super::{BodySelection, SlabWindow};
+#[cfg(test)]
+use super::{CameraMode, SLAB_DEPTH};
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum BodyMode {
@@ -40,6 +42,7 @@ pub const DEFAULT_BODY_BUDGET: usize = MAX_ROSTER + 1;
 #[derive(Clone, Debug, Default, Serialize)]
 pub struct BodyFrameStats {
     pub candidates: usize,
+    pub body_scale: f32,
     pub voxel_bodies: usize,
     pub voxel_parts: usize,
     pub carcasses: usize,
@@ -71,6 +74,8 @@ pub(super) struct BodyLayer {
     pub played_fallback: Option<CritterPose>,
     pub stats: BodyFrameStats,
     pub budget: usize,
+    pub scale: f32,
+    pub ground_anatomy: bool,
     focus_subject: Option<OrganismId>,
     selected: Option<BodySelection>,
     depth: wgpu::Texture,
@@ -88,6 +93,8 @@ impl BodyLayer {
             played_fallback: None,
             stats: BodyFrameStats::default(),
             budget: DEFAULT_BODY_BUDGET,
+            scale: 1.0,
+            ground_anatomy: false,
             focus_subject: None,
             selected: None,
             depth,
@@ -190,13 +197,18 @@ impl BodyLayer {
         self.placed.clear();
         self.fallback.clear();
         self.played_fallback = None;
-        self.stats = BodyFrameStats::default();
+        self.stats = BodyFrameStats {
+            body_scale: self.scale,
+            ..Default::default()
+        };
         let controlled = world.controlled_id();
         let mut candidates: Vec<_> = world
             .organisms
             .iter()
             .filter(|o| o.body().living().next().is_some())
-            .filter(|o| Some(o.id) == controlled || intersects(o, window))
+            .filter(|o| {
+                Some(o.id) == controlled || intersects(o, window, self.scale, self.ground_anatomy)
+            })
             .collect();
         candidates.sort_by(|a, b| {
             let priority = |o: &Organism| Some(o.id) != controlled;
@@ -223,7 +235,7 @@ impl BodyLayer {
                     self.stats.carcasses += usize::from(!organism.is_alive());
                     self.placed.push(PlacedBody {
                         projection,
-                        origin: organism.position.map(|v| v as f32),
+                        origin: body_origin(organism, self.scale, self.ground_anatomy),
                         tint,
                     });
                 },
@@ -241,10 +253,14 @@ impl BodyLayer {
     }
 
     fn add_fallback(&mut self, organism: &Organism, controlled: bool, tint: [f32; 3]) {
-        let at = organism.position.map(|v| v as f32);
+        let at = body_origin(organism, self.scale, self.ground_anatomy);
         let placement = BodyPlacement {
-            ground: [at[0], at[1] + organism.body().aabb().min[1] as f32, at[2]],
-            scale: 1.0,
+            ground: [
+                at[0],
+                at[1] + organism.body().aabb().min[1] as f32 * self.scale,
+                at[2],
+            ],
+            scale: self.scale,
             tint,
         };
         match BodyLensProjection::project_truncated(organism.body(), placement) {
@@ -275,17 +291,16 @@ impl BodyLayer {
         queue: &wgpu::Queue,
         encoder: &mut wgpu::CommandEncoder,
         colour: &wgpu::TextureView,
-        camera: (CameraMode, [f32; 3], f32, f32),
+        camera: super::view::View,
     ) -> Result<[[f32; 4]; 4], String> {
-        let (mode, centre, half_height, aspect) = camera;
-        let matrix = clip_from_world(mode, centre, half_height, aspect);
+        let matrix = camera.matrix();
         let bodies: Vec<_> = self
             .placed
             .iter()
             .map(|body| LiveBody {
                 mesh: &body.projection.mesh,
                 origin: body.origin,
-                scale: 1.0,
+                scale: self.scale,
                 tint: body.tint,
                 focused: self.focus_subject == Some(body.projection.organism),
                 selected_part: self.selected.and_then(|selection| {
@@ -304,7 +319,7 @@ impl BodyLayer {
                 colour,
                 &self.depth_view,
                 matrix,
-                Some(clip_slab(mode, centre)),
+                Some(camera.clip()),
                 &bodies,
             )
             .map_err(|error| format!("voxel bodies: {error:?}"))?;
@@ -352,13 +367,21 @@ fn distance(at: [i32; 3], centre: [f32; 3]) -> f32 {
     (0..3).map(|i| (at[i] as f32 - centre[i]).powi(2)).sum()
 }
 
-fn intersects(organism: &Organism, window: SlabWindow) -> bool {
+fn body_origin(organism: &Organism, scale: f32, grounded: bool) -> [f32; 3] {
+    let mut origin = organism.position.map(|v| v as f32);
+    if grounded {
+        origin[1] -= organism.body().aabb().min[1] as f32 * scale;
+    }
+    origin
+}
+
+fn intersects(organism: &Organism, window: SlabWindow, scale: f32, grounded: bool) -> bool {
     let bounds = organism.body().aabb();
+    let origin = body_origin(organism, scale, grounded);
     let middle = [0, 1, 2].map(|i| {
-        organism.position[i] as f32 + (bounds.min[i] as f32 + bounds.max[i] as f32) * 0.5
-            - window.centre[i]
+        origin[i] + (bounds.min[i] as f32 + bounds.max[i] as f32) * 0.5 * scale - window.centre[i]
     });
-    let half = [0, 1, 2].map(|i| (bounds.max[i] as f32 - bounds.min[i] as f32) * 0.5);
+    let half = [0, 1, 2].map(|i| (bounds.max[i] as f32 - bounds.min[i] as f32) * 0.5 * scale);
     (0..3).all(|axis| {
         let extent: f32 = (0..3).map(|i| half[i] * window.axes[axis][i].abs()).sum();
         dot(middle, window.axes[axis]).abs() <= window.half[axis] + extent
@@ -369,37 +392,23 @@ fn dot(a: [f32; 3], b: [f32; 3]) -> f32 {
     a.into_iter().zip(b).map(|(a, b)| a * b).sum()
 }
 
+#[cfg(test)]
 pub(super) fn clip_from_world(
     mode: CameraMode,
     centre: [f32; 3],
     half: f32,
     aspect: f32,
 ) -> [[f32; 4]; 4] {
-    let [right, up, forward] = mode.basis();
-    // Standard-z over a conservative view-aligned envelope of the vertical
-    // slab. Actual cut planes are applied per fragment, independently of z.
-    let reach = mode.slab_reach(half, aspect) + 1.0;
-    let x = right.map(|v| v / (half * aspect));
-    let y = up.map(|v| v / half);
-    let z = forward.map(|v| v / (2.0 * reach));
-    [
-        [x[0], y[0], z[0], 0.0],
-        [x[1], y[1], z[1], 0.0],
-        [x[2], y[2], z[2], 0.0],
-        [-dot(x, centre), -dot(y, centre), 0.5 - dot(z, centre), 1.0],
-    ]
-}
-
-fn clip_slab(mode: CameraMode, centre: [f32; 3]) -> ClipSlab {
-    let [x, _, z] = mode.forward();
-    let length = (x * x + z * z).sqrt();
-    let normal = [x / length, 0.0, z / length];
-    let middle = dot(normal, centre);
-    ClipSlab {
-        normal,
-        min: middle - SLAB_DEPTH * 0.5,
-        max: middle + SLAB_DEPTH * 0.5,
+    super::view::View {
+        mode,
+        centre,
+        half,
+        aspect,
+        depth: SLAB_DEPTH,
+        pitch: None,
+        bounds: None,
     }
+    .matrix()
 }
 
 fn depth_target(
@@ -429,6 +438,28 @@ fn depth_target(
 mod tests {
     use super::*;
     use mesocosm_lens::TraceCamera;
+
+    #[test]
+    fn grounded_terrarium_anatomy_fits_the_fixed_volume() {
+        let founding = mesocosm_core::Founding::SpacedRoster;
+        let world = World::terrarium(7, founding, founding.palette()).unwrap();
+        let bounds = super::super::framed_habitat(&world).bounds;
+        let scale = super::super::TERRARIUM_BODY_SCALE;
+        for organism in &world.organisms {
+            let origin = body_origin(organism, scale, true);
+            let body = organism.body().aabb();
+            assert_eq!(
+                origin[1] + body.min[1] as f32 * scale,
+                organism.position[1] as f32
+            );
+            for axis in 0..3 {
+                assert!(origin[axis] + body.min[axis] as f32 * scale >= bounds.min[axis] as f32);
+                assert!(
+                    origin[axis] + body.max[axis] as f32 * scale <= bounds.max[axis] as f32 + 1.0
+                );
+            }
+        }
+    }
 
     fn transform(matrix: [[f32; 4]; 4], point: [f32; 3]) -> [f32; 3] {
         [0, 1, 2].map(|row| {
@@ -472,7 +503,16 @@ mod tests {
     #[test]
     fn vertical_cut_plane_is_independent_of_height() {
         for mode in CameraMode::ALL {
-            let slab = clip_slab(mode, [4.0, 20.0, 7.0]);
+            let slab = super::super::view::View {
+                mode,
+                centre: [4.0, 20.0, 7.0],
+                half: 28.0,
+                aspect: 1.0,
+                depth: SLAB_DEPTH,
+                pitch: None,
+                bounds: None,
+            }
+            .clip();
             assert_eq!(slab.normal[1], 0.0);
             assert!((slab.max - slab.min - SLAB_DEPTH).abs() < 1e-5);
         }

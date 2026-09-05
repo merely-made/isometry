@@ -18,12 +18,19 @@
 
 mod bodies;
 mod camera;
+mod capture;
+mod terrarium;
+mod view;
+pub use terrarium::{
+    BODY_SCALE as TERRARIUM_BODY_SCALE, Cutaway, framed_habitat, occupied as terrarium_occupied,
+};
+pub use view::camera_basis;
 mod inspection;
 
 pub use bodies::{BodyFrameStats, BodyMode, DEFAULT_BODY_BUDGET};
 pub use inspection::BodySelection;
 
-pub use camera::{CameraMode, Framing, OBLIQUE_DEGREES, SLAB_DEPTH, SlabWindow};
+pub use camera::{CameraMode, Framing, OBLIQUE_DEGREES, SLAB_DEPTH, SlabWindow, TERRARIUM_DEGREES};
 
 use mesocosm_core::places::Ground;
 use mesocosm_core::{BodyDocument, Organism, World};
@@ -95,6 +102,7 @@ pub struct Section {
     mode: CameraMode,
     body_mode: BodyMode,
     bodies: bodies::BodyLayer,
+    terrarium: Option<terrarium::TerrariumView>,
     /// What the tracer writes: display-encoded values in a linear-tagged
     /// format, exactly as the lens's own captures read them back.
     traced: wgpu::Texture,
@@ -146,6 +154,7 @@ impl Section {
             mode: framing.mode,
             body_mode: BodyMode::default(),
             bodies,
+            terrarium: None,
             traced,
             traced_view,
             display,
@@ -185,15 +194,22 @@ impl Section {
     /// host's. The tracer orthonormalizes what it is handed, which is why an
     /// off-axis section costs three unit vectors and nothing else.
     fn camera(&self, centre: [f32; 3]) -> Option<TraceCamera> {
-        let [_, up, forward] = self.mode.basis();
-        TraceCamera::orthographic_slab(
+        self.view(centre).trace()
+    }
+
+    fn view(&self, centre: [f32; 3]) -> view::View {
+        view::View {
+            mode: self.mode,
             centre,
-            forward,
-            up,
-            self.half_height,
-            self.aspect(),
-            SLAB_DEPTH,
-        )
+            half: self.half_height,
+            aspect: self.aspect(),
+            depth: self
+                .terrarium
+                .as_ref()
+                .map_or(SLAB_DEPTH, |view| view.depth()),
+            pitch: self.terrarium.as_ref().map(|view| view.pitch()),
+            bounds: self.terrarium.as_ref().map(|view| view.bounds()),
+        }
     }
 
     /// Which way this section is looking. The receipt names it, so a capture
@@ -223,7 +239,7 @@ impl Section {
     /// numbers. What falls outside cannot reach a pixel, so it is what the
     /// roster culls against.
     pub fn slab_window(&self, centre: [f32; 3]) -> SlabWindow {
-        SlabWindow::new(self.mode, centre, self.half_height, self.aspect())
+        self.view(centre).window()
     }
 
     /// Roster members the last traced frame drew. The receipt's evidence that
@@ -253,12 +269,24 @@ impl Section {
         encoder: &mut wgpu::CommandEncoder,
         frame: SectionFrame<'_>,
     ) -> Result<(), String> {
-        let slots = if frame.dirty.is_empty() {
+        let mut full = false;
+        let slots = if let Some(view) = &mut self.terrarium {
+            if let Some(map) = view.refresh(frame.ground, self.mode)? {
+                self.map = map;
+                full = true;
+            }
+            Vec::new()
+        } else if frame.dirty.is_empty() {
             Vec::new()
         } else {
             self.map
                 .refresh(frame.ground, frame.dirty.iter().copied())
                 .map_err(|error| error.to_string())?
+        };
+        let change = if full {
+            BrickChange::Full
+        } else {
+            BrickChange::Slots(&slots)
         };
         let camera = self
             .camera(frame.centre)
@@ -291,14 +319,14 @@ impl Section {
                     multiview_mask: None,
                 });
             }
-            let aspect = self.aspect();
-            let matrix = bodies::clip_from_world(self.mode, frame.centre, self.half_height, aspect);
+            let camera_view = self.view(frame.centre);
+            let matrix = camera_view.matrix();
             if let Err(error) = self.bodies.draw(
                 &self.device,
                 &self.queue,
                 encoder,
                 &self.traced_view,
-                (self.mode, frame.centre, self.half_height, aspect),
+                camera_view,
             ) {
                 eprintln!("{error}; using capsule fallback");
                 self.bodies.stats.last_error = Some(error);
@@ -310,7 +338,7 @@ impl Section {
                 camera,
                 &self.grade,
             )
-            .changed(BrickChange::Slots(&slots))
+            .changed(change)
             .with_clip_from_world(matrix)
             .with_roster(&self.bodies.fallback);
             if let Some(pose) = self.bodies.played_fallback.as_ref() {
@@ -326,7 +354,7 @@ impl Section {
                 camera,
                 &self.grade,
             )
-            .changed(BrickChange::Slots(&slots))
+            .changed(change)
             .with_roster(frame.roster);
             if let Some(pose) = frame.pose {
                 input = input.with_pose(pose);
@@ -374,106 +402,6 @@ impl Section {
                 depth_or_array_layers: 1,
             },
         );
-    }
-
-    /// Reads the most recently traced frame back as RGBA8, with `overlay`
-    /// given the chance to composite chrome over it first.
-    ///
-    /// The last frame rather than a fresh trace: the capture is meant to be
-    /// the picture the player was looking at, and re-tracing would show a
-    /// world one frame further on than the receipt's own hash.
-    pub fn capture(
-        &self,
-        overlay: impl FnOnce(&mut wgpu::CommandEncoder, &wgpu::TextureView, wgpu::TextureFormat),
-    ) -> Option<(u32, u32, Vec<u8>)> {
-        self.capture_from(&self.display, overlay)
-    }
-
-    /// Reads a completed frame master back as RGBA8, with `overlay` given the
-    /// chance to composite chrome over it first. RG3 uses this route so its
-    /// evidence crosses the same imported-tenant master as the live window.
-    pub fn capture_from(
-        &self,
-        master: &wgpu::Texture,
-        overlay: impl FnOnce(&mut wgpu::CommandEncoder, &wgpu::TextureView, wgpu::TextureFormat),
-    ) -> Option<(u32, u32, Vec<u8>)> {
-        let (shot, view) = target(
-            &self.device,
-            self.width,
-            self.height,
-            CAPTURE_FORMAT,
-            "section capture",
-        );
-        let mut encoder = self
-            .device
-            .create_command_encoder(&wgpu::CommandEncoderDescriptor {
-                label: Some("section capture"),
-            });
-        Composite::new(&self.device, CAPTURE_FORMAT).draw(
-            &self.device,
-            &self.queue,
-            &mut encoder,
-            &view,
-            &master.create_view(&Default::default()),
-            (0.0, 0.0, self.width as f32, self.height as f32),
-            (self.width, self.height),
-        );
-        overlay(&mut encoder, &view, CAPTURE_FORMAT);
-        self.read_back(encoder, &shot)
-            .map(|pixels| (self.width, self.height, pixels))
-    }
-
-    fn read_back(
-        &self,
-        mut encoder: wgpu::CommandEncoder,
-        colour: &wgpu::Texture,
-    ) -> Option<Vec<u8>> {
-        // Copy rows must be aligned, so the staging buffer is padded and the
-        // padding is stripped after mapping.
-        let unpadded = self.width * 4;
-        let align = wgpu::COPY_BYTES_PER_ROW_ALIGNMENT;
-        let padded = unpadded.div_ceil(align) * align;
-        let staging = self.device.create_buffer(&wgpu::BufferDescriptor {
-            label: Some("section readback"),
-            size: (padded * self.height) as wgpu::BufferAddress,
-            usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
-            mapped_at_creation: false,
-        });
-        encoder.copy_texture_to_buffer(
-            wgpu::TexelCopyTextureInfo {
-                texture: colour,
-                mip_level: 0,
-                origin: wgpu::Origin3d::ZERO,
-                aspect: wgpu::TextureAspect::All,
-            },
-            wgpu::TexelCopyBufferInfo {
-                buffer: &staging,
-                layout: wgpu::TexelCopyBufferLayout {
-                    offset: 0,
-                    bytes_per_row: Some(padded),
-                    rows_per_image: Some(self.height),
-                },
-            },
-            wgpu::Extent3d {
-                width: self.width,
-                height: self.height,
-                depth_or_array_layers: 1,
-            },
-        );
-        self.queue.submit(Some(encoder.finish()));
-
-        let slice = staging.slice(..);
-        slice.map_async(wgpu::MapMode::Read, |_| {});
-        self.device.poll(wgpu::PollType::wait_indefinitely()).ok()?;
-        let mapped = slice.get_mapped_range().ok()?;
-        let mut pixels = Vec::with_capacity((unpadded * self.height) as usize);
-        for row in 0..self.height {
-            let start = (row * padded) as usize;
-            pixels.extend_from_slice(&mapped[start..start + unpadded as usize]);
-        }
-        drop(mapped);
-        staging.unmap();
-        Some(pixels)
     }
 }
 
@@ -551,7 +479,21 @@ pub fn centre_on(at: [i32; 3], pan: Pan, half_height: f32, mode: CameraMode) -> 
 /// The pose comes back with the count of parts the capsule budget dropped, so
 /// a truncated player is reported rather than merely smaller.
 pub fn pose_of(world: &World, tint: [f32; 3]) -> Option<(CritterPose, u32)> {
-    pose_at(world.body()?, world.position()?, tint)
+    pose_of_scaled(world, tint, 1.0, false)
+}
+
+pub fn pose_of_scaled(
+    world: &World,
+    tint: [f32; 3],
+    scale: f32,
+    grounded: bool,
+) -> Option<(CritterPose, u32)> {
+    let body = world.body()?;
+    let mut at = world.position()?.map(|v| v as f32);
+    if grounded {
+        at[1] -= body.aabb().min[1] as f32 * scale;
+    }
+    pose_at_origin(body, at, tint, scale)
 }
 
 /// Every other living organism the window holds, posed and tinted.
@@ -565,6 +507,16 @@ pub fn roster_of(
     window: SlabWindow,
     tint: impl Fn(&Organism) -> [f32; 3],
 ) -> Vec<CritterPose> {
+    roster_of_scaled(world, window, tint, 1.0, false)
+}
+
+pub fn roster_of_scaled(
+    world: &World,
+    window: SlabWindow,
+    tint: impl Fn(&Organism) -> [f32; 3],
+    scale: f32,
+    grounded: bool,
+) -> Vec<CritterPose> {
     let controlled = world.controlled_id();
     world
         .organisms
@@ -575,7 +527,12 @@ pub fn roster_of(
                 && window.holds(organism.position)
         })
         .filter_map(|organism| {
-            pose_at(organism.body(), organism.position, tint(organism)).map(|(pose, _)| pose)
+            let body = organism.body();
+            let mut at = organism.position.map(|v| v as f32);
+            if grounded {
+                at[1] -= body.aabb().min[1] as f32 * scale;
+            }
+            pose_at_origin(body, at, tint(organism), scale).map(|(pose, _)| pose)
         })
         .take(MAX_ROSTER)
         .collect()
@@ -592,11 +549,26 @@ pub fn roster_of(
 /// Until DC3 this swallowed the refusal with `.ok()` and the frame simply had
 /// no body in it, which is how a played critter could disappear while alive.
 /// The overflow is now a number the host puts in its receipt.
-fn pose_at(body: &BodyDocument, at: [i32; 3], tint: [f32; 3]) -> Option<(CritterPose, u32)> {
-    let floor = body.aabb().min[1] as f32;
+#[cfg(test)]
+fn pose_at(
+    body: &BodyDocument,
+    at: [i32; 3],
+    tint: [f32; 3],
+    scale: f32,
+) -> Option<(CritterPose, u32)> {
+    pose_at_origin(body, at.map(|v| v as f32), tint, scale)
+}
+
+fn pose_at_origin(
+    body: &BodyDocument,
+    at: [f32; 3],
+    tint: [f32; 3],
+    scale: f32,
+) -> Option<(CritterPose, u32)> {
+    let floor = body.aabb().min[1] as f32 * scale;
     let placement = BodyPlacement {
-        ground: [at[0] as f32, at[1] as f32 + floor, at[2] as f32],
-        scale: 1.0,
+        ground: [at[0], at[1] + floor, at[2]],
+        scale,
         tint,
     };
     BodyLensProjection::project_truncated(body, placement)

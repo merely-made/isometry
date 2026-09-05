@@ -48,6 +48,7 @@ fn recorded_content_replays_without_the_current_generation_setting() {
         live.advance(100_000);
     }
     let trace = PlayedTrace {
+        scene: crate::played::SceneMode::Ecology,
         body_layout: config.body_layout,
         seed: config.seed,
         organisms: config.organisms,

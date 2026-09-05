@@ -36,6 +36,32 @@ use serde::{Deserialize, Serialize};
 mod layout;
 pub use layout::BodyLayout;
 
+/// The host presentation/world fixture selected for a run.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SceneMode {
+    #[default]
+    Ecology,
+    Terrarium,
+}
+
+impl SceneMode {
+    pub const fn name(self) -> &'static str {
+        match self {
+            Self::Ecology => "ecology",
+            Self::Terrarium => "terrarium",
+        }
+    }
+
+    pub fn parse(name: &str) -> Option<Self> {
+        match name.trim().to_ascii_lowercase().as_str() {
+            "ecology" => Some(Self::Ecology),
+            "terrarium" => Some(Self::Terrarium),
+            _ => None,
+        }
+    }
+}
+
 /// Steps the recorded demo runs for.
 ///
 /// **Long enough for the loop the game is named around** (PE1). It was 120 —
@@ -115,6 +141,8 @@ pub struct Script {
 /// A recorded run, complete enough to reproduce and to judge.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct PlayedTrace {
+    #[serde(default, skip_serializing_if = "SceneMode::is_ecology")]
+    pub scene: SceneMode,
     #[serde(
         default = "BodyLayout::axial",
         skip_serializing_if = "BodyLayout::is_axial"
@@ -131,6 +159,12 @@ pub struct PlayedTrace {
     /// Absent in existing recordings, which retain their original fixtures.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub content: Option<mesocosm_mesh::content::ContentPack>,
+}
+
+impl SceneMode {
+    pub const fn is_ecology(&self) -> bool {
+        matches!(self, Self::Ecology)
+    }
 }
 
 /// What a run says about itself on the way out.
@@ -158,6 +192,10 @@ pub struct FrameGraphReceipt {
 /// What a run says about itself on the way out.
 #[derive(Clone, Debug, Serialize)]
 pub struct PlayedReceipt {
+    pub scene: &'static str,
+    pub habitat_bounds: Option<[[i32; 3]; 2]>,
+    pub terrarium_pitch: Option<f32>,
+    pub burrow_occupied: Option<bool>,
     pub body_layout: &'static str,
     pub body_content: &'static str,
     pub inspecting: bool,
@@ -206,6 +244,7 @@ pub struct PlayedReceipt {
     /// `oblique` default does. It is written down because captures of one
     /// tick are only comparable if each says which arm it is.
     pub camera: &'static str,
+    pub cutaway: &'static str,
     pub bodies: &'static str,
     pub body_budget: usize,
     pub body_projection: crate::section::BodyFrameStats,
@@ -365,6 +404,7 @@ pub fn record_demo(seed: u64, organisms: u32, ticks_per_second: u32, steps: u64)
         demo_step(&mut runtime, &volumes, step, &mut script);
     }
     PlayedTrace {
+        scene: SceneMode::Ecology,
         body_layout: BodyLayout::Axial,
         seed,
         organisms,

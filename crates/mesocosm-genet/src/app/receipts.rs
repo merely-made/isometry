@@ -96,9 +96,10 @@ impl Host {
             return;
         };
         let recorded = PlayedTrace {
+            scene: self.config.effective_scene(),
             body_layout: self.config.effective_body_layout(),
             seed: self.config.seed,
-            organisms: self.config.organisms,
+            organisms: self.runtime.receipt().organisms,
             steps: self.runtime.trace().len() as u64,
             state_hash: self.runtime.state_hash(),
             intents: self.runtime.trace().to_vec(),
@@ -186,6 +187,14 @@ impl Host {
             .map(|trace| trace.state_hash);
         let world = self.runtime.world();
         PlayedReceipt {
+            scene: self.config.effective_scene().name(),
+            habitat_bounds: self.habitat.as_ref().map(|h| [h.bounds.min, h.bounds.max]),
+            terrarium_pitch: self.habitat.as_ref().map(|_| self.config.terrarium_pitch),
+            burrow_occupied: self.habitat.as_ref().and_then(|h| {
+                world
+                    .position()
+                    .map(|at| crate::section::terrarium_occupied(h, at))
+            }),
             body_layout: self.config.effective_body_layout().name(),
             body_content: if self.content.is_some() {
                 "generated-v1"
@@ -231,6 +240,7 @@ impl Host {
                 .as_ref()
                 .map_or(self.config.camera, |gpu| gpu.section.mode())
                 .name(),
+            cutaway: self.config.cutaway.name(),
             bodies: self.config.body_mode.name(),
             inspecting: self.inspection.open,
             selected_part: self

@@ -4,44 +4,13 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 // SPDX-License-Identifier: MPL-2.0
 
-//! Which way the section looks, and the slab that follows from it. (DC4, Q9)
+//! Presentation camera orientations and the legacy section's cull window.
 //!
-//! **Presentation only, and measured before it was ruled.** Mark's 2026-09-02
-//! ruling on the default creatures plan's ninth open question was *measure
-//! before ruling*: a body's segments chain along `+z` and the section then
-//! shipped looked along `-z`, so every critter was drawn end-on and the
-//! roster's whole part budget landed in one pixel column. This module is the
-//! instrument that question asked for — the same tick, rendered three ways.
-//! The measurement is on record in the plan's Q9 Findings entry, and Mark
-//! ruled on it the same day: **[`CameraMode::Oblique`] is the default**, the
-//! only arm that shows a body's part budget and keeps the section's vertical
-//! read. All three modes stay, because the sheet they compose is the evidence
-//! for the ruling.
-//!
-//! Nothing here reaches an intent, a snapshot or the state hash; the
-//! `--camera` flag is a sibling of `--slab`, and a replay under any of the
-//! three lands on the same hash.
-//!
-//! # Why all three are cheap
-//!
-//! [`mesocosm_lens::TraceCamera::orthographic_slab`] takes an arbitrary
-//! forward and up and orthonormalizes them itself, and the tracer's DDA
-//! marches whatever rays it is handed. So an off-axis section costs a
-//! different set of three unit vectors and nothing else: no shader change, no
-//! second pipeline, no new binding. The expensive option in Q9 is the third
-//! one Mark named — the rotatable isometric cube with the interior cut — and
-//! that one is *not* built here; the plan's Findings entry says what it would
-//! take.
-//!
-//! # The one thing that had to generalize with the camera
-//!
-//! The roster's cull window. It used to be an axis-aligned box because the
-//! camera was axis-aligned, and left that way it would have picked the wrong
-//! critters the moment the camera turned: `across` would have rostered a
-//! hundred voxels of `x` it cannot see and none of the `z` it can. So
-//! [`SlabWindow`] now carries the camera's own basis and tests against it,
-//! which is exact for all three modes and reduces to precisely the old
-//! numbers for [`CameraMode::Side`].
+//! Side, across and the default oblique view retain their measured Q9
+//! geometry. CP1 adds four cardinal terrarium views at a shallow pitch.
+//! `view.rs` supplies configurable pitch and one matching terrain/raster
+//! transform; `terrarium.rs` clips a fixed habitat volume and applies the
+//! interior information policy. Rotation never reaches a world intent.
 
 use mesocosm_lens::SlabWall;
 
@@ -65,6 +34,9 @@ const UP: [f32; 3] = [0.0, 1.0, 0.0];
 /// the middle of the 15-25 the ruling asked for.
 pub const OBLIQUE_DEGREES: f32 = 20.0;
 
+/// The shallow fixed pitch used by the CP1 terrarium camera prototype.
+pub const TERRARIUM_DEGREES: f32 = 12.0;
+
 /// Which way the section looks. Presentation, so it is a host flag and never
 /// a world fact.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -83,11 +55,48 @@ pub enum CameraMode {
     /// budget *and* keeps the section.
     #[default]
     Oblique,
+    /// Terrarium views keep a little vertical depth while turning around the
+    /// body chain. East is the prototype's first view, looking across `-x`.
+    TerrariumEast,
+    TerrariumSouth,
+    TerrariumWest,
+    TerrariumNorth,
 }
 
 impl CameraMode {
     /// Every mode, in the order the contact sheet composes them.
-    pub const ALL: [CameraMode; 3] = [Self::Side, Self::Across, Self::Oblique];
+    pub const ALL: [CameraMode; 7] = [
+        Self::Side,
+        Self::Across,
+        Self::Oblique,
+        Self::TerrariumEast,
+        Self::TerrariumSouth,
+        Self::TerrariumWest,
+        Self::TerrariumNorth,
+    ];
+
+    pub const fn is_terrarium(self) -> bool {
+        matches!(
+            self,
+            Self::TerrariumEast | Self::TerrariumSouth | Self::TerrariumWest | Self::TerrariumNorth
+        )
+    }
+
+    /// Turns one quarter around the terrarium. Legacy modes remain unchanged.
+    pub const fn quarter_turn(self, backwards: bool) -> Self {
+        use CameraMode::*;
+        match (self, backwards) {
+            (TerrariumEast, false) => TerrariumSouth,
+            (TerrariumSouth, false) => TerrariumWest,
+            (TerrariumWest, false) => TerrariumNorth,
+            (TerrariumNorth, false) => TerrariumEast,
+            (TerrariumEast, true) => TerrariumNorth,
+            (TerrariumNorth, true) => TerrariumWest,
+            (TerrariumWest, true) => TerrariumSouth,
+            (TerrariumSouth, true) => TerrariumEast,
+            (mode, _) => mode,
+        }
+    }
 
     /// What `--camera` accepts, and what a receipt and a scenario read back.
     pub fn parse(name: &str) -> Option<Self> {
@@ -101,6 +110,10 @@ impl CameraMode {
             Self::Side => "side",
             Self::Across => "across",
             Self::Oblique => "oblique",
+            Self::TerrariumEast => "terrarium-east",
+            Self::TerrariumSouth => "terrarium-south",
+            Self::TerrariumWest => "terrarium-west",
+            Self::TerrariumNorth => "terrarium-north",
         }
     }
 
@@ -117,6 +130,10 @@ impl CameraMode {
                 -pitch.sin(),
                 -yaw.cos() * pitch.cos(),
             ],
+            Self::TerrariumEast => terrarium_forward([-1.0, 0.0, 0.0]),
+            Self::TerrariumSouth => terrarium_forward([0.0, 0.0, -1.0]),
+            Self::TerrariumWest => terrarium_forward([1.0, 0.0, 0.0]),
+            Self::TerrariumNorth => terrarium_forward([0.0, 0.0, 1.0]),
         }
     }
 
@@ -260,6 +277,15 @@ fn normalize(value: [f32; 3]) -> Option<[f32; 3]> {
     (length > 1e-6).then(|| [value[0] / length, value[1] / length, value[2] / length])
 }
 
+fn terrarium_forward(horizontal: [f32; 3]) -> [f32; 3] {
+    let pitch = TERRARIUM_DEGREES.to_radians();
+    [
+        horizontal[0] * pitch.cos(),
+        -pitch.sin(),
+        horizontal[2] * pitch.cos(),
+    ]
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -274,6 +300,50 @@ mod tests {
         }
         assert_eq!(CameraMode::default(), CameraMode::Oblique);
         assert_eq!(CameraMode::parse("isometric"), None);
+        assert!(CameraMode::TerrariumEast.is_terrarium());
+        assert!(!CameraMode::Oblique.is_terrarium());
+    }
+
+    #[test]
+    fn terrarium_turns_four_times_back_to_the_start() {
+        let mut mode = CameraMode::TerrariumEast;
+        for _ in 0..4 {
+            mode = mode.quarter_turn(false);
+        }
+        assert_eq!(mode, CameraMode::TerrariumEast);
+        assert_eq!(
+            CameraMode::TerrariumEast.quarter_turn(true),
+            CameraMode::TerrariumNorth
+        );
+        assert_eq!(CameraMode::Side.quarter_turn(false), CameraMode::Side);
+    }
+
+    #[test]
+    fn terrarium_views_keep_world_up_and_share_a_center() {
+        let centre = [13.0, 29.0, -7.0];
+        for mode in [
+            CameraMode::TerrariumEast,
+            CameraMode::TerrariumSouth,
+            CameraMode::TerrariumWest,
+            CameraMode::TerrariumNorth,
+        ] {
+            let forward = mode.forward();
+            assert!((forward[1] + TERRARIUM_DEGREES.to_radians().sin()).abs() < 1e-5);
+            let [right, up, basis_forward] = mode.basis();
+            assert!(dot(up, UP) > 0.97, "{} lost world up", mode.name());
+            assert!(
+                dot(forward, basis_forward) > 0.999,
+                "{} changed forward",
+                mode.name()
+            );
+            assert!(SlabWindow::new(mode, centre, 28.0, 1.0).holds([13, 29, -7]));
+            assert!(dot(right, right) > 0.99);
+        }
+        let first = CameraMode::TerrariumEast.forward();
+        assert!(
+            first[0] < -0.9 && first[2].abs() < 1e-5,
+            "east starts across -x"
+        );
     }
 
     /// The frame the cull window tests against has to be the frame the tracer

@@ -2196,7 +2196,7 @@ recipe depends on which anatomy makes it what it is.
 
 ## CP1: clearing and burrow camera prototype
 
-**Status: direction accepted 2026-09-05 (Mark); implementation pending.**
+**Status: implemented and native-verified 2026-09-05; visual review pending.**
 Mark imagines mainly up/down/left/right play with shallow depth and favours
 four deliberate quarter-turn views of a cutaway terrarium. The clearing and
 burrow prototype follows VB3 body-part inspection in the proposed sequence;
@@ -2204,6 +2204,30 @@ this ordering interprets his request to do the scene "after". The accepted
 direction reopens camera exploration beyond Q9's earlier three-angle result.
 The current oblique default remains the comparison arm until a prototype is
 reviewed. No exact isometric angle or final movement model is ruled here.
+
+**Implementation note (2026-09-05):** `--scene ecology|terrarium` selects the
+scene, with `ecology` as the backward-compatible default and a saved replay
+scene taking precedence. The terrarium uses a fixed habitat volume and a
+read-only Ground display filter. `Z` and `V` quarter-turn the presentation
+around world axes; ordinary WASD movement is unchanged. Terrarium pitch and
+slab size remain presentation settings. Cutaway policy is explicit:
+`occupied`, `always` or `never`, with `occupied` as the default. Existing
+traces without the scene tag continue to read as ecology. Native receipts are
+recorded below.
+
+The prototype explicitly converts anatomy to Ground units using the existing
+locomotion contract (`BODY_VOXELS_PER_GROUND_VOXEL = 4`). Raster bodies,
+capsule comparison and culling use scale 1/4, with anatomy grounded at its
+lowest extent to match the walker stance; the existing ecology renderer
+retains its previous scale for comparison. CP1 starts at slab half-height 18,
+with configurable 0..45 degree pitch (default 12). The host fits admitted
+anatomy at genesis and retains those world-aligned bounds during movement
+and turns. Movement still uses a
+turning cross-section proxy, rather than articulated voxel collision.
+`occupied` opens the habitat cut when the controlled body enters its burrow
+route and closes it on exit. This is an occupancy-triggered ground-truth
+section of the authored habitat, not persistent exploration visibility.
+`always` exposes it from the clearing; `never` keeps the terrain closed.
 
 **Scene target:** one small habitat with a readable clearing, canopy/root
 structure, surface entrance and connected underground chamber. Use actual
@@ -2231,3 +2255,33 @@ still points to the displayed part after a turn; pure camera rotation leaves
 the world hash unchanged; and the intended traversal has an ordinary input
 receipt. Compare against the existing oblique view at the same world state.
 Review the scene and controls with Mark before changing the shipping camera.
+
+
+**CP1 receipt (2026-09-05):** 572 distinct library tests pass: core 401,
+host 80, lens 49, render 13, runtime 29 (two existing ignored tests). The
+release host was captured on Vulkan / RTX 4060 Laptop GPU. Evidence and
+executable scenarios live under `Code/testing/mesocosm/cp1_terrarium/`.
+
+- All four views plus return to east retain organism 0 / part 0 / revision
+  `3c08feca18d1fcee`, the same coordinates and hash `65425aa79982d536` at
+  every turn. The trace contains zero intents. Ordinary, non-dev camera
+  controls also turn during replay without changing that hash.
+- Four ordinary D inputs, each stepped once, descend from `[-14,6,-13]`
+  to `[-10,2,-13]`. The occupancy cut opens on entry; the trace replays to
+  `c90423c121afb7fb`. Open and closed interior comparisons preserve that hash.
+- Seed 7 retains bounds `[-38,-4,-37] .. [10,18,13]` before and after travel.
+  At genesis, four voxel bodies / 170 parts render at scale 1/4 with zero fallbacks,
+  missing volumes or projection failures. Oblique and 0/24-degree pitch
+  comparisons preserve the same world state.
+- The historical 856-step trace still reaches `17ce02e24e152591`; its PNG
+  byte-matches the retained pre-CP1 RG3 host. The default ecology projection
+  and frame-master composition are preserved.
+
+**Visual finding:** the side views now expose legs and body length clearly;
+18 frames the whole habitat, while `--slab 12` gives a closer section. The
+current producer reads as a spreading mat, so the canopy target is still
+open. Terrain colour/contrast, composed vegetation and articulated foot
+contact need further visual work. Locomotion still uses the turning-width
+proxy, not full posed voxel collision. CP1 establishes the working comparison
+and traversal; it does not promote a new shipping camera or claim final scene
+composition.

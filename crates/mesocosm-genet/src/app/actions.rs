@@ -113,6 +113,9 @@ impl Host {
     /// queue. At a lineage checkpoint the board's own two keys come first — one
     /// of which sends no intent at all.
     pub(super) fn press_key(&mut self, key: &Key) {
+        if self.try_camera_key(key) {
+            return;
+        }
         if self.try_inspection_key(key) {
             return;
         }
@@ -170,6 +173,9 @@ impl Host {
             None => (label.trim(), ""),
         };
         if let Some(key) = key_named(name) {
+            if self.try_camera_key(&key) {
+                return true;
+            }
             // A replay's trace is the whole of what it applies. An `act` that
             // queued beside it would put an intent in the run the recording
             // never had, and the hash would be the first thing to say so.
@@ -349,7 +355,7 @@ fn key_named(name: &str) -> Option<Key> {
         // Play: WASD, E, Q, C; T at a checkpoint; R at the board.
         // Dev (live only under `--dev`): P . , [ ] N B M X F K G.
         "w" | "a" | "s" | "d" | "e" | "q" | "c" | "t" | "r" | "p" | "." | "," | "[" | "]" | "n"
-        | "b" | "m" | "x" | "f" | "k" | "g" | "i" | "j" | "l" | "u" => {
+        | "b" | "m" | "x" | "f" | "k" | "g" | "i" | "j" | "l" | "u" | "z" | "v" => {
             Some(Key::Character(name.into()))
         },
         _ => None,
@@ -409,6 +415,29 @@ mod tests {
         pressed.runtime.step(1);
         assert_eq!(acted.runtime.trace(), pressed.runtime.trace());
         assert_eq!(acted.runtime.state_hash(), pressed.runtime.state_hash());
+    }
+
+    #[test]
+    fn terrarium_camera_keys_turn_without_touching_world_hash() {
+        let mut host = Host::new(HostConfig {
+            dev: false,
+            scene: crate::played::SceneMode::Terrarium,
+            camera: crate::section::CameraMode::TerrariumEast,
+            ..HostConfig::default()
+        });
+        let before = host.runtime.state_hash();
+        assert!(host.run_action("v"));
+        assert_eq!(
+            host.config.camera,
+            crate::section::CameraMode::TerrariumSouth
+        );
+        assert_eq!(host.runtime.state_hash(), before);
+        assert!(host.run_action("z"));
+        assert_eq!(
+            host.config.camera,
+            crate::section::CameraMode::TerrariumEast
+        );
+        assert_eq!(host.runtime.state_hash(), before);
     }
 
     /// An unknown name fails loudly rather than passing as a no-op.

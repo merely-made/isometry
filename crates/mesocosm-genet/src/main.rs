@@ -65,6 +65,7 @@ fn main() {
     let mut trace = None;
     let mut receipt = None;
     let mut capture = None;
+    let mut slab_explicit = false;
 
     while let Some(arg) = args.next() {
         match arg.as_str() {
@@ -109,6 +110,32 @@ fn main() {
                         std::process::exit(1)
                     });
             },
+            "--scene" => {
+                let named = args.next().unwrap_or_default();
+                config.scene =
+                    mesocosm_genet::played::SceneMode::parse(&named).unwrap_or_else(|| {
+                        eprintln!("--scene wants ecology or terrarium");
+                        std::process::exit(1);
+                    });
+            },
+            "--terrarium-pitch" => {
+                config.terrarium_pitch = args
+                    .next()
+                    .and_then(|value| value.parse::<f32>().ok())
+                    .filter(|value| value.is_finite() && (0.0..=45.0).contains(value))
+                    .unwrap_or_else(|| {
+                        eprintln!("--terrarium-pitch wants a finite angle from 0 to 45");
+                        std::process::exit(1);
+                    });
+            },
+            "--cutaway" => {
+                let named = args.next().unwrap_or_default();
+                config.cutaway =
+                    mesocosm_genet::section::Cutaway::parse(&named).unwrap_or_else(|| {
+                        eprintln!("--cutaway wants occupied, always or never");
+                        std::process::exit(1);
+                    });
+            },
             "--capture" => capture = args.next().map(PathBuf::from),
             "--trace" => trace = args.next().map(PathBuf::from),
             "--receipt" => receipt = args.next().map(PathBuf::from),
@@ -135,15 +162,21 @@ fn main() {
             "--camera" => {
                 let named = args.next().unwrap_or_default();
                 match CameraMode::parse(&named) {
-                    Some(mode) => config.camera = mode,
+                    Some(mode) => {
+                        config.camera = mode;
+                        config.camera_explicit = true;
+                    },
                     None => {
-                        eprintln!("--camera wants one of oblique, side, across");
+                        eprintln!(
+                            "--camera wants one of oblique, side, across, terrarium-east, terrarium-south, terrarium-west, terrarium-north"
+                        );
                         std::process::exit(1);
                     },
                 }
             },
             // Presentation only; the default is ruled and this varies it.
             "--slab" => {
+                slab_explicit = true;
                 if let Some(half) = args.next().and_then(|v| v.parse::<f32>().ok()) {
                     config.slab_half_height = half;
                 }
@@ -165,6 +198,10 @@ fn main() {
             },
             other => eprintln!("ignoring unknown argument: {other}"),
         }
+    }
+
+    if config.scene == mesocosm_genet::played::SceneMode::Terrarium && !config.camera_explicit {
+        config.camera = CameraMode::TerrariumEast;
     }
 
     // A scratch name under the workspace's headed-verify home, unless a flag
@@ -195,6 +232,16 @@ fn main() {
         config.trace = Some(trace_path);
     }
 
+    if config.effective_scene() == mesocosm_genet::played::SceneMode::Terrarium
+        && !config.camera_explicit
+    {
+        config.camera = CameraMode::TerrariumEast;
+    }
+
+    if config.effective_scene() == mesocosm_genet::played::SceneMode::Terrarium && !slab_explicit {
+        config.slab_half_height = 18.0;
+    }
+
     match Host::run(config) {
         Ok(code) => std::process::exit(code),
         Err(error) => {
@@ -218,7 +265,10 @@ mesocosm-genet: run Mesocosm in a window
   --replay PATH   drive the run from a recorded trace and assert its hash
   --scenario PATH drive the run from a text scenario and exit 1 if it fails
   --seed N        world seed
-  --slab H        section slab half-height in voxels (presentation only, default 28)
+  --scene MODE    ecology (default) or the fixed clearing-and-burrow terrarium
+  --terrarium-pitch DEG  shallow camera pitch, 0..45 degrees (default 12)
+  --cutaway MODE  occupied (default), always (expose interior), or never
+  --slab H        section slab half-height in voxels (presentation only, default 28, terrarium 18)
   --camera MODE   which way the section looks: oblique (the shipped section,
                   tilted 20 degrees so depth reads as a short diagonal; the
                   default), side (straight down -z, bodies end-on) or across
@@ -235,7 +285,7 @@ headed-verify home: <Code>/testing/mesocosm/scratch_played.png, .trace.json and
 .json. They are never the golden ps1_played.* fixture, which is written only
 when one of those flags names it.
 
-controls: WASD move, E/Space eat, Q deposit, C dig, arrows pan, Esc quit
+controls: Z/V turn the terrarium left/right; WASD move along world axes, E/Space eat, Q deposit, C dig, arrows pan, Esc quit
 at a checkpoint the world stops and the keys narrow:
   Enter  carry on unchanged
   T      take the body on offer (the newborn, or your eldest descendant)

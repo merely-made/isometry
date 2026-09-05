@@ -32,6 +32,24 @@ const DEV_SPEED_LADDER: [(f64, &str); 5] = [
 pub(super) const DEV_SPEED_DEFAULT_IDX: usize = 2;
 
 impl Host {
+    /// Presentation-only terrarium quarter turns. They are handled before
+    /// inspection and dev/world keys so Z/V always remain camera controls.
+    pub(super) fn try_camera_key(&mut self, key: &winit::keyboard::Key) -> bool {
+        let backwards = match key {
+            winit::keyboard::Key::Character(c) if matches!(c.as_str(), "z" | "Z") => true,
+            winit::keyboard::Key::Character(c) if matches!(c.as_str(), "v" | "V") => false,
+            _ => return false,
+        };
+        if !self.config.camera.is_terrarium() {
+            return true;
+        }
+        self.config.camera = self.config.camera.quarter_turn(backwards);
+        if let Some(gpu) = self.gpu.as_mut() {
+            gpu.section.set_mode(self.config.camera);
+        }
+        true
+    }
+
     /// Applies pause and speed to a played frame's elapsed time. `advance`
     /// calls this every frame, dev build or not: outside `--dev` it is the
     /// identity, so an ordinary build pays one branch and nothing else.

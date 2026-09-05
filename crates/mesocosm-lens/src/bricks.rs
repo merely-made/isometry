@@ -10,9 +10,10 @@
 //! owns the product-specific decision that a Ground brick's raw material
 //! bytes populate that presentation view.
 
+use std::collections::BTreeMap;
 use std::ops::Deref;
 
-use mesocosm_core::places::Ground;
+use mesocosm_core::places::{BRICK, Ground};
 use modulus::BrickMap as SharedBrickMap;
 
 pub use modulus::{BrickMapError, BrickProjectionRevision, RetargetDelta};
@@ -35,6 +36,42 @@ impl BrickMap {
     ) -> Result<Self, BrickMapError> {
         SharedBrickMap::from_keys(projection_revision, keys, |key| {
             ground.brick_materials(key).map(|(brick, _)| brick.raw())
+        })
+        .map(Self)
+    }
+
+    /// Builds a presentation-only cropped map without changing Ground.
+    ///
+    /// `keep` receives each material's world coordinate. Rejected materials
+    /// become air, and a brick that becomes all air has no shared-map slot.
+    pub fn from_ground_filtered(
+        ground: &Ground,
+        projection_revision: BrickProjectionRevision,
+        mut keep: impl FnMut([i32; 3], u8) -> bool,
+    ) -> Result<Self, BrickMapError> {
+        let mut retained = BTreeMap::new();
+        for key in ground.keys() {
+            let Some((brick, origin)) = ground.brick_materials(key) else {
+                continue;
+            };
+            let mut materials = brick.raw().to_vec();
+            for y in 0..BRICK {
+                for z in 0..BRICK {
+                    for x in 0..BRICK {
+                        let index = ((y * BRICK + z) * BRICK + x) as usize;
+                        let material = materials[index];
+                        if !keep([origin[0] + x, origin[1] + y, origin[2] + z], material) {
+                            materials[index] = 0;
+                        }
+                    }
+                }
+            }
+            if materials.iter().any(|material| *material != 0) {
+                retained.insert(key, materials);
+            }
+        }
+        SharedBrickMap::from_keys(projection_revision, retained.keys().copied(), |key| {
+            retained.get(&key).map(Vec::as_slice)
         })
         .map(Self)
     }
@@ -174,5 +211,44 @@ mod tests {
             BrickMap::from_ground_keys(&ground, BrickProjectionRevision(0), [[i16::MAX; 3]],),
             Err(BrickMapError::MissingBrick { .. })
         ));
+    }
+
+    #[test]
+    fn filtered_map_crops_materials_without_changing_ground() {
+        let ground = ground();
+        let before = ground.clone();
+        let revision = ground.revision();
+        let retained = ground
+            .keys()
+            .find_map(|key| {
+                let (brick, origin) = ground.brick_materials(key)?;
+                for y in 0..BRICK {
+                    for z in 0..BRICK {
+                        for x in 0..BRICK {
+                            let material = brick.get([x, y, z]);
+                            if material != 0 {
+                                return Some((
+                                    [origin[0] + x, origin[1] + y, origin[2] + z],
+                                    material,
+                                ));
+                            }
+                        }
+                    }
+                }
+                None
+            })
+            .expect("generated ground has a solid voxel");
+        let map = BrickMap::from_ground_filtered(&ground, BrickProjectionRevision(7), |at, _| {
+            at == retained.0
+        })
+        .unwrap();
+
+        assert_eq!(map.material_at(retained.0), retained.1);
+        assert_eq!(
+            map.material_at([retained.0[0] + 1, retained.0[1], retained.0[2]]),
+            0
+        );
+        assert_eq!(ground, before);
+        assert_eq!(ground.revision(), revision);
     }
 }

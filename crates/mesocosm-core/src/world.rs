@@ -5,13 +5,10 @@
 // SPDX-License-Identifier: MPL-2.0
 
 //! The world: an enclosure holding one critter and the loose matter it can
-//! metabolize.
-//!
-//! A world is a pure function of its seed and the ordered intents applied to
+//! metabolize. A world is a pure function of its seed and the ordered intents applied to
 //! it. There are no clock reads, no unordered iteration that reaches the
 //! simulation, and no randomness outside the seeded stream, so replaying the
 //! same trace against the same seed reproduces the same world exactly.
-
 use std::collections::{BTreeMap, BTreeSet};
 
 use serde::{Deserialize, Serialize};
@@ -21,7 +18,6 @@ use crate::organism::{Organism, OrganismId};
 use crate::places::{PlaceId, Places};
 use crate::record::WorldRecord;
 use crate::rng::Rng;
-
 mod act;
 mod adapt;
 mod consume;
@@ -36,6 +32,7 @@ mod read;
 mod records;
 mod review;
 mod revise;
+mod terrarium;
 
 pub use adapt::{Round, Score, Turn};
 pub use dev::PLACE_MATTER_MAX_MG;
@@ -45,6 +42,7 @@ pub use intent::{Ineligible, Intent, Outcome, Placement, Rejection, Route};
 pub use read::Gland;
 pub use review::{Offer, Prospect, Untakeable};
 pub use revise::Unrevised;
+pub use terrarium::{TERRARIUM_EXTENT, TERRARIUM_ROUTE_BUDGET, TerrariumBounds, TerrariumHabitat};
 
 /// How far the enclosure reaches from its middle, in voxels.
 ///
@@ -500,7 +498,7 @@ impl World {
             Some(id) if !self.is_eligible(id) => {
                 self.controlled = None;
                 Some(id)
-            }
+            },
             _ => None,
         };
 

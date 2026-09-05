@@ -246,6 +246,46 @@ impl Automatable for Host {
                 // scenario asserts it to prove the arm it captured rather
                 // than to prove anything about the world.
                 ("camera", self.config.camera.name().to_string()),
+                ("scene", self.config.effective_scene().name().to_string()),
+                (
+                    "controlled-x",
+                    world
+                        .controlled_id()
+                        .and_then(|id| world.organisms.iter().find(|o| o.id == id))
+                        .map_or(String::new(), |o| o.position[0].to_string()),
+                ),
+                (
+                    "controlled-y",
+                    world
+                        .controlled_id()
+                        .and_then(|id| world.organisms.iter().find(|o| o.id == id))
+                        .map_or(String::new(), |o| o.position[1].to_string()),
+                ),
+                (
+                    "controlled-z",
+                    world
+                        .controlled_id()
+                        .and_then(|id| world.organisms.iter().find(|o| o.id == id))
+                        .map_or(String::new(), |o| o.position[2].to_string()),
+                ),
+                (
+                    "burrow-occupied",
+                    self.habitat
+                        .as_ref()
+                        .map_or("unknown", |habitat| {
+                            world
+                                .controlled_id()
+                                .and_then(|id| world.organisms.iter().find(|o| o.id == id))
+                                .map_or("unknown", |o| {
+                                    if crate::section::terrarium_occupied(habitat, o.position) {
+                                        "yes"
+                                    } else {
+                                        "no"
+                                    }
+                                })
+                        })
+                        .to_string(),
+                ),
                 ("tick", world.tick.to_string()),
                 ("steps", self.steps.to_string()),
                 ("frames", self.frames.to_string()),

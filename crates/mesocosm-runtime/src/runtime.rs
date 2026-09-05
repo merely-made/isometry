@@ -23,6 +23,8 @@ use crate::readings::FlowWindows;
 use crate::review::{Authored, Review};
 use crate::succession::{Checkpoint, Occasion};
 
+mod terrarium;
+
 /// Default ceiling on steps authorised by one `advance` call. A stalled host
 /// resuming after a long pause catches up over several frames rather than in
 /// one burst that would itself cause another stall.

@@ -2,6 +2,8 @@ struct Frame {
     clip_from_world: mat4x4<f32>,
     slab_normal_min: vec4<f32>,
     slab_max_enabled: vec4<f32>,
+    bounds_min: vec4<f32>,
+    bounds_max: vec4<f32>,
 };
 
 @group(0) @binding(0)
@@ -43,6 +45,11 @@ fn fs_main(input: VertexOut) -> @location(0) vec4<f32> {
         if (slab < frame.slab_normal_min.w || slab > frame.slab_max_enabled.x) {
             discard;
         }
+    }
+    if (frame.bounds_min.w > 0.5 &&
+        (any(input.world_position < frame.bounds_min.xyz) ||
+         any(input.world_position > frame.bounds_max.xyz))) {
+        discard;
     }
     // Lens FRAME_FORMAT is Rgba8Unorm: it stores display values directly.
     return vec4<f32>(srgb(input.color), 1.0);

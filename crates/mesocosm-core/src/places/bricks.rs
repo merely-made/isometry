@@ -271,6 +271,41 @@ impl Ground {
         }
     }
 
+    /// Authors one wide walker stance into initial terrain geometry.
+    ///
+    /// This preserves exactly one chosen floor voxel while clearing the
+    /// walker's occupied volume. It is for deterministic world construction;
+    /// simulation edits continue to use [`Self::carve`].
+    pub fn author_walker_stance(
+        &mut self,
+        at: [i32; 3],
+        radius: i32,
+        height: i32,
+        support_offset: [i32; 2],
+    ) {
+        let radius = radius.max(0);
+        debug_assert!(support_offset[0].abs() <= radius);
+        debug_assert!(support_offset[1].abs() <= radius);
+        for dz in -radius..=radius {
+            for dx in -radius..=radius {
+                for dy in 0..height.max(1) {
+                    let air = [at[0] + dx, at[1] + dy, at[2] + dz];
+                    if self.solid(air) {
+                        self.place(air, AIR);
+                    }
+                }
+            }
+        }
+        self.place(
+            [
+                at[0] + support_offset[0],
+                at[1] - 1,
+                at[2] + support_offset[1],
+            ],
+            SOIL,
+        );
+    }
+
     /// Dig the access route for one generated nest. It descends one voxel per
     /// horizontal step to the roofed entry room. Its directness matters: the
     /// current embodied ecology follows a visible target vector, and must not
