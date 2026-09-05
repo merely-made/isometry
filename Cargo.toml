@@ -87,7 +87,7 @@ paint_list_render = { git = "https://github.com/merely-made/netrender.git", rev 
 # RG3 compatibility lane. Genet and Mere still expose the older paint-list
 # source identity above; this alias uses the same physical wgpu handles and
 # owns only the opaque-tenant frame master until those pins align.
-netrender_graph = { package = "netrender", git = "https://github.com/merely-made/netrender.git", rev = "2f34dcdc4a4c6cd461874457d5109822e2d5290d" }
+netrender_graph = { package = "netrender", git = "https://github.com/merely-made/netrender.git", rev = "93b221a5e48e80fe992feddf42b00dbe1eea3713" }
 mesocosm-core = { path = "crates/mesocosm-core", version = "0.0.1" }
 mesocosm-lens = { path = "crates/mesocosm-lens", version = "0.0.1" }
 mesocosm-mesh = { path = "crates/mesocosm-mesh", version = "0.0.1" }
