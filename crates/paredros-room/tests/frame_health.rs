@@ -45,7 +45,7 @@ fn tenant_validation_scope_leaves_later_frame_usable() {
     assert_eq!(
         health.finish_validation(
             "paredros-room",
-            "renderling::Stage::render (opaque)",
+            "renderling::Stage::encode_into (opaque)",
             1,
             Some(detail.clone()),
         ),
@@ -55,7 +55,7 @@ fn tenant_validation_scope_leaves_later_frame_usable() {
     assert_eq!(health.validations()[0].tenant_name, "paredros-room");
     assert_eq!(
         health.validations()[0].producer_path,
-        "renderling::Stage::render (opaque)"
+        "renderling::Stage::encode_into (opaque)"
     );
     assert_eq!(health.validations()[0].frame, 1);
     assert!(!health.validations()[0].error.is_empty());
@@ -76,7 +76,7 @@ fn tenant_validation_scope_leaves_later_frame_usable() {
     assert_eq!(
         health.finish_validation(
             "paredros-room",
-            "renderling::Stage::render (opaque)",
+            "renderling::Stage::encode_into (opaque)",
             2,
             None
         ),
