@@ -182,7 +182,7 @@ impl DepthApp {
             .set_room(&scene::pillar_vertices(&live.pillars), camera.eye);
         live.tenant
             .set_body(&scene::body_vertices(self.probe.at()), camera.eye);
-        live.tenant.draw();
+        let _ = live.tenant.draw();
 
         // Then the join, against the same matrix the raster projected with.
         // The depth view is fetched after the draw because the stage may

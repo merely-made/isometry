@@ -936,6 +936,17 @@ the player should receive. S0's close camera is evidence, not a ruling.
 
 ## 7. Progress
 
+- **2026-09-05 (RG3e):** Renderling commit `3683dd6` exposed a caller-owned
+  complete-stage encoder path for direct draws. The normal room tenant now
+  records geometry, the bloom chain, tonemapping, and optional debug work into
+  one encoder and Paredros performs exactly one tenant submission. The physical
+  RG3c receipt reports 20 render passes, zero copy commands, zero internal
+  submissions, one caller submission, and one separate Netrender graph
+  submission; its final master still byte-matches the legacy composition and
+  contains 466 distinct colours. The D1 shared-depth binary compiles through
+  the same tenant draw path. Compute-culling stages remain on Renderling's
+  legacy self-submitting path and are explicitly refused by `Stage::encode_into`
+  until their preparatory compute work can join the caller encoder.
 - **2026-09-05 (later):** the RG3d shared-device recovery lifecycle landed.
   Initial boot and recovery now use one constructor for the compatible adapter,
   device, queue, Renderling tenant, optional DDA tenant, Netrender composer,

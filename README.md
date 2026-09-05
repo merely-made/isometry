@@ -47,6 +47,10 @@ shipped game yet.
   as initial boot while preserving the host window and surface. A headed
   synthetic-fault receipt suppresses generation 1 before acquisition and
   presents successfully from generation 2.
+- The Renderling room tenant now records its 20-pass frame into a caller-owned
+  encoder and Paredros submits it once. RG3c reports that physical tenant
+  submission separately from Netrender's one graph submission and retains the
+  466-colour byte-match against the legacy composition path.
 
 Current plans live in [design_docs/](design_docs/DOC_README.md); the
 executable plan retains S0-S3 as foundation receipts and orders future work

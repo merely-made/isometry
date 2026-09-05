@@ -615,14 +615,16 @@ impl RoomApp {
                 live.tenant.set_room(&live.room, camera.eye);
                 live.tenant
                     .set_body(&scene::body_vertices(self.probe.at()), camera.eye);
-                live.tenant.draw();
+                let tenant_report = live.tenant.draw();
                 let chrome = scene::chrome(SIZE, self.probe.tick_count(), TICKS);
-                let (master, receipt) = live.composer.compose_opaque_tenant(&chrome, &live.tenant);
+                let (master, receipt) =
+                    live.composer
+                        .compose_opaque_tenant(&chrome, &live.tenant, tenant_report);
                 (
                     master,
                     Some(receipt),
                     "paredros-room",
-                    "renderling::Stage::render (opaque)",
+                    "renderling::Stage::encode_into (opaque)",
                 )
             }
             #[cfg(not(feature = "r1-proof"))]
@@ -631,14 +633,16 @@ impl RoomApp {
                 live.tenant.set_room(&live.room, camera.eye);
                 live.tenant
                     .set_body(&scene::body_vertices(self.probe.at()), camera.eye);
-                live.tenant.draw();
+                let tenant_report = live.tenant.draw();
                 let chrome = scene::chrome(SIZE, self.probe.tick_count(), TICKS);
-                let (master, receipt) = live.composer.compose_opaque_tenant(&chrome, &live.tenant);
+                let (master, receipt) =
+                    live.composer
+                        .compose_opaque_tenant(&chrome, &live.tenant, tenant_report);
                 (
                     master,
                     Some(receipt),
                     "paredros-room",
-                    "renderling::Stage::render (opaque)",
+                    "renderling::Stage::encode_into (opaque)",
                 )
             }
         };

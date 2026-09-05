@@ -30,7 +30,7 @@ use renderling::context::{Context, RenderTarget};
 use renderling::geometry::Vertex;
 use renderling::glam::{Mat4, Vec3};
 use renderling::primitive::Primitive;
-use renderling::stage::Stage;
+use renderling::stage::{Stage, StageEncodeReport};
 
 /// The composed frame's size. Fixed, so the receipt is the same picture on
 /// every machine.
@@ -118,6 +118,7 @@ impl Tenant {
             handles.device.clone(),
             handles.queue.clone(),
         );
+        ctx.set_use_direct_draw(true);
         // Underground dark, not black: the room reads as a place with air in
         // it rather than a cutout.
         let stage = ctx
@@ -177,10 +178,23 @@ impl Tenant {
     }
 
     /// Draws one frame into the tenant texture.
-    pub fn draw(&self) {
+    pub fn draw(&self) -> StageEncodeReport {
         let frame = self.ctx.get_next_frame().expect("tenant frame");
-        self.stage.render(&frame.view());
+        let mut encoder =
+            self.ctx
+                .get_device()
+                .create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                    label: Some("paredros renderling tenant frame"),
+                });
+        let report = self
+            .stage
+            .encode_into(&frame.view(), &mut encoder)
+            .expect("Paredros uses Renderling's direct-draw encoder path");
+        self.ctx
+            .get_queue()
+            .submit(std::iter::once(encoder.finish()));
         frame.present();
+        report
     }
 }
 
@@ -498,16 +512,19 @@ impl Composer {
         &self,
         chrome: &Scene,
         tenant: &Tenant,
+        tenant_report: StageEncodeReport,
     ) -> (wgpu::Texture, netrender::OpaqueTenantReceipt) {
+        assert_eq!(tenant_report.internal_queue_submissions, 0);
         let input = netrender::OpaqueTenantInput::new(
             tenant.target_texture(),
             netrender::OpaqueTenantMetadata::new(
                 "paredros-room",
-                "renderling::Stage::render (opaque)",
+                "renderling::Stage::encode_into (opaque)",
                 0,
                 0,
                 ExternalTexturePlacement::new([0.0, 0.0, self.size[0] as f32, self.size[1] as f32]),
-            ),
+            )
+            .with_reported_physical_submission_count(1),
         );
         let mut grab = MasterGrab { master: None };
         let receipt = self.net.render_with_opaque_tenant(
