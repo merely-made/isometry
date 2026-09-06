@@ -1,6 +1,6 @@
 # Paredros: Founding Plan
 
-**Status: active founding record, revised 2026-08-13.** Early foundation
+**Status: active founding record, revised 2026-08-13; player-experience proposal added 2026-09-05.** Early foundation
 receipts are implemented; the phase section is superseded by the execution
 plan. Vessel 2 of the games wing. Shared architecture, the three pipeline
 laws, and the wing vocabulary live in the wing founding record at
@@ -231,6 +231,160 @@ converts and nothing is re-represented, which is why the three-layer identity
 above can stay facets rather than nested copies. Ruling and consequences in
 the wing founding record §1 (`mesocosm/design_docs/`); the open word-clearance
 question for "borg" is that record's open question 3.
+
+### Player experience: body, place, and other lives
+
+**Design proposal, 2026-09-05; awaiting play and further discussion.** The
+Kenshi, RimWorld, Caves of Qud, Clone Drone, Mount & Blade, and Battlefront
+references suggest an inhabited sandbox with responsive embodied action.
+The player learns a place, makes a living, acquires capabilities, and becomes
+involved with particular lives. Combat, work, communication, and exploration
+must meet in the same space. This proposal supplements the charter; camera,
+control details, progression rates, and world-generation coverage remain open.
+
+The everyday rhythm is to notice an opportunity or need, prepare one's body
+and equipment, attempt something in the world, and live with the material and
+social consequences. Finding shelter, following a migration, learning from a
+craftsperson, repairing a crossing, and surviving a dispute can each sustain
+play. An encounter can continue through retreat, surrender, rescue, injury,
+recovery, and later reconciliation. Death severity and recovery assistance
+should be configurable; the initial feel target permits recoverable mistakes.
+
+#### What the player handles
+
+Prototype direct movement and aim with a camera that exposes reach, footing,
+obstacles, and the creature's silhouette. Begin the comparison with a trailing
+third-person camera and adjustable distance. Body-relative movement and
+targeting assistance need settings. Test a second body shape before treating
+a humanoid's controls or animation skeleton as the universal interface.
+
+Use a small equipped set of actions. Common intentions such as move, inspect,
+use, defend, and communicate resolve through actual capabilities: a hand may
+grip, a tendril anchor, a shell brace, a gland spray, or a wing arrest a fall.
+An unavailable action names the missing capability. Equipment attaches through
+compatible supports and interfaces, including carried, worn, gripped,
+symbiotic, or implanted forms. A universal pair of hand slots would defeat
+the biological premise.
+
+In motion, show immediate commitment, recovery, balance, danger, and relevant
+body damage. Inspection adds observed capabilities, equipment, injuries, and
+uncertainty about unfamiliar anatomy. An action detail explains its physical
+source, requirements, cost, output, and known interactions. The journal keeps
+encountered rules, people, places, and unresolved reports. These are projections
+of knowledge available to the played subject. A separately labelled diagnostic
+view can expose objective state for development and optional sandbox use.
+
+Social feedback has three depths: a visible act or response in the world, a
+brief stated concern when the other creature communicates it, and an evidence
+trail for what the player has learned. Do not expose private beliefs or intent
+automatically through a relationship panel. An old report stays old until a
+correction reaches its hearer; a new fact cannot silently update every mind.
+
+#### Spatial action and communication
+
+Combat should reward distance, attack path, commitment, cover, reach, footing,
+and the body part struck. Author controllable movement and attack trajectories;
+use collision, materials, and impulse to resolve their consequences. Full
+ragdoll simulation need not drive every action. Separate surface damage from
+loss of a functional part: a clipped voxel must not arbitrarily disable a
+whole creature. Telegraph serious injury and provide escape and recovery
+opportunities before making fragility a primary difficulty source.
+
+Actions chain through states they actually create. A strike unbalances; a
+shove exploits poor footing; an anchor arrests the fall. A secretion makes a
+surface conductive, and a discharge follows that path. Each action declares
+windup, active interval, recovery, allowed interruption, cost, and contact or
+field effects. The same effect can aid work, travel, rescue, or combat.
+
+Emotes can participate in this grammar. Lowering a weapon, exposing a
+vulnerable surface, offering an object, calling attention, or signalling
+surrender has a spatial and sensory expression. A receiver must perceive and
+interpret it. Different bodies may signal through sound, posture, colour,
+light, vibration, or chemical traces. An understood surrender is a proposal
+whose acceptance depends on the recipient; it is not a guaranteed stun.
+Expression can remain playful without every gesture granting a stat bonus.
+
+#### Progression and structurally different worlds
+
+Keep four sources of growth legible: practiced technique, changed anatomy,
+equipment and symbiosis, and knowledge or access earned through relationships
+and local rules. Practice improves control and application; new mechanisms
+open new actions. A stronger discharge differs from learning to store charge,
+transfer it through a tether, or draw it from a storm. Acquisition can involve
+training, repair, cultivation, grafting, bargains, research, or unusual world
+conditions. Repetition alone should not become the optimal progression loop.
+
+Generate worlds from a supported vocabulary of mechanisms and compatibility
+rules. Vary the causal structure: which materials carry an effect, which
+organisms produce it, how it is stored, what releases it, and what counters
+it. Random names, colours, damage values, and cooldowns alone are insufficient.
+Initial rules should come from a small curated set before combinations expand.
+Every admitted interaction needs readable feedback and a bounded execution cost.
+
+For example, one world might accumulate atmospheric charge in living storage
+organs, making insulation and wet surfaces matter to homes, tools, travel, and
+fighting. Another might transmit effects through continuous resonant material,
+making broken connections, tuned structures, and vibration-sensing creatures
+important. These are illustrative candidate rules, not implemented world types.
+Each should change at least one ordinary activity and one dangerous encounter.
+Teaching and experimentation must allow the player to discover a useful rule
+before survival depends on guessing it. Rules stay consistent within their
+recorded world revision; authored exceptions have discoverable causes.
+
+Across the wing, an admitted world's material and capability facts retain
+their meaning. Mesocosm experiences their ecological consequences, Paredros
+their possibilities for an embodied life, and Isometry their consequences at
+its own scale. Products need declared support for the world's required
+mechanisms; sharing a seed alone cannot establish compatibility. Missing
+mechanisms require an explicit admission result rather than a silent rewrite.
+
+#### Sky creatures and unusual world shapes
+
+Naming, agency, sapience, social recognition, and faction affiliation are
+independent questions. Existing critter/borg/character vocabulary remains a
+historical convention under discussion; a name does not create a mind, and
+faction membership is not a prerequisite for making decisions. Narratives can
+refer to any persistent subject that affects a place or life.
+
+A huge sky organism could first be encountered through its moving shadow,
+shed material, feeding, weather effects, and visible responses. Its distant
+representation and locally detailed parts must refer to the same organism and
+history. Recognition adds knowledge and relationships. Naming alone neither
+creates an individual nor enables conversation. Communication requires an
+actual compatible channel and capacity; controlling a vastly different body
+is a separate playability question.
+
+This is a later scale experiment with a proposed done-condition: one organism
+has a coherent coarse lifecycle, produces an observable local effect, and
+responds to one local action without duplicating its state on approach or
+departure. Walking settlements on its back and directly piloting it are
+further experiments. A disc-shaped world is a separate topology question;
+spatially varying gravity, moving habitats, navigation across boundaries, and
+world-supporting organisms each need their own concrete evidence. First prove
+that one unfamiliar rule makes an ordinary place interesting to inhabit.
+
+The first concrete fixture is the execution plan's
+[damaged crossing](2026-08-07_paredros_execution_plan.md#first-encounter-the-damaged-crossing):
+a useful destination, two bodies, a learnable material rule, and inhabitants
+with independent needs and partial knowledge. Its authored setup tests this
+proposal before procedural encounter generation.
+
+#### Sources and what they inform
+
+- [Kenshi's official description](https://lofigames.com/about-kenshi/): an open
+  sandbox with varied skills and livelihoods informs the lived experience.
+- [Qud's mutation overhaul](https://freeholdgames.itch.io/cavesofqud/devlog/182472/mutation-overhaul-our-biggest-mutation-rebalance-ever):
+  interacting physical and mental mutations inform qualitatively different
+  capabilities. Generating coherent world rules is our proposed extension.
+- [RimWorld's meditation and psycast update](https://ludeon.com/blog/2020/05/update-may-2020/):
+  ability growth and its supporting practices inform progression; its explicit
+  concern about repetitive worker buffs is a useful friction warning.
+- [Clone Drone's developer description](https://support.doborog.com/l/en):
+  damage to voxel body parts informs spatially readable injury.
+- [TaleWorlds on weapon physics](https://www.taleworlds.com/en/News/194):
+  directional attacks, blocking, feints, and footwork inform the action feel.
+- Battlefront is a user-supplied reference for participating bodily in a
+  larger conflict; no particular entry's mechanics are selected here.
 
 ### Expression and tone
 

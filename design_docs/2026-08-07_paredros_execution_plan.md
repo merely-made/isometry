@@ -1,6 +1,8 @@
 # Paredros Execution Plan (2026-08-07)
 
-**Status: in progress (2026-08-26); F0-F2 closed, F3 active, F3a landed.**
+**Status: in progress (2026-09-05); F0-F2 closed, F3 active, F3a landed.**
+The player-experience proposal below adds an embodied prototype alongside F3
+design; its implementation has not started.
 S0-S3 remain landed foundation receipts, with their stated headed judgments
 still open. They do not define a required entourage, sortie loop, or camera.
 **R4 was decided and executed
@@ -676,6 +678,34 @@ and adjudication policy, deception and intent, versioned norms,
 observer-relative standing, and a consequential answer citing its complete
 observation/report/norm chain remain F3b work.
 
+#### F3b1 — A consequential answer, design proposal (2026-09-05)
+
+Join observer-owned beliefs to a judgment under an explicit norm revision,
+then derive that observer's standing and an answer with its complete support
+chain. `Relations::derive` currently reads objective deeds directly; the new
+path must use what the holder knows and judges. Facts, interpretations, and
+normative evaluations need separate meanings: F3a's `Helped`/`Betrayed` reading
+is too coarse to be the entire vocabulary for an embodied encounter.
+
+Versioned norm inputs can initially be authored. F6 owns how practices and
+institutions produce them. A correction changes later reasoning after it is
+received and accepted; preserve the belief and norm revisions used by earlier
+answers. Forgetting governs current recall and use, while history persists.
+
+Contradicting one's belief is evidence of insincerity, not sufficient proof
+of deception. Distinguish the transmitted claim, the speaker's beliefs at
+that time, communicative purpose where actually recorded, and the hearer's
+inference. This corrects the earlier conversational suggestion to infer
+deception directly from belief mismatch. Public explanations must respect
+what the player could learn; an objective debugger is a separate view.
+
+**Done when:** a report reaches an absent creature and changes its answer;
+the player can obtain the stated concern and trace available evidence; a
+later correction can change the answer while the earlier account remains
+pointable; two norms can evaluate the same known facts differently; and
+replay reproduces the answers with the exact evidence and norm revisions.
+Do not gate this slice on implementing forgetting or deception in full.
+
 #### Post-F3 runtime projection proof — gated, orthogonal to F4
 
 After F3 supplies real product facts, a product-owned world compiler may lower
@@ -767,10 +797,240 @@ replay preserves the complete control history.
 
 Every layer needs enough projection to inspect and judge its laws. The final
 camera is deliberately open. Third-person, over-the-shoulder, top-down, and
-first-person references each privilege different information. Choose only
-after F1 embodiment, F5 construction, and F7 danger establish locomotion,
+first-person references each privilege different information. Refine the camera
+as F1 embodiment, F5 construction, and F7 danger establish locomotion,
 perception, reach, verticality, scene density, and how much off-body knowledge
 the player should receive. S0's close camera is evidence, not a ruling.
+
+### Embodied prototype alongside F3: proposed 2026-09-05
+
+The [founding plan's player-experience proposal](2026-07-30_paredros_founding_plan.md#player-experience-body-place-and-other-lives)
+owns action feel, progression, world differences, and the player-facing
+knowledge boundary. F0-F8 remain semantic milestones. A small playable
+cross-section may exercise preliminary F4/F5/F7 verbs before those milestones
+are complete, so interaction can inform the social design.
+
+1. **Body and contact.** One inhabited location, two materially different body
+   forms, a tool, an innate action, obstacles, and a readable opponent. Prototype
+   movement, aiming, guarding, recovery, local damage, and one action chain.
+   Done when reach and footing change outcomes, an injured capability visibly
+   changes available actions, and escape/recovery works. Compare camera distance
+   and assistance settings in play; this is an action experiment, not F7 closure.
+2. **One rule, two uses.** Start with authored candidate world rules and apply
+   the same mechanism to a practical task and a dangerous situation. Done when
+   a player can learn the connection from in-world feedback and predict a new
+   use. Repeat the location under a second rule whose structure changes the
+   solution. Procedural selection waits for these readable authored examples.
+3. **One encounter with social consequences.** Add two autonomous inhabitants,
+   one disputed resource or passage, and physical signals such as offering an
+   object or lowering a weapon. Connect the outcome to F3b1. Done when a player
+   can negotiate, help, withdraw, or fight through ordinary actions; a partial
+   witness report influences a later request; and the player can learn and
+   contest the reason without reading private minds.
+
+The encounter is an acceptance fixture. Its cast and story must not become
+special cases in production rules. Each stage needs an interactive receipt and
+appropriate replay/invariant checks before its done-condition closes. Shared
+spatial and capability machinery should be consumed where compatible; game
+timing, damage, knowledge admission, and social interpretation remain owned
+by Paredros. Huge organisms and alternative world topology remain separate
+later probes with the bounded targets stated in the founding proposal.
+
+#### First encounter: the damaged crossing
+
+**Design draft, 2026-09-05.** A concrete fixture for the embodied prototype,
+with authored terrain, bodies, and two candidate world profiles. It tests
+whether ordinary actions can produce a situation worth remembering. The
+crossing, inhabitants, and outcomes below are scenario data, not production
+types or required story beats. This section owns the encounter details; the
+founding proposal owns the wider player experience.
+
+**Why you are here.** Rain is approaching. Across a shallow cut is a roofed
+resting place beside a workshop. You can see its shelter and dry ground from
+the approach. Rest would be useful, but exposure is forgiving in this fixture:
+you can stop to experiment or turn away. The player can pursue another goal;
+there is no mandatory accept-quest step or completion reward screen.
+
+**The place.** A short deck crosses the cut. A damaged connection has brought
+an energy-carrying living fibre into contact with its wet section. An upper
+rock lip offers an awkward route around it. The shallow channel offers a
+longer route to the far bank, interrupted by the same wet connection. A loose
+dry board can span a small section; a sheltered patch on the approach lets
+the player recover from a failed attempt. The roof, workshop, and collector
+remain ordinary structures after the encounter.
+
+**The inhabitants.** One creature is maintaining the collector and drying
+rack that support its work. Another is hauling a load toward the far bank.
+Working roles identify the fixture here; names and subject identities are
+ordinary generated data. The maintainer wants the live path isolated before
+anyone disturbs it. The hauler wants a usable route and may accept losing
+power temporarily. Both value their own safety. Neither is automatically an
+enemy. The maintainer can signal a warning, intercept interference, accept
+help, retreat, or defend itself according to the current situation.
+
+Run their routines without player intervention: inspect damage, fetch
+material, wait or seek an alternate route, and resume work when possible.
+Their needs and capabilities should determine those transitions. Arrival
+does not freeze them into dialogue roles or start a mandatory storm countdown.
+
+##### The rule you can learn
+
+First author a small charge profile: connected wet fibre carries stored
+charge; a dry mineral or wooden spacer interrupts that path. A release
+consumes a bounded stored quantity. The collector, reservoir, and connected
+material patches suffice for the first model; full weather or fluid simulation
+is unnecessary. Rain onset is an explicit scenario input with a visible cue.
+
+Before the dangerous section, a harmless charged strand and loose dry spacer
+permit observation and experimentation. A travelling pulse, small visible
+motion at contact, and a matching sound expose the path. Interrupting the
+strand stops those cues. Inspection initially says what the subject can
+observe, such as "pulses reach the wet section"; after testing it can retain
+"dry spacers interrupt this connection" as a discovered relationship.
+Equivalent shape, motion, text, and sound cues avoid reliance on colour alone.
+
+Three plausible approaches emerge from these facts. Isolate and repair the
+connection, preserving the workshop supply; drain the reservoir to make a
+temporary crossing, interrupting the drying rack; or use the board or upper
+lip and leave the repair to its owner. Passing the maintainer is physically
+possible. Its warning and preferences do not create an invisible access wall.
+Routes have different effort, bodily requirements, exposure, and consequences.
+
+##### Two bodies, shared intentions
+
+| Fixture body | Spatial strengths | Limits and equipment | Local power use |
+| --- | --- | --- | --- |
+| Low shell crawler with a gripping forelimb | Stable brace, pushes and carries a board, fits under low obstacles | Short reach, poor climb; shell supports a harness and forelimb holds a tool | A carried discharge probe can drain a contacted source if equipped and understood |
+| Light climber with anchoring tendrils | Reaches an upper hold, tethers a loose object, can catch a fall | Limited load and stability; taut tendril exposes a vulnerable connection | In the charge profile, a storage organ can accept and release a limited charge through contact |
+
+These are test bodies, not final species or classes. Each gets a viable
+low-risk route and a chance to use its strengths. The climber is neither
+obliged nor universally safe to conduct charge through its body. Inspecting
+its known capacity and current storage must expose overload risk. The crawler
+can use mundane material handling without acquiring the climber's anatomy.
+Switching test bodies happens by restarting a fixture, not by free switching
+in ordinary play.
+
+Begin with move/aim, use equipped action, defend or brace, inspect, and signal.
+An action picker exposes only learned, supported actions and their source.
+Show an interrupted action's reason, such as lost anchor or occupied grip.
+Commitment and recovery are visible in the body; severe damage changes a
+specific capability. The first injury target is reduced reach or an impaired
+grip with a recoverable path, rather than mandatory limb loss.
+
+##### One possible encounter, not the required sequence
+
+The player sees the warning, experiments with insulation, then drains the
+reservoir to clear the deck. The hauler crosses. The maintainer emerges from
+behind the workshop and sees the disconnected supply and the player holding
+a tool. It did not see the dangerous contact or the safe crossing. It signals
+objection and approaches to stop further work.
+
+The player can put the tool away, indicate the damaged section, offer a
+spacer, continue working, withdraw, or attack. An offer states an intended
+transfer; the recipient may accept, refuse, or suggest different terms.
+Pointing directs attention to inspectable evidence. It does not automatically
+prove the player's motive. A warning or surrender must be perceived before
+it can affect a decision, and remains subject to that creature's willingness.
+
+If fighting occurs, the work site provides the spatial test: the tool's sweep
+needs clearance, bracing changes the effect of a shove, and a taut tether can
+arrest a fall. The charge path affects everyone exposed to it. An interrupted
+strike and a dropped tool should create space to withdraw. Test controlled
+attack trajectories with contact and impulse consequences before adding
+full-body physical animation. Injury, dropped property, and repairs remain
+after the conflict; the fixture does not reset the place when combat ends.
+
+The hauler may later report that the player made the crossing usable; the
+maintainer may report damage to the supply. An absent third subject at a later
+meeting supplies F3b1's receipt: its response to a tool loan changes only after
+information reaches it and it judges that information. Both reports may be
+factually compatible. Restoring power need not erase a complaint about acting
+without permission, and a safety norm can value the same act differently.
+The fixture must also exercise an actual factual correction, with delivery
+and belief revision separate from disagreement under different norms.
+
+##### What the player sees
+
+In ordinary movement, keep the body, relevant action readiness, and immediate
+physical cues prominent. A brief signal caption might read "warning: wet
+deck" when the communication is understood. Before understanding a signal,
+show its observed form without asserting its meaning. Common controls and
+fixture communication are initially taught; inventing an entire language is
+outside the first prototype.
+
+Inspection of the maintainer can say "blocking the deck; carrying an insulating
+tool." After conversation, its concern can be recorded as "wants the supply
+kept intact." A later refusal can say "I was told you cut their supply," with
+the source shown if disclosed. Following the journal entry shows who said
+what, when it was learned, and what has subsequently been checked. An inferred
+claim remains labelled as inferred. Unheard private reports and objective
+intent remain absent from this player view.
+
+The player-facing history might therefore contain "I drained the reservoir,"
+"the hauler crossed," and "the maintainer objected." It must not fabricate
+"everyone trusts me less." An optional development view exposes the full
+causal chain for debugging separately. Pause or slow inspection, target
+assistance, camera distance, and damage/recovery settings are fixture options
+to compare; opening a diagnostic panel must not be necessary to play.
+
+##### Progression you can feel here
+
+The first gain is a learned interaction and an altered route. A tool found,
+borrowed, made, or traded for can carry that interaction elsewhere. Training
+can later improve timing and control; acquiring a suitable organ or symbiont
+can add storage or sensing. Assistance may make the maintainer willing to
+teach, but independent experimentation and other sources remain possible.
+Killing the maintainer does not automatically grant its technical knowledge.
+Fighting, helping, and bypassing are not assigned universal moral scores.
+
+Repeat the layout in a second authored world profile before procedural
+generation. In the resonance profile, dry rigid connected members carry a
+pulse, while a compliant joint damps it. A dry rigid spacer that electrically
+insulates in the charge profile may complete the resonant path here. Tools, anatomy,
+local industry, and cues must be admitted coherently for that profile; an
+electrical organ is not silently renamed into a sonic organ. Success means a
+player observes the changed rule and finds a different material solution in
+both work and danger. The two profiles need no arbitrary mid-world switch.
+
+##### Build order and acceptance
+
+Implement a small encounter harness over the existing Paredros owners after
+checking suitable shared spatial/capability APIs. The fixture owns layout,
+cast, initial facts, selected rule profile, and replay inputs. `paredros-world`
+owns admitted material/body/action outcomes; `paredros-social` owns knowledge,
+judgments, requests, and agreements. The host routes observed outcomes to
+those owners and projects their results into the existing rendering stack.
+Scene objects and displayed text never become save authority.
+
+1. **Dry movement and contact.** Build only the cut, deck, board, recoverable
+   landing, and two body configurations. Prove movement, contact, brace,
+   tether, one timed attack, and capability injury with an adjustable camera.
+   Done when each body has a readable traversal solution, a failed attempt
+   permits recovery, and reach/footing changes the same action's outcome.
+2. **Local charge interaction.** Add the finite reservoir and a bounded set
+   of conductive connections. Done when isolated/reconnected/drained states
+   are persistent, the same rule explains a tool use and a dangerous contact,
+   and untrained players can predict a new application after experimentation.
+3. **Inhabitants and evidence.** Add the maintainer, hauler, and later absent
+   recipient fixture. Done when autonomy continues without player action,
+   signalling can change an encounter, partial observation yields distinct
+   supported accounts, and delivery/correction changes a later answer with
+   inspectable evidence. Pair this with F3b1 rather than a complete culture AI.
+4. **Second world profile.** Reuse the encounter's constraints under resonance.
+   Done when material connectivity changes both the safe route and a combat
+   application, with coherent abilities and cues, without scripting outcomes
+   by profile name. This is the admission gate for procedural combinations.
+
+Record accepted inputs and resolved effects at the simulation step, with
+body/world/rule revisions sufficient to replay them. Establish a pinned
+runtime replay baseline before promising cross-device numerical equivalence.
+Meaningful automated checks cover interrupted actions, capability limits,
+finite resource use, evidence visibility, and save/replay continuity. Headed
+play must separately test camera, action readability, recovery, and whether a
+player can explain another creature's response. No acceptance results exist
+yet. If the dry movement pass is uninteresting, revise its controls and space
+before expanding the social or procedural scope.
 
 ## 5. Stop rules
 
@@ -804,6 +1064,18 @@ the player should receive. S0's close camera is evidence, not a ruling.
 
 ## 6. Findings
 
+- **2026-09-05 (player-experience design):** live `epistemic.rs` supplies
+  observer-scoped evidence and exact report history; `relation.rs` still
+  derives standing from objective `DeedLog`, using `DeedKind::weight` in
+  `deed.rs`. The missing join is from known facts through judgment to action.
+  The existing transition and room receipts do not establish responsive
+  spatial combat or player understanding of a generated rule.
+- **2026-09-05 (encounter design):** `paredros-world/src/transitions.rs`
+  currently admits generate, name, move, observe, take, eat, rest, fall, and
+  wait. It does not yet supply timed attacks, anchoring, bracing, equipment
+  use, charge connectivity, or communication acts. The crossing plan is a
+  proposed extension to those owners, not a claim that its verbs already
+  exist behind the room renderer.
 - **2026-08-26 (F3a planning):** the existing seams already express the
   authority split. `GameEvent::Observed` records a witness and visible target
   but not a proposition or another subject's belief. `DeedLog` is append-only;
@@ -936,6 +1208,17 @@ the player should receive. S0's close camera is evidence, not a ruling.
 
 ## 7. Progress
 
+- **2026-09-05 (encounter draft):** specified the damaged crossing as the
+  first playable design: a practical destination, two body configurations,
+  multiple physical approaches, independent inhabitants, partial witness
+  knowledge, and persistent consequences. Set dry movement/contact as the
+  first implementation slice, then charge, social evidence, and a distinct
+  authored resonance profile. Updated the index; implementation remains open.
+- **2026-09-05 (design):** recorded the embodied sandbox proposal and F3b1
+  judgment/answer seam. Added a proposed playable sequence covering body and
+  contact, a world rule used in work and danger, and a witnessed encounter.
+  These are design changes; no new gameplay implementation or acceptance
+  receipt is claimed.
 - **2026-09-05 (RG3e):** Renderling commit `3683dd6` exposed a caller-owned
   complete-stage encoder path for direct draws. The normal room tenant now
   records geometry, the bloom chain, tonemapping, and optional debug work into

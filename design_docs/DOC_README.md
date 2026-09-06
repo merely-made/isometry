@@ -25,6 +25,17 @@ any other index and is updated in the same session as any doc change.
 
 ## Active docs
 
+The founding plan's **2026-09-05 player-experience proposal** covers embodied
+action, biological abilities, progression, communication, knowledge surfaces,
+structural world differences, and bounded sky-organism/topology experiments.
+The execution plan translates it into a proposed playable sequence alongside
+F3b1's evidence-to-answer join. Its
+[damaged crossing fixture](2026-08-07_paredros_execution_plan.md#first-encounter-the-damaged-crossing)
+specifies the player flow, two bodies, local world rules, partial witnesses,
+knowledge surfaces, and staged acceptance. Dry movement/contact is the first
+implementation slice. These proposals remain unimplemented and open to
+design discussion.
+
 | Doc | What it is |
 | --- | ---------- |
 | [DOC_POLICY.md](DOC_POLICY.md) | Documentation governance |
