@@ -162,7 +162,7 @@ fn the_review_stands_only_while_the_world_holds_at_a_lineage_checkpoint() {
                     .map(|organism| Intent::TakeControl { organism })
                     .unwrap_or(Intent::Resume);
                 rt.queue(answer);
-            }
+            },
             // A boundary is only ever *asked* of a hand, so a run that lost
             // its body and its line takes another one. Ordinary
             // `TakeControl` through the ordinary eligibility gate — the same
@@ -177,7 +177,7 @@ fn the_review_stands_only_while_the_world_holds_at_a_lineage_checkpoint() {
                     panic!("the enclosure emptied");
                 };
                 rt.queue(Intent::TakeControl { organism: next });
-            }
+            },
             None => rt.queue(Intent::Resume),
         }
         rt.step(1);

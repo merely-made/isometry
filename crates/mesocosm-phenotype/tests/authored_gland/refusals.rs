@@ -108,7 +108,7 @@ fn excessive_output_refuses_cleanly() {
         Refused::Output { bytes, limit } => {
             assert_eq!(limit, 64);
             assert!(bytes > limit, "and it says how much was offered");
-        }
+        },
         other => panic!("{other:?}"),
     }
 }
@@ -134,7 +134,7 @@ fn an_overlong_collection_refuses_cleanly() {
         Refused::Collection { entries, limit } => {
             assert_eq!(limit, 4);
             assert!(entries > limit);
-        }
+        },
         other => panic!("{other:?}"),
     }
 }
@@ -192,7 +192,7 @@ fn the_validator_still_owns_its_own_boundaries() {
     match candidate.develop(&registry, &allocation) {
         Err(mesocosm_core::Refusal::SiteMismatch { part, .. }) => {
             assert_eq!(part, mesocosm_core::PartId(0), "a bulk root is not a plate")
-        }
+        },
         other => panic!("{other:?}"),
     }
 }

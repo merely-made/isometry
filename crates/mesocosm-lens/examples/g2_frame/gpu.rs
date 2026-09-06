@@ -144,7 +144,7 @@ impl Gpu {
             wgpu::CurrentSurfaceTexture::Lost | wgpu::CurrentSurfaceTexture::Outdated => {
                 self.configure();
                 return Ok(None);
-            }
+            },
             wgpu::CurrentSurfaceTexture::Timeout => return Ok(None),
             _ => return Err("surface acquisition failed".into()),
         };

@@ -293,7 +293,7 @@ fn rect_of(
                 offset += branch.fraction;
             }
             None
-        }
+        },
     }
 }
 

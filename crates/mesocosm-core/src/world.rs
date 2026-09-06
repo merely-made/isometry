@@ -36,7 +36,7 @@ mod terrarium;
 pub use adapt::{Round, Score, Turn};
 pub use dev::PLACE_MATTER_MAX_MG;
 pub use genesis::Founding;
-pub use graft::Graft;
+pub use graft::{Graft, GraftPreview};
 pub use intent::{Ineligible, Intent, Outcome, Placement, Rejection, Route};
 pub use read::Gland;
 pub use review::{Offer, Prospect, Untakeable};

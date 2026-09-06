@@ -112,22 +112,22 @@ impl fmt::Display for LensError {
             Self::EmptyMap => write!(f, "a lens map must have a non-zero side"),
             Self::InvalidHeightLength { expected, actual } => {
                 write!(f, "height map has {actual} bytes; expected {expected}")
-            }
+            },
             Self::InvalidColorLength { expected, actual } => {
                 write!(f, "colour map has {actual} bytes; expected {expected}")
-            }
+            },
             Self::PaletteTooLarge(actual) => {
                 write!(
                     f,
                     "palette has {actual} entries; the lens accepts at most 256"
                 )
-            }
+            },
             Self::TooManyCapsules { actual, maximum } => {
                 write!(
                     f,
                     "body has {actual} capsules; the baseline accepts at most {maximum}"
                 )
-            }
+            },
             Self::DirtyRegionOutsideMap(rect) => write!(
                 f,
                 "dirty region ({}, {}) {}x{} lies outside the map",
@@ -135,7 +135,7 @@ impl fmt::Display for LensError {
             ),
             Self::CaptureFormat(format) => {
                 write!(f, "capture requires Rgba8Unorm output, not {format:?}")
-            }
+            },
             Self::DevicePoll(message) => write!(f, "device poll failed: {message}"),
             Self::Readback(message) => write!(f, "readback failed: {message}"),
         }

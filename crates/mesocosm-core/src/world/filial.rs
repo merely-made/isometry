@@ -132,7 +132,7 @@ impl World {
                         cost_mg: filial.cost_mg,
                     },
                 ));
-            }
+            },
             Err(why) => self.pending.push(crate::flow::Envelope::new(
                 tick,
                 place,

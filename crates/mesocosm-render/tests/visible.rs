@@ -40,7 +40,7 @@ fn renderer() -> Option<Renderer> {
         Err(RenderError::NoAdapter) => {
             eprintln!("skipping: no GPU adapter available on this machine");
             None
-        }
+        },
         Err(other) => panic!("renderer failed for a reason other than adapter: {other:?}"),
     }
 }

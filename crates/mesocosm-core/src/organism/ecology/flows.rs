@@ -93,7 +93,7 @@ pub(super) fn record_intake(
         let flow = match from {
             Some(from) => {
                 FlowEvent::between(Process::Feeding, from, Account::Substance, to, into, mg)
-            }
+            },
             None => FlowEvent::uptake(to, into, mg),
         };
         records.flow(at, flow);

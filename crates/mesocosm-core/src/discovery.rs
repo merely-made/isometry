@@ -166,7 +166,7 @@ impl Evidence {
             ),
             Evidence::Endured { stress, ticks } => {
                 format!("{} for {ticks} ticks", stress.name())
-            }
+            },
         }
     }
 }
@@ -305,7 +305,7 @@ impl Candidate {
                 existing.cells.extend(taken);
                 existing.cells.sort_unstable();
                 existing.cells.dedup();
-            }
+            },
             None => sites.push(ProposedSite {
                 part,
                 process: self.process,
@@ -484,12 +484,12 @@ fn digest_of(id: ConditionId, candidate: &Candidate, evidence: &Evidence, tick: 
             bytes.extend_from_slice(&part.0.to_le_bytes());
             bytes.push(role as u8);
             bytes.extend_from_slice(&mass_mg.to_le_bytes());
-        }
+        },
         Evidence::Endured { stress, ticks } => {
             bytes.push(1);
             bytes.push(stress as u8);
             bytes.extend_from_slice(&ticks.to_le_bytes());
-        }
+        },
     }
     bytes.extend_from_slice(&tick.to_le_bytes());
     crate::snapshot::hash_bytes(&bytes)

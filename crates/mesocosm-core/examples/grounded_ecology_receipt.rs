@@ -83,12 +83,12 @@ fn main() {
                     organism.id,
                     organism.position
                 );
-            }
+            },
             Tier::Far => {
                 far += 1;
                 far_biomass_mg += organism.biomass_mg();
                 far_energy_mg += organism.energy_mg;
-            }
+            },
         }
     }
 

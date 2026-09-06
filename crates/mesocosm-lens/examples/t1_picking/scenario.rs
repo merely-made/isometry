@@ -130,7 +130,7 @@ impl World {
                     ));
                 }
                 Answer::Nothing
-            }
+            },
             Some(hit) => match hit.pick {
                 TactilePick::Ground { cell } => {
                     let (expected, toi) = oracle.ok_or_else(|| {
@@ -151,7 +151,7 @@ impl World {
                         cell,
                         distance_bits: hit.distance.to_bits(),
                     }
-                }
+                },
                 TactilePick::Critter { key } => {
                     // The stops aimed at the critter pass through its
                     // capsule core, so any radius model agrees; the ground
@@ -167,7 +167,7 @@ impl World {
                         key,
                         distance_bits: hit.distance.to_bits(),
                     }
-                }
+                },
             },
         };
         Ok(Stop { world, answer })

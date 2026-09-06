@@ -122,12 +122,12 @@ fn rule_bytes(rule: Rule) -> Vec<u8> {
             bytes.push(0);
             bytes.push(role as u8);
             bytes.extend_from_slice(&mass_mg.to_le_bytes());
-        }
+        },
         Rule::Endured { stress, ticks } => {
             bytes.push(1);
             bytes.push(stress as u8);
             bytes.extend_from_slice(&ticks.to_le_bytes());
-        }
+        },
     }
     bytes
 }

@@ -158,7 +158,7 @@ fn producers_creep_and_unlimbed_consumers_do_not() {
                 assert_eq!(organism.actuator_span(), 0, "a producer grew an actuator");
                 assert!(travels(organism), "a producer cannot spread");
                 creeping += 1;
-            }
+            },
             _ if organism.actuator_span() == 0 => panic!(
                 "the roster founds nothing sessile that eats: {:?}",
                 organism.id
@@ -250,9 +250,9 @@ fn a_seeded_producer_is_sessile_and_a_seeded_consumer_is_not() {
                     organism.id
                 );
                 sessile_producers += 1;
-            }
+            },
             Kingdom::Consumer if organism.actuator_span() > 0 => motile_consumers += 1,
-            _ => {}
+            _ => {},
         }
     }
     assert!(sessile_producers > 0 && motile_consumers > 0);

@@ -332,7 +332,7 @@ mod tests {
                     match profile.origin_at(at) {
                         Some(origin) if origin.is_incorporated() => incorporated += 1,
                         Some(_) => founding += 1,
-                        None => {}
+                        None => {},
                     }
                 }
             }

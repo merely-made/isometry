@@ -201,7 +201,7 @@ mod tests {
                 .find(|region| match &region.contour {
                     Some(Footprint::Polygon { points }) => {
                         polygon_contains(points, x as f32, z as f32)
-                    }
+                    },
                     _ => false,
                 })
                 .expect("the cells tile the enclosure");

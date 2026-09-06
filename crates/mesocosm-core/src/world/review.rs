@@ -315,7 +315,7 @@ impl World {
                 Err(why) => {
                     offer.why_not = Some(why);
                     return offer;
-                }
+                },
             },
         };
         let Some(prospect) = self.prospect(species) else {
@@ -331,14 +331,14 @@ impl World {
         offer.program = preview.program;
         match preview.filial {
             // The founding revision declares nothing, so nothing is charged.
-            None => {}
+            None => {},
             Some(Ok(filial)) => offer.price_mg = filial.cost_mg,
             // A price the body could not meet is still a price, and it is the
             // one number that would let a player go and earn it.
             Some(Err(why @ Unexpressed::Unaffordable { needed_mg, .. })) => {
                 offer.price_mg = needed_mg;
                 offer.why_not = Some(Untakeable::Unexpressed(why));
-            }
+            },
             Some(Err(why)) => offer.why_not = Some(Untakeable::Unexpressed(why)),
         }
         offer

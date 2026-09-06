@@ -201,7 +201,7 @@ fn text<'gc>(ctx: Context<'gc>, table: Table<'gc>, key: &'static str) -> Result<
             String::from_utf8(found.as_bytes().to_vec()).map_err(|_| Refused::Malformed {
                 why: format!("{key} is not UTF-8"),
             })
-        }
+        },
         other => Err(Refused::Malformed {
             why: format!("{key} is a {}, not a string", other.type_name()),
         }),

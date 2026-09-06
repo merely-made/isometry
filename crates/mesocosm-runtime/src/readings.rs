@@ -82,7 +82,7 @@ impl Totals {
             match event.record {
                 Event::Matured { .. } => totals.matured += 1,
                 Event::Died { .. } => totals.died += 1,
-                _ => {}
+                _ => {},
             }
         }
         let producer = |side: Option<Subject>| {

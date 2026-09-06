@@ -141,7 +141,7 @@ impl Gpu {
             wgpu::CurrentSurfaceTexture::Lost | wgpu::CurrentSurfaceTexture::Outdated => {
                 self.configure();
                 return Ok(None);
-            }
+            },
             wgpu::CurrentSurfaceTexture::Timeout => return Ok(None),
             _ => return Err("surface acquisition failed".into()),
         };
@@ -261,12 +261,12 @@ fn overlay(size: [u32; 2], scenario: &Scenario, frame: u32) -> Scene {
         Answer::Ground { cell, .. } => {
             let centre = scenario.pixel([cell[0] as f32 + 0.5, cell[1] as f32 + 0.5], size);
             outline(&mut scene, centre, 14.0, chip);
-        }
+        },
         Answer::Critter { .. } => {
             let body = scenario.body_centre();
             let centre = scenario.pixel([body[0], body[1]], size);
             outline(&mut scene, centre, 22.0, chip);
-        }
+        },
         Answer::Nothing => outline(&mut scene, cursor, 10.0, chip),
     }
     scene

@@ -181,7 +181,7 @@ pub fn arrange(phenotype: &BodyPhenotype, aim: Aim) -> AllocationProposal {
             Aim::Express => {
                 fresh = Mosaic::seed(phenotype.body().part(part).expect("a living part"));
                 fresh.sites()
-            }
+            },
             Aim::Spare => mosaic.sites(),
         };
         for site in source {

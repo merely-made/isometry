@@ -313,7 +313,7 @@ impl ApplicationHandler for Watch {
                 if let Some(live) = self.live.as_mut() {
                     configure(live);
                 }
-            }
+            },
             WindowEvent::KeyboardInput { event, .. } => {
                 let down = event.state == ElementState::Pressed;
                 match event.logical_key {
@@ -329,28 +329,28 @@ impl ApplicationHandler for Watch {
                                 "still blocked"
                             }
                         );
-                    }
+                    },
                     Key::Character(ref c) if down && (c == "r" || c == "R") => {
                         self.state.rewind();
                         println!("rewound to the moment before the carve");
-                    }
+                    },
                     Key::Named(NamedKey::ArrowLeft) => {
                         self.yaw_input = if down { -1.0 } else { 0.0 }
-                    }
+                    },
                     Key::Named(NamedKey::ArrowRight) => {
                         self.yaw_input = if down { 1.0 } else { 0.0 }
-                    }
+                    },
                     Key::Named(NamedKey::ArrowUp) => {
                         self.pitch_input = if down { 1.0 } else { 0.0 }
-                    }
+                    },
                     Key::Named(NamedKey::ArrowDown) => {
                         self.pitch_input = if down { -1.0 } else { 0.0 }
-                    }
-                    _ => {}
+                    },
+                    _ => {},
                 }
-            }
+            },
             WindowEvent::RedrawRequested => self.frame(),
-            _ => {}
+            _ => {},
         }
     }
 }
@@ -460,9 +460,9 @@ impl Watch {
                 );
                 live.window.pre_present_notify();
                 live.handles.queue.present(frame);
-            }
+            },
             Acquired::Outdated | Acquired::Lost => configure(live),
-            Acquired::Timeout | Acquired::Occluded => {}
+            Acquired::Timeout | Acquired::Occluded => {},
             Acquired::Validation => panic!("surface acquisition failed validation"),
         }
 

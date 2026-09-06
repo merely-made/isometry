@@ -181,16 +181,16 @@ impl Refused {
             Refused::Fuel { limit } => format!("the script did not finish within {limit} fuel"),
             Refused::Output { bytes, limit } => {
                 format!("the proposal is {bytes} bytes and the host reads {limit}")
-            }
+            },
             Refused::Depth { limit } => format!("the proposal nests deeper than {limit}"),
             Refused::Collection { entries, limit } => {
                 format!("the proposal lists {entries} entries and the host reads {limit}")
-            }
+            },
             Refused::Malformed { why } => format!("the proposal is not the declared shape: {why}"),
             Refused::Script { why } => format!("the script failed: {why}"),
             Refused::UnknownProcess { id } => {
                 format!("this world's ruleset does not hold {id}")
-            }
+            },
             Refused::UnknownPart { part } => format!("this body has no part {}", part.0),
             Refused::TooMuchTissue {
                 part,

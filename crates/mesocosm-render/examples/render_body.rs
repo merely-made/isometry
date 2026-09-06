@@ -125,7 +125,7 @@ fn main() {
         Err(e) => {
             eprintln!("no renderer available: {e:?}");
             std::process::exit(1);
-        }
+        },
     };
 
     let mut world = World::new(SEED, 60);

@@ -157,7 +157,7 @@ fn quoted_then_paid(mut world: World) -> (u64, u64) {
     match world.apply(Intent::Revise {
         condition: hunger(),
     }) {
-        Outcome::Revised { .. } => {}
+        Outcome::Revised { .. } => {},
         other => panic!("the commit was refused: {other:?}"),
     }
     // The parent the quote was taken against, past the breeding gate, and
@@ -290,7 +290,7 @@ fn a_commit_is_admitted_at_the_boundary_and_refused_outside_it() {
     match world.apply(Intent::Revise {
         condition: hunger(),
     }) {
-        Outcome::Revised { .. } => {}
+        Outcome::Revised { .. } => {},
         other => panic!("the commit was refused: {other:?}"),
     }
 

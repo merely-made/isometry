@@ -180,7 +180,7 @@ pub(super) fn upload_maps(
                 &maps.color,
             );
             diagnostics.map_upload_bytes += (maps.height.len() + maps.color.len()) as u64;
-        }
+        },
         MapChange::Region(rect) => {
             validate_rect(rect, maps.side)?;
             let height = region_bytes(&maps.height, maps.side, 1, rect);
@@ -202,7 +202,7 @@ pub(super) fn upload_maps(
                 &color,
             );
             diagnostics.map_upload_bytes += (height.len() + color.len()) as u64;
-        }
+        },
     }
     let palette = palette_bytes(maps);
     if resident.palette_bytes != palette {

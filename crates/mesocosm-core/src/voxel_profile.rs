@@ -161,7 +161,7 @@ impl GroundVoxelProfile {
                         patch,
                         occupancy_edits,
                     });
-                }
+                },
                 None => {
                     let chunk = VoxelChunk::from_cells(CHUNK_EXTENT, brick.raw().to_vec(), 0)
                         .map_err(|source| GroundVoxelProfileError::Chunk { key: *key, source })?;
@@ -177,7 +177,7 @@ impl GroundVoxelProfile {
                         occupancy_edits,
                     });
                     next.insert(*key, chunk);
-                }
+                },
             }
         }
 
@@ -266,19 +266,19 @@ impl fmt::Display for GroundVoxelProfileError {
                     formatter,
                     "stale Ground revision {expected}; current is {actual}"
                 )
-            }
+            },
             Self::RegressedSource { current, offered } => {
                 write!(
                     formatter,
                     "Ground revision regressed from {current} to {offered}"
                 )
-            }
+            },
             Self::ChangedWithoutRevision { revision } => {
                 write!(
                     formatter,
                     "Ground bytes changed without advancing revision {revision}"
                 )
-            }
+            },
             Self::RevisionWithoutChange { previous, offered } => write!(
                 formatter,
                 "Ground revision advanced from {previous} to {offered} without a voxel change"
@@ -288,7 +288,7 @@ impl fmt::Display for GroundVoxelProfileError {
                     formatter,
                     "Ground chunk {key:?} could not be projected: {source}"
                 )
-            }
+            },
         }
     }
 }

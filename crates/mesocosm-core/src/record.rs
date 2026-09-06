@@ -123,7 +123,7 @@ impl Mark {
         match other.high.cmp(&self.high) {
             std::cmp::Ordering::Greater => *self = other.clone(),
             std::cmp::Ordering::Equal => self.holders.extend(other.holders.iter().copied()),
-            std::cmp::Ordering::Less => {}
+            std::cmp::Ordering::Less => {},
         }
     }
 }

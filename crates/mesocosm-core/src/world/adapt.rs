@@ -347,7 +347,7 @@ impl World {
                     match record.process {
                         Process::Upkeep => {
                             score.rent_mg = score.rent_mg.saturating_add(record.amount_mg);
-                        }
+                        },
                         _ => score.outflow_mg = score.outflow_mg.saturating_add(record.amount_mg),
                     }
                 }

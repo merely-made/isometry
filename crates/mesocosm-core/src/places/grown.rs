@@ -106,7 +106,7 @@ impl Places {
                 Ok(()) => {
                     links[a].insert(PlaceId(b as u16));
                     links[b].insert(PlaceId(a as u16));
-                }
+                },
                 Err(rise) => blocked.push((rise, a, b)),
             }
         }

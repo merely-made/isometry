@@ -302,7 +302,7 @@ impl BodyDocument {
             match part.attachment {
                 None => {
                     return Some(offset);
-                }
+                },
                 Some(a) => {
                     let rotated = a.yaw.rotate(offset);
                     offset = [
@@ -311,7 +311,7 @@ impl BodyDocument {
                         rotated[2] + a.offset[2],
                     ];
                     cursor = a.parent;
-                }
+                },
             }
         }
         None
@@ -367,7 +367,7 @@ impl BodyDocument {
                 Some(a) => {
                     yaw = a.yaw.compose(yaw);
                     cursor = a.parent;
-                }
+                },
             }
         }
         None

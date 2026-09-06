@@ -87,21 +87,21 @@ impl Admission {
             Admission::MalformedSchema { path, why } => format!("{path} is malformed: {why}"),
             Admission::UnknownAbi { found, supported } => {
                 format!("pack format {found}, and this build reads {supported}")
-            }
+            },
             Admission::PathEscape { declared } => {
                 format!("{declared} leaves the pack root")
-            }
+            },
             Admission::UndeclaredFile { path } => {
                 format!("{path} is in the pack and the manifest does not declare it")
-            }
+            },
             Admission::DuplicateId { id } => format!("two definitions claim {id}"),
             Admission::UnqualifiedId { path } => format!("{path} has no qualified id"),
             Admission::UnknownRole { path, word } => {
                 format!("{path} expects a shape this world does not hold: {word}")
-            }
+            },
             Admission::UnknownSeeding { path, word } => {
                 format!("{path} names a seeding rule this world does not hold: {word}")
-            }
+            },
             Admission::NoSite { path } => format!("{path} names no shape that could express it"),
             Admission::EmptyPack { root } => format!("{root} declares no definitions"),
         }
@@ -206,10 +206,10 @@ fn inside(root: &Path, declared: &str) -> Result<PathBuf, Admission> {
     let relative = Path::new(declared);
     for component in relative.components() {
         match component {
-            Component::Normal(_) | Component::CurDir => {}
+            Component::Normal(_) | Component::CurDir => {},
             Component::ParentDir | Component::RootDir | Component::Prefix(_) => {
                 return Err(escape());
-            }
+            },
         }
     }
     let joined = root.join(relative);

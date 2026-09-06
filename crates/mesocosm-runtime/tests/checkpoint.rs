@@ -301,13 +301,13 @@ fn run_to_a_loss(seed: u64) -> Option<(Runtime, OrganismId)> {
                 assert!(!rt.world().is_embodied(), "the body is gone");
                 let heir = rt.checkpoint().expect("standing").heir()?;
                 return Some((rt, heir));
-            }
+            },
             // A birth, or the epoch's own boundary: both are answered by
             // carrying on, which is what this run is doing to everything.
             Some(Occasion::Birth(_) | Occasion::Epoch(_)) => {
                 rt.queue(Intent::Resume);
                 rt.step(1);
-            }
+            },
             None => {
                 rt.queue(Intent::Resume);
                 assert_eq!(rt.step(1), 1, "the world kept running");
@@ -315,7 +315,7 @@ fn run_to_a_loss(seed: u64) -> Option<(Runtime, OrganismId)> {
                     rt.world().tick < 8_000,
                     "the played critter outlived the horizon"
                 );
-            }
+            },
         }
     }
 }

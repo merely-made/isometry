@@ -267,7 +267,7 @@ fn run(seed: u64, ticks: u32) -> Reading {
                         species_of.insert(organism.0, o.species.0);
                         born[k] += 1;
                     }
-                }
+                },
                 Event::Died { organism, .. } => {
                     let k = kingdom_of.get(&organism.0).copied().unwrap_or(0);
                     died[k] += 1;
@@ -296,7 +296,7 @@ fn run(seed: u64, ticks: u32) -> Reading {
                         let last = last_meal.get(&organism.0).copied().unwrap_or(0);
                         decomposer_fast_total += u64::from(tick - last);
                     }
-                }
+                },
                 Event::Fed {
                     eater,
                     from,
@@ -328,14 +328,14 @@ fn run(seed: u64, ticks: u32) -> Reading {
                             limbed_fed_mg += mass_mg;
                         }
                     }
-                }
+                },
                 Event::Moved { organism, .. } => {
                     if unlimbed_ids.contains(&organism.0) {
                         unlimbed_moves += 1;
                     }
                     moves[kingdom_of.get(&organism.0).copied().unwrap_or(0)] += 1;
-                }
-                _ => {}
+                },
+                _ => {},
             }
         }
 

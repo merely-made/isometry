@@ -79,6 +79,74 @@ metabolized memories, and places that grow organs are all perturbations of
 continuity, which is why "impossible ecology" rather than spellcasting is
 the fantastical direction (general model plan, F-gates).
 
+### Historical entry and lineage-shaped lives
+
+**Direction affirmed by Mark, 2026-09-05; entry mechanics proposed, not implemented.**
+Any of the three games may be played at any supported point in a world's
+history. Their characteristic historical settings differ: Mesocosm naturally
+foregrounds early ecological history, when most subjects are critters;
+Paredros foregrounds pre-civilization and the emergence of kin, kith, camps,
+colonies, and bases; Isometry foregrounds worlds where civilizations and their
+institutions have become dominant. These are historical emphases, not required
+stages, population-type restrictions, or a mandatory export sequence.
+
+Late Mesocosm can concern organisms in cultivated soil, infrastructure,
+domesticated populations, or ruins. Late Paredros can concern one life among
+powerful institutions. Early Isometry can concern the collective activity of
+a small founding group. Each keeps its own care granularity and admits the
+mechanisms it supports. An unsupported ruleset is an explicit compatibility
+result, not an era lock. Naming does not create cognition; anonymous subjects
+can learn and act, and faction membership is not a prerequisite for agency.
+
+Ecology, settlement, and institutions coexist at every date in different
+proportions and places. Civilization need not emerge, advance monotonically,
+cover every region, or remain dominant. Collapse, dispersal, and recolonization
+can make an old world newly relevant to any vessel. The intended historical
+arc must not become a universal civilization-level meter.
+
+**Proposed entry policy:** choose a world, a dated history checkpoint, a place,
+and a vessel. Continue a compatible present, or explicitly branch from a past
+checkpoint. Changing the past never silently rewrites an already played
+future. Only causally available facts enter the branch; later discoveries are
+not earlier characters' knowledge. A subject must exist at the chosen point:
+before its birth, choose an ancestor or another generated subject instead.
+Unplayed periods may be generated from established constraints, retaining the
+provenance and uncertainty of generated versus played history. This proposes
+checkpoint materialization, not a requirement to simulate every historical
+tick or maintain one live simulator across all games.
+
+History influences a borg through distinct, pointable routes:
+
+- **Biological descent:** developmental potential, inherited mechanisms,
+  tolerances, and costs. Historical conditions matter through recorded
+  selection/developmental changes, not an arbitrary bonus for an era name.
+- **Individual development:** nutrition, habitat, injury, grafts, symbioses,
+  practice, and experiences that actually affected this subject.
+- **Cultural transmission:** techniques carried by teaching, imitation,
+  records, institutions, or explicitly supported memory-transfer mechanisms.
+  Shared ancestry alone does not transfer learned expertise.
+- **Material and social inheritance:** tools, cultivated places, obligations,
+  access, and other people's beliefs about the line. Recognition and evidence
+  govern reputation; ancestry does not determine personality or morality.
+
+In-world biological descent, cultural transmission, and Fili's cross-world
+lineage remain different relations. Reproduction checkpoints, epoch lineage
+review, and individual RPG learning remain different transitions. A learned
+technique becomes heritable only through a named world mechanism, with its
+costs and transmission limits recorded.
+
+Traditions arise from useful mechanisms, recurrent problems, and historical
+transmission. A technique may originate independently, spread, be adapted to
+another anatomy, or disappear when its practitioners and records are lost.
+World generation should produce working transmission paths and local variants,
+not merely random school names. Player histories displace generated history;
+playing the earlier games is never required to obtain a rich lineage or culture.
+
+Paredros's proposed RPG and character-sheet design lives in
+`paredros/design_docs/2026-07-30_paredros_founding_plan.md`, under
+"Borg generation, techniques, and the character sheet". That product proposal
+does not impose its attributes, skill points, or action rules on the other games.
+
 ### Each vessel is a mode of the same peopled history
 
 **Ruled 2026-08-10 (Mark),** during the R4 extraction review

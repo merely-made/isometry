@@ -84,7 +84,7 @@ deliberate here: candidates get crates.io, game, studio, and trademark checks
 before adoption, and the receipts are recorded.
 
 **Collision to respect**: the bare word *flora* is spoken for platform-side
-(a moot's accumulated engrams). Game vocabulary must not reuse it.
+(a moot's accumulated codicils). Game vocabulary must not reuse it.
 
 ## Document Structure
 

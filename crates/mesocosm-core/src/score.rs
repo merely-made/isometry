@@ -79,15 +79,15 @@ pub fn readings(world: &World, history: &History) -> Vec<Reading> {
                 organism, species, ..
             } => {
                 lineage_of.insert(organism, species);
-            }
+            },
             Event::Speciated {
                 species, founder, ..
             } => {
                 lineage_of.insert(founder, species);
-            }
+            },
             Event::Died { organism, .. } => {
                 dead.insert(organism);
-            }
+            },
             Event::Fed {
                 eater,
                 from,
@@ -102,8 +102,8 @@ pub fn readings(world: &World, history: &History) -> Vec<Reading> {
                 {
                     *predation.entry(*species).or_default() += mass_mg as i64;
                 }
-            }
-            _ => {}
+            },
+            _ => {},
         }
     }
 

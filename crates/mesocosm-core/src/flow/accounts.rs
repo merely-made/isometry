@@ -93,7 +93,7 @@ impl Accounts {
                 match record.process {
                     Process::Upkeep => {
                         self.rent_mg = self.rent_mg.saturating_add(record.amount_mg);
-                    }
+                    },
                     _ => self.outflow_mg = self.outflow_mg.saturating_add(record.amount_mg),
                 }
             }

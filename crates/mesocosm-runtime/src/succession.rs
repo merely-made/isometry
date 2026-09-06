@@ -249,7 +249,7 @@ pub(crate) fn opened(
                 // checkpoint, not an individual's.
                 heirs: Vec::new(),
             });
-        }
+        },
         None => return None,
     };
 
@@ -266,7 +266,7 @@ pub(crate) fn opened(
             // Neither is a body's account, so neither is a provisioning: a
             // birth never lands in the ground, and the dev source is only ever
             // a *source*.
-            Account::Soil | Account::Dev => {}
+            Account::Soil | Account::Dev => {},
         }
     }
 

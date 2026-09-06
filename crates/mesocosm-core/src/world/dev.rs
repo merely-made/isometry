@@ -118,7 +118,7 @@ impl World {
                     parent: organism,
                     offspring,
                 }
-            }
+            },
             None => Outcome::Rejected(Rejection::InsufficientMass),
         }
     }

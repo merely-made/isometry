@@ -62,13 +62,13 @@ impl Config {
                     "--frames" => {
                         let value = args.next().ok_or("--frames needs a number")?;
                         config.frames = value.parse().map_err(|_| "invalid --frames")?;
-                    }
+                    },
                     "--capture" => {
                         config.capture = Some(args.next().ok_or("--capture needs a path")?.into());
-                    }
+                    },
                     "--receipt" => {
                         config.receipt = Some(args.next().ok_or("--receipt needs a path")?.into());
-                    }
+                    },
                     other => return Err(format!("unknown argument: {other}")),
                 }
             }
@@ -120,7 +120,7 @@ impl App {
             Err(error) => {
                 self.fail(event_loop, &error);
                 return;
-            }
+            },
         };
         self.frames += 1;
         if self.frames < self.config.frames.max(1) {
@@ -134,7 +134,7 @@ impl App {
             Err(error) => {
                 self.fail(event_loop, &error.to_string());
                 return;
-            }
+            },
         };
 
         #[cfg(target_arch = "wasm32")]
@@ -190,7 +190,7 @@ impl ApplicationHandler<InitEvent> for App {
             Err(error) => {
                 self.fail(event_loop, &error.to_string());
                 return;
-            }
+            },
         };
         self.window = Some(window.clone());
         self.initializing = true;
@@ -217,7 +217,7 @@ impl ApplicationHandler<InitEvent> for App {
                 if let Some(window) = &self.window {
                     window.request_redraw();
                 }
-            }
+            },
             InitEvent::Ready(Err(error)) => self.fail(event_loop, &error),
         }
     }
@@ -234,9 +234,9 @@ impl ApplicationHandler<InitEvent> for App {
                 if let Some(gpu) = &mut self.gpu {
                     gpu.resize(size.width, size.height);
                 }
-            }
+            },
             WindowEvent::RedrawRequested => self.redraw(event_loop),
-            _ => {}
+            _ => {},
         }
     }
 

@@ -97,7 +97,7 @@ fn an_unplayed_line_takes_its_turn_at_the_boundary_and_its_next_birth_expresses(
                     .1;
                 assert!(taken.net_mg() > standing, "it earns more net than standing");
                 assert!(turn.committed.is_some(), "and the commit went through");
-            }
+            },
             None => assert!(
                 turn.considered
                     .iter()
