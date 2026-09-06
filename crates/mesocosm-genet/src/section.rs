@@ -19,7 +19,9 @@
 mod bodies;
 mod camera;
 mod capture;
+mod terrain;
 mod terrarium;
+pub use terrain::TerrainStyle;
 mod view;
 pub use terrarium::{
     BODY_SCALE as TERRARIUM_BODY_SCALE, Cutaway, framed_habitat, occupied as terrarium_occupied,
@@ -92,6 +94,7 @@ pub struct Section {
     tracer: BrickTracer,
     map: BrickMap,
     grade: Grade,
+    terrain_appearance: Option<mesocosm_lens::TerrainAppearance>,
     width: u32,
     height: u32,
     /// How much world this section frames. Presentation, so it lives beside the
@@ -148,6 +151,7 @@ impl Section {
             tracer,
             map,
             grade: Grade::retro(PALETTE),
+            terrain_appearance: None,
             width,
             height,
             half_height: half_height_or_default(framing.half_height),
@@ -341,6 +345,7 @@ impl Section {
             .changed(change)
             .with_clip_from_world(matrix)
             .with_roster(&self.bodies.fallback);
+            input.terrain_appearance = self.terrain_appearance;
             if let Some(pose) = self.bodies.played_fallback.as_ref() {
                 input = input.with_pose(pose);
             }
@@ -356,6 +361,7 @@ impl Section {
             )
             .changed(change)
             .with_roster(frame.roster);
+            input.terrain_appearance = self.terrain_appearance;
             if let Some(pose) = frame.pose {
                 input = input.with_pose(pose);
             }

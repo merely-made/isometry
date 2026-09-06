@@ -354,13 +354,15 @@ comparisons against TD10's table; conservation exact; fixtures re-recorded.
 
 ## After TD11: the playable ecology chain is next
 
-The [playable ecology plan](2026-08-31_playable_ecology_plan.md) decomposes the
-next product chain. PE0 first makes ecological flow visible. PE1 composes
-reproduction, death, witnessing, and succession as the individual checkpoint.
-PD1b/PD2 then supply one embodied developmental option in PE2; P3 and PD3/PD4
-remain ahead of PE3's P4/PD5 lineage-scale epoch review. The world record
-remains empty until `end_epoch` has that production caller, and NPC speciation
-remains open.
+The [playable ecology plan](2026-08-31_playable_ecology_plan.md) owns the
+successor product chain. **Refreshed 2026-09-05:** PE0-PE3 now compose flow
+readings, reproduction/succession, embodied discovery and lineage review;
+the former missing epoch caller and review path are implemented. NPC
+speciation remains open. CP1 adds a fixed habitat for observing those bodies,
+with ordinary burrow traversal and four presentation-only views (`377d774`).
+TG1 typed intake is the next mechanics slice; this does not reopen TD for
+another constants-only retune. Its corridor result must be measured after the
+shared edibility rule exists, not inferred from the better picture.
 
 The loop-composition correction from the second playtest stands: single-loop
 polish is done until the loops can compose.

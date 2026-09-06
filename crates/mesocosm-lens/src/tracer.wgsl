@@ -30,6 +30,8 @@ struct TraceParams {
     space: BrickTraceSpace,
     fog: vec4<f32>,
     look: vec4<f32>,
+    // mode, soil, rock, unknown, sky, underground, section centre + clearing Y
+    terrain: array<vec4<f32>, 7>,
     // Column-major world-to-clip for the depth join; identity when unused.
     clip_from_world: mat4x4<f32>,
     critter: CritterParams,
@@ -83,6 +85,11 @@ fn vs(@builtin(vertex_index) index: u32) -> VsOut {
 }
 
 fn material_colour(material: u32) -> vec3<f32> {
+    if (params.terrain[0].x > 0.5) {
+        if (material == 3u) { return params.terrain[1].xyz; }
+        if (material == 2u) { return params.terrain[2].xyz; }
+        return params.terrain[3].xyz;
+    }
     if (material == 3u) {
         return vec3(0.38, 0.24, 0.13); // soil
     }
@@ -404,11 +411,23 @@ fn trace_sample(in: VsOut) -> TraceSample {
     }
 
     if (!hit.found) {
-        let sky = mix(vec3(0.65, 0.72, 0.80), vec3(0.35, 0.45, 0.62), clamp(ray.direction.y * 3.0 + 0.3, 0.0, 1.0));
-        return TraceSample(
-            vec4(grade(sky, params.camera.far, pixel, false), 1.0),
-            ray.origin + ray.direction * params.camera.far,
+        var sky = mix(vec3(0.65, 0.72, 0.80), vec3(0.35, 0.45, 0.62), clamp(ray.direction.y * 3.0 + 0.3, 0.0, 1.0));
+        if (params.terrain[0].x > 0.5) {
+            let horizontal = vec3(params.camera.forward.x, 0.0, params.camera.forward.z);
+            let denominator = dot(ray.direction, horizontal);
+            var plane_y = ray.origin.y + ray.direction.y * params.camera.far;
+            if (abs(denominator) > 1e-5) {
+                let plane_t = dot(params.terrain[6].xyz - ray.origin, horizontal) / denominator;
+                plane_y = ray.origin.y + ray.direction.y * plane_t;
+            }
+            sky = select(params.terrain[5].xyz, params.terrain[4].xyz, plane_y >= params.terrain[6].w);
+        }
+        let colour = select(
+            grade(sky, params.camera.far, pixel, false),
+            sky,
+            params.terrain[0].x > 0.5,
         );
+        return TraceSample(vec4(colour, 1.0), ray.origin + ray.direction * params.camera.far);
     }
     let sun = normalize(vec3(0.4, 0.8, 0.3));
     let light = 0.38 + 0.62 * max(0.0, dot(hit.normal, sun));

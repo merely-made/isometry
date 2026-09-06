@@ -26,6 +26,9 @@ mod tracer;
 #[cfg(test)]
 mod netrender_tests;
 #[cfg(test)]
+#[path = "tracer_tests/terrain.rs"]
+mod terrain_tests;
+#[cfg(test)]
 mod tracer_tests;
 
 pub use body::{BodyLensProjection, BodyPlacement, BodyProjectionError, BodyRevision, LensPart};
@@ -106,6 +109,20 @@ pub struct Grade {
     /// Internal render scale denominator: 1 = full res, 4 = quarter res
     /// integer-upscaled, which is most of the retro grain.
     pub downscale: u32,
+}
+
+/// Optional terrain presentation supplied by the host.
+#[derive(Clone, Copy, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+pub struct TerrainAppearance {
+    pub soil: [f32; 3],
+    pub rock: [f32; 3],
+    pub unknown: [f32; 3],
+    pub sky: [f32; 3],
+    pub underground: [f32; 3],
+    /// Centre of the fixed vertical plane used to classify no-hit pixels.
+    pub section_centre: [f32; 3],
+    /// World Y separating the illustrated sky and underground backgrounds.
+    pub clearing_y: f32,
 }
 
 impl Grade {

@@ -2285,3 +2285,41 @@ contact need further visual work. Locomotion still uses the turning-width
 proxy, not full posed voxel collision. CP1 establishes the working comparison
 and traversal; it does not promote a new shipping camera or claim final scene
 composition.
+
+### CP1 terrain readability follow-through
+
+**Status: implemented and native-verified 2026-09-05.** The native prototype exposes a presentation
+problem: heavily quantized terrain turns soil into olive/red bands and gives
+open sky and exposed underground space too little distinction. Add an explicit
+`--terrain-style auto|classic|habitat` setting. Auto retains classic in ecology
+and chooses habitat in the opt-in CP1 scene. Host-owned appearance data supplies
+soil, rock and backdrop colours to the existing lens tracer. The existing
+Ground, cut policy, rays, body geometry, depth join and world record stay the
+authority for geometry and interaction.
+
+**Done when:** the same clearing and four-step burrow trace are captured under
+both styles; all four turns preserve world hash and addressed selection; the
+classic terrain/body pixels match CP1 and the historical ecology capture; sky, earth,
+rock and exposed underground space are visibly distinct in the habitat style;
+the receipt records the resolved style. Backdrop bands are illustration, not
+lighting, sensing or another material field. Canopy generation and articulated
+foot contact remain separate open anatomy work.
+
+**Findings and progress (2026-09-05):** 130 focused library tests pass
+(host 80, lens 50; one existing ignored). Native clearing and burrow replays
+under classic/habitat retain `65425aa79982d536` / `c90423c121afb7fb`.
+All four 12-degree views retain the selected part/revision and zero camera
+intents. Historical ecology remains fully PNG-identical. Classic CP1's
+terrain and body region is pixel-identical; whole-frame identity is not
+claimed: tiny minimap-edge differences also occur between repeated captures
+of the same binary and arguments. The exact differing pixels are recorded in
+`Code/testing/mesocosm/cp1_readability/verification.json`, separately from the
+zero-tolerance terrain/body check.
+
+`section/terrain.rs` owns the preset; lens `TerrainAppearance` carries only
+colours and the fixed backdrop plane. `Grade` still owns fog and quantisation.
+The host chooses a smooth grade for habitat and retains the retro grade for
+classic. Ground, body volumes, geometry, hit depths and saved trace data are
+unchanged. The new picture removes the false red/olive soil bands and exposes
+body/ground contrast more clearly. Canopy composition, contact and scene
+dressing remain open; this pass does not declare the habitat visually complete.

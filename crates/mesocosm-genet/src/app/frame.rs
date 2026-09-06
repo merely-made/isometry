@@ -130,6 +130,21 @@ impl Host {
 
         let world = self.runtime.world();
         let Some(gpu) = &mut self.gpu else { return };
+        let (backdrop_centre, surface_y) =
+            self.habitat
+                .as_ref()
+                .map_or((centre, at[1] as f32), |habitat| {
+                    (
+                        [0, 1, 2]
+                            .map(|i| (habitat.bounds.min[i] + habitat.bounds.max[i]) as f32 * 0.5),
+                        habitat.clearing[1] as f32,
+                    )
+                });
+        gpu.section.configure_terrain(
+            self.config.terrain_style.resolved(self.habitat.is_some()),
+            backdrop_centre,
+            surface_y,
+        );
         gpu.section
             .set_body_focus(focused_body, self.inspection.selected);
         // wgpu 29 returns an enum rather than a Result here: a suboptimal

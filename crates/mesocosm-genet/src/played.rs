@@ -245,6 +245,7 @@ pub struct PlayedReceipt {
     /// tick are only comparable if each says which arm it is.
     pub camera: &'static str,
     pub cutaway: &'static str,
+    pub terrain_style: &'static str,
     pub bodies: &'static str,
     pub body_budget: usize,
     pub body_projection: crate::section::BodyFrameStats,

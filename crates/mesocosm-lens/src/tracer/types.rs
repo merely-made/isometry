@@ -11,7 +11,7 @@ use bytemuck::{Pod, Zeroable};
 use modulus::BrickMap;
 
 use super::LeasedAtlas;
-use crate::{CritterPose, Flight, Grade};
+use crate::{CritterPose, Flight, Grade, TerrainAppearance};
 
 const PERSPECTIVE: u32 = 0;
 const ORTHOGRAPHIC: u32 = 1;
@@ -303,6 +303,9 @@ pub struct BrickFrameInput<'a> {
     pub change: BrickChange<'a>,
     pub camera: TraceCamera,
     pub grade: &'a Grade,
+    /// Optional vessel-owned terrain presentation. `None` preserves the
+    /// original renderer path and its capture bytes.
+    pub terrain_appearance: Option<TerrainAppearance>,
     /// Presentation-only SDF bodies. Their source remains the caller's
     /// projection, never the brick map or world state.
     pub pose: Option<&'a CritterPose>,
@@ -351,6 +354,7 @@ impl<'a> BrickFrameInput<'a> {
             change: BrickChange::Full,
             camera,
             grade,
+            terrain_appearance: None,
             pose: None,
             roster: &[],
             leased_atlas: None,
@@ -392,6 +396,11 @@ impl<'a> BrickFrameInput<'a> {
     /// State the host schedule epoch a leased atlas must carry this frame.
     pub fn with_expected_read_epoch(mut self, epoch: u64) -> Self {
         self.expected_read_epoch = Some(epoch);
+        self
+    }
+
+    pub fn with_terrain_appearance(mut self, appearance: TerrainAppearance) -> Self {
+        self.terrain_appearance = Some(appearance);
         self
     }
 }

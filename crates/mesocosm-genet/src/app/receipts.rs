@@ -241,6 +241,11 @@ impl Host {
                 .map_or(self.config.camera, |gpu| gpu.section.mode())
                 .name(),
             cutaway: self.config.cutaway.name(),
+            terrain_style: self
+                .config
+                .terrain_style
+                .resolved(self.habitat.is_some())
+                .name(),
             bodies: self.config.body_mode.name(),
             inspecting: self.inspection.open,
             selected_part: self

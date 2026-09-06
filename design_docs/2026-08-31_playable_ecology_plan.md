@@ -1,8 +1,7 @@
 # Playable Ecology Architecture Plan (2026-08-31)
 
-**Status: plan, founded 2026-08-31 and refined 2026-09-01. PE0 and PE1 are
-built as of 2026-09-01 (see §9); PE2-PE7 remain plan, and nothing outside PE0
-and PE1 claims new code.**
+**Status: active integration plan, refreshed 2026-09-05. PE0-PE3 are landed
+(see §9); PE4-PE7 remain open. TG1 is the next mechanics slice.**
 Mark ruled reproduction as an individual-scale micro-checkpoint and named
 trophic visibility as the primary design challenge. He reaffirmed the other
 load-bearing directions: body composition determines what a critter can do;
@@ -595,6 +594,16 @@ voxel bodies, the played scene, part inspection and visible life-history
 changes. Its first geometry/existing-mechanics proof does not wait for typed
 matter. Diet-composition appearance waits on TG2/TG3. Visual acceptance and the
 TG6 corridor supplement, rather than replace, PE4's generated-world criteria.
+
+**CP1 integration finding (2026-09-05):** the fixed clearing/burrow now has
+four hash-neutral views, addressed inspection and ordinary grounded traversal
+(`377d774`). This provides a small acceptance habitat, not a generated-world
+or trophic-viability result. Terrain readability is now native-verified there;
+next join TG1's shared pursuit/bite admission answer to the existing inspector.
+Follow with VB4a's visible intake, body change and descendant proof using
+existing mechanics. Canopy form remains real developed anatomy; diet-derived
+tissue waits for TG2/TG3. PE5's controller and PE6's scale work retain their
+own gates. CP1's ground-truth cutaway is not an organism's sensory knowledge.
 
 The material scheme is ruled in section 6 item 4. Generate an immutable
 world-law record first, then admitted material

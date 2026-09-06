@@ -248,6 +248,14 @@ impl Automatable for Host {
                 ("camera", self.config.camera.name().to_string()),
                 ("scene", self.config.effective_scene().name().to_string()),
                 (
+                    "terrain-style",
+                    self.config
+                        .terrain_style
+                        .resolved(self.habitat.is_some())
+                        .name()
+                        .to_string(),
+                ),
+                (
                     "controlled-x",
                     world
                         .controlled_id()

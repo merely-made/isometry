@@ -136,6 +136,16 @@ fn main() {
                         std::process::exit(1);
                     });
             },
+            "--terrain-style" => {
+                config.terrain_style = args
+                    .next()
+                    .as_deref()
+                    .and_then(mesocosm_genet::section::TerrainStyle::parse)
+                    .unwrap_or_else(|| {
+                        eprintln!("--terrain-style wants auto, classic or habitat");
+                        std::process::exit(1);
+                    });
+            },
             "--capture" => capture = args.next().map(PathBuf::from),
             "--trace" => trace = args.next().map(PathBuf::from),
             "--receipt" => receipt = args.next().map(PathBuf::from),
@@ -268,6 +278,8 @@ mesocosm-genet: run Mesocosm in a window
   --scene MODE    ecology (default) or the fixed clearing-and-burrow terrarium
   --terrarium-pitch DEG  shallow camera pitch, 0..45 degrees (default 12)
   --cutaway MODE  occupied (default), always (expose interior), or never
+  --terrain-style MODE  auto (habitat in terrarium, classic in ecology),
+                        classic (retro comparison), or habitat (earth/sky contrast)
   --slab H        section slab half-height in voxels (presentation only, default 28, terrarium 18)
   --camera MODE   which way the section looks: oblique (the shipped section,
                   tilted 20 degrees so depth reads as a short diagonal; the

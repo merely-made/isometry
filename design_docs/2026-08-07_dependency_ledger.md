@@ -52,6 +52,14 @@ TG2/TG3 block VB4's typed diet extension, not VB1-VB3 or the existing-mechanics
 graft/expression proof. TG6 measures trophic viability; VB5 adds visible and
 performance acceptance. Neither closes PE4's generated-world proof by itself.
 
+**Integration checkpoint, 2026-09-05:** VB3 keyboard inspection and CP1's
+fixed clearing/burrow quarter turns are implemented (`377d774`). The bounded
+CP1 terrain-readability pass is now native-verified; actual canopy composition remains
+an anatomy task. TG1 is the next mechanics slice, followed by VB4a's visible
+body-change/descendant join. This sequence uses the habitat as a common
+acceptance scene without making presentation a prerequisite for core TG1.
+Typed diet appearance still waits on TG2/TG3; camera work closes no scale gate.
+
 PE6 consumes the scale lane but does not silently rule its open S2-versus-S3
 order. S3's spatial index and cohort execution are required before the final
 large-roster proof; S2 remains the presentation route beyond the current atlas

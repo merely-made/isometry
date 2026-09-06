@@ -27,6 +27,8 @@ pub(super) struct TraceParams {
     pub space: BrickTraceSpace,
     pub fog: [f32; 4],
     pub look: [f32; 4],
+    /// Optional habitat appearance: mode, five colours, and plane data.
+    pub terrain: [[f32; 4]; 7],
     /// Column-major, identity when the frame carries no depth join.
     pub clip_from_world: [[f32; 4]; 4],
     pub critter: CritterParams,
@@ -78,6 +80,44 @@ impl TraceParams {
                 input.grade.palette_len as f32,
                 0.0,
             ],
+            terrain: input
+                .terrain_appearance
+                .map_or([[0.0; 4]; 7], |appearance| {
+                    [
+                        [1.0, 0.0, 0.0, 0.0],
+                        [
+                            appearance.soil[0],
+                            appearance.soil[1],
+                            appearance.soil[2],
+                            0.0,
+                        ],
+                        [
+                            appearance.rock[0],
+                            appearance.rock[1],
+                            appearance.rock[2],
+                            0.0,
+                        ],
+                        [
+                            appearance.unknown[0],
+                            appearance.unknown[1],
+                            appearance.unknown[2],
+                            0.0,
+                        ],
+                        [appearance.sky[0], appearance.sky[1], appearance.sky[2], 0.0],
+                        [
+                            appearance.underground[0],
+                            appearance.underground[1],
+                            appearance.underground[2],
+                            0.0,
+                        ],
+                        [
+                            appearance.section_centre[0],
+                            appearance.section_centre[1],
+                            appearance.section_centre[2],
+                            appearance.clearing_y,
+                        ],
+                    ]
+                }),
             clip_from_world: input.clip_from_world.unwrap_or(IDENTITY),
             critter: CritterParams::from_pose(input.pose),
         }
@@ -352,9 +392,9 @@ mod tests {
         assert!(ROSTER_BUFFER_BYTES < limit);
         assert!((size_of::<TraceParams>() as u64) < limit);
         // Both bindings are live at once, and each has to fit the same limit
-        // on its own. The frame uniform (header 224 B + pose, including the slab wall) spends 51.7%,
+        // on its own. The frame uniform (header 336 B + pose, including the slab wall) spends 52.4%,
         // the roster 93.8%.
-        assert_eq!(size_of::<TraceParams>(), 8480);
+        assert_eq!(size_of::<TraceParams>(), 8592);
         assert_eq!(ROSTER_BUFFER_BYTES * 100 / limit, 93);
         // The budget §3 writes as `M × (C + 1) ≤ 511`, checked rather than
         // recited: 40 members at 11 capsules is 480, and one more capsule each

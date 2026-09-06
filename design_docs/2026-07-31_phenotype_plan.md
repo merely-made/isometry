@@ -2008,7 +2008,12 @@ quarter-turn terrarium views and a clearing-and-burrow prototype. His request
 to do that "after" is recorded as following this body-part inspection step;
 that ordering is an interpretation of the conversation. The camera experiment
 is [CP1](2026-08-30_default_creatures_plan.md#cp1-clearing-and-burrow-camera-prototype).
-It will reuse addressed selection and does not replace VB4's biological join.
+CP1 now reuses addressed selection across all four turns (`377d774`,
+2026-09-05); it does not replace VB4's biological join. The terrain-readability
+follow-through is now native-verified. Canopy form must grow from the developed
+body and retained part addresses. After TG1's intake seam, VB4a connects
+existing intake/body change to a visible descendant before the typed-diet
+extension; pointer picking and sensory food cues remain open VB3 work.
 
 Compose organism and part selection with the existing dev inspector, views and
 host input route. Preserve identity through the render list; resolve a hit to

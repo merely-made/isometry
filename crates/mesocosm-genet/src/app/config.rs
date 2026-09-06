@@ -62,6 +62,8 @@ pub struct HostConfig {
     pub camera_explicit: bool,
     pub terrarium_pitch: f32,
     pub cutaway: section::Cutaway,
+    /// Presentation preset; Auto selects the habitat look only for CP1.
+    pub terrain_style: section::TerrainStyle,
     /// Voxel anatomy or the legacy capsule comparison, presentation only.
     pub body_mode: section::BodyMode,
     pub body_budget: usize,
@@ -124,6 +126,7 @@ impl Default for HostConfig {
             camera_explicit: false,
             terrarium_pitch: section::TERRARIUM_DEGREES,
             cutaway: section::Cutaway::Occupied,
+            terrain_style: section::TerrainStyle::Auto,
             body_mode: section::BodyMode::default(),
             body_budget: section::DEFAULT_BODY_BUDGET,
             generated_content: true,

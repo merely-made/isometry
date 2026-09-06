@@ -197,6 +197,16 @@ beginning body types; start investigating a beginning set of traits.
 
 ## Findings
 
+- **2026-09-05, CP1 review:** camera and addressed-body inspection now have a
+  native four-view habitat receipt (`377d774`). Core still derives feeding
+  from jaw/crop geometry in `organism/kingdom.rs`; pursuit and bite still
+  carry separate Predator/Producer filters in `organism/ecology/movement.rs`
+  and `movement/perception.rs`. TG1 remains unimplemented. Its first visible
+  consumer should read the same port-admission answer in the existing body
+  inspector. A displayed food/threat cue must not infer edibility from colour,
+  silhouette or kingdom alone. CP1 cutaways expose Ground for observation,
+  and do not grant the controlled organism perception through terrain.
+
 - **2026-09-04.** Nothing verified by this plan yet. The diagnosis it is built
   on is the default creatures plan section 7 Q10 Findings entry of the same
   date: the stand is innocent, the producer tier's balance is the verdict, a
