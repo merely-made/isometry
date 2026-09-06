@@ -30,7 +30,7 @@ impl Host {
         // the one the HUD backdrop's own scene item asks.
         let played_at = self.runtime.world().position().unwrap_or(at);
         let half = section::half_height_or_default(self.config.slab_half_height);
-        let centre = self.habitat.as_ref().map_or_else(
+        let mut centre = self.habitat.as_ref().map_or_else(
             || section::centre_on(at, self.pan, half, self.config.camera),
             |habitat| {
                 let mut centre =
@@ -56,7 +56,7 @@ impl Host {
                 || (self.config.cutaway == section::Cutaway::Occupied
                     && section::terrarium_occupied(habitat, played_at));
             window.set_title(&format!(
-                "Mesocosm | clearing and burrow | {} | cutaway {} ({}) | Z/V turn",
+                "Mesocosm | clearing and burrow | {} | cutaway {} ({}) | Z/V turn | H graft tissue",
                 self.config.camera.name(),
                 self.config.cutaway.name(),
                 if exposed { "open" } else { "closed" }
@@ -67,13 +67,51 @@ impl Host {
         } else {
             1.0
         };
+        let mut view_half = half;
+        if self.grafting.open {
+            let frame = self
+                .gpu
+                .as_ref()
+                .map(|gpu| (gpu.config.width, gpu.config.height))
+                .unwrap_or((960, 540));
+            if let Some((focused, fitted)) = grafting::framing(
+                self.grafting
+                    .preview
+                    .as_deref()
+                    .unwrap_or(self.runtime.world()),
+                frame,
+                self.config.camera,
+                self.habitat.as_ref().map(|_| self.config.terrarium_pitch),
+                body_scale,
+            ) {
+                centre = focused;
+                view_half = fitted;
+            }
+        }
+        if let Some(gpu) = &mut self.gpu {
+            gpu.section.set_half_height(view_half);
+            gpu.section.set_body_preview(self.grafting.open);
+            gpu.section.configure_bodies(
+                if self.grafting.open {
+                    section::BodyMode::Voxels
+                } else {
+                    self.config.body_mode
+                },
+                self.config.body_budget,
+            );
+        }
+        // Only the section sees this disposable candidate. HUD, receipts and
+        // all simulation work keep reading the authoritative runtime world.
         let tint = self
             .runtime
             .world()
             .controlled()
             .map_or([0.42, 0.62, 0.46], |organism| look_of(organism).0);
         let (pose, dropped) = match section::pose_of_scaled(
-            self.runtime.world(),
+            self.grafting
+                .preview
+                .as_deref()
+                .unwrap_or(self.runtime.world()),
             tint,
             body_scale,
             self.habitat.is_some(),
@@ -88,6 +126,7 @@ impl Host {
         let roster = self
             .gpu
             .as_ref()
+            .filter(|_| !self.grafting.open)
             .map(|gpu| gpu.section.slab_window(centre))
             .map(|window| {
                 section::roster_of_scaled(
@@ -126,6 +165,7 @@ impl Host {
         // The dev lane's own reading (DT1). `None` outside `--dev`, which is
         // also when nothing below touches `lanes.dev` at all.
         let dev = self.dev_reading();
+        let graft_menu = self.grafting.open.then_some(&self.grafting.reading);
         let focused_body = self.config.dev.then(|| self.followed()).flatten();
 
         let world = self.runtime.world();
@@ -145,8 +185,19 @@ impl Host {
             backdrop_centre,
             surface_y,
         );
+        let candidate = self.grafting.preview.as_deref().unwrap_or(world);
+        let graft_selection = self
+            .grafting
+            .open
+            .then(|| grafting::selection(&gpu.section, candidate, self.grafting.root))
+            .flatten();
+        let subject = if self.grafting.open {
+            candidate.controlled().map(|o| o.id)
+        } else {
+            focused_body
+        };
         gpu.section
-            .set_body_focus(focused_body, self.inspection.selected);
+            .set_body_focus(subject, graft_selection.or(self.inspection.selected));
         // wgpu 29 returns an enum rather than a Result here: a suboptimal
         // texture is still drawable, and a lost or outdated surface wants
         // reconfiguring rather than an error.
@@ -162,7 +213,7 @@ impl Host {
 
         let view = surface_texture.texture.create_view(&Default::default());
         let section_frame = SectionFrame {
-            world,
+            world: self.grafting.preview.as_deref().unwrap_or(world),
             volumes: &self.volumes,
             ground: world.ground(),
             dirty: &dirty,
@@ -208,6 +259,7 @@ impl Host {
                 .refresh(&lanes.device, review.as_ref(), board_row);
             let held = checkpoint.as_ref().filter(|_| !lanes.board.standing());
             lanes.checkpoint.refresh(&lanes.device, held);
+            lanes.grafting.update(&lanes.device, graft_menu);
 
             let framed = lanes.device.frame_master(
                 gpu.section.display_texture(),
@@ -221,24 +273,29 @@ impl Host {
                     .create_command_encoder(&wgpu::CommandEncoderDescriptor {
                         label: Some("mesocosm chrome into master"),
                     });
-            lanes
-                .hud
-                .composite(&lanes.device, &mut chrome_encoder, &master_view, frame);
-            lanes
-                .vitals
-                .composite(&lanes.device, &mut chrome_encoder, &master_view, frame);
-            devtime::composite_dev_lane(
-                lanes,
-                dev.as_ref(),
-                &mut chrome_encoder,
-                &master_view,
-                frame,
-            );
+            if !self.grafting.open {
+                lanes
+                    .hud
+                    .composite(&lanes.device, &mut chrome_encoder, &master_view, frame);
+                lanes
+                    .vitals
+                    .composite(&lanes.device, &mut chrome_encoder, &master_view, frame);
+                devtime::composite_dev_lane(
+                    lanes,
+                    dev.as_ref(),
+                    &mut chrome_encoder,
+                    &master_view,
+                    frame,
+                );
+            }
             lanes
                 .checkpoint
                 .composite(&lanes.device, &mut chrome_encoder, &master_view, frame);
             lanes
                 .board
+                .composite(&lanes.device, &mut chrome_encoder, &master_view, frame);
+            lanes
+                .grafting
                 .composite(&lanes.device, &mut chrome_encoder, &master_view, frame);
             gpu.queue.submit(Some(chrome_encoder.finish()));
 

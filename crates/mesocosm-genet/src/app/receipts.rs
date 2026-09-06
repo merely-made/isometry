@@ -62,22 +62,27 @@ impl Host {
                     .create_command_encoder(&wgpu::CommandEncoderDescriptor {
                         label: Some("mesocosm captured chrome into master"),
                     });
-            lanes
-                .hud
-                .composite(&lanes.device, &mut encoder, &master_view, frame);
-            lanes
-                .vitals
-                .composite(&lanes.device, &mut encoder, &master_view, frame);
-            if self.config.dev {
+            if !self.grafting.open {
                 lanes
-                    .dev
+                    .hud
                     .composite(&lanes.device, &mut encoder, &master_view, frame);
+                lanes
+                    .vitals
+                    .composite(&lanes.device, &mut encoder, &master_view, frame);
+                if self.config.dev {
+                    lanes
+                        .dev
+                        .composite(&lanes.device, &mut encoder, &master_view, frame);
+                }
             }
             lanes
                 .checkpoint
                 .composite(&lanes.device, &mut encoder, &master_view, frame);
             lanes
                 .board
+                .composite(&lanes.device, &mut encoder, &master_view, frame);
+            lanes
+                .grafting
                 .composite(&lanes.device, &mut encoder, &master_view, frame);
             lanes.device.queue().submit(Some(encoder.finish()));
             gpu.section.capture_from(&master.texture, |_, _, _| {})
@@ -248,8 +253,20 @@ impl Host {
                 .terrain_style
                 .resolved(self.habitat.is_some())
                 .name(),
-            bodies: self.config.body_mode.name(),
+            bodies: if self.grafting.open {
+                "voxels"
+            } else {
+                self.config.body_mode.name()
+            },
             inspecting: self.inspection.open,
+            graft_menu: self.grafting.open,
+            body_view: if self.grafting.open {
+                "isolated"
+            } else {
+                "scene"
+            },
+            graft_preview: self.grafting.preview.is_some(),
+            graft_root: self.grafting.root.map(|part| part.0),
             selected_part: self
                 .inspection
                 .selected

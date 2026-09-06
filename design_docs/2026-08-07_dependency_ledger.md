@@ -68,6 +68,31 @@ join. This sequence uses the habitat as a common
 acceptance scene without making presentation a prerequisite for core TG1.
 Typed diet appearance still waits on TG2/TG3; camera work closes no scale gate.
 
+**Locally verified integration slice, 2026-09-06:**
+the graft-practice menu is a bounded host join before VB4a, using authored
+terrarium terrain and a trace-distinct compatible carcass branch. `H` lists contextual reachable branches; arrows
+select; `Tab` selects the shared Carry/Regrow preview; `Enter` sends the
+existing graft intent; and `Esc` has no mutation. Its modal pauses ordinary
+play while camera `Z`/`V` remain available, and isolates the controlled voxel
+body on a plain panel background through the resident renderer/depth/device
+before restoring the terrarium on close. When Carry requires an adapter, the
+menu explicitly says the tissue arrives inactive. `--size` gives logical `WxH`
+native 960/1920 fit checks. Native acceptance covers ten scenarios: 1920 and
+960 preview layouts, four rotations, cancel, Carry, Regrow, empty menu, both
+new replays, and historical TG1 turns/walk replay. It reports zero dev intents,
+missing/fallback/omitted/projection failures, one graph submission, two
+actual and four projected parts in the isolated one-body preview, tick 0 cancel/browse,
+and one-step/one-Graft commit. Genesis `6a011fb0e2bfe633`, Carry
+`d55a291046b07b98`, and Regrow `4759ff216707ff05` replay exactly; retained TG1
+hashes stay `8c655e425264e795` / `2fc1d29e8ce0e4b0`. The joined suite is 848
+passed, 0 failed, 2 ignored, including 424 core passed and one core ignored;
+accounting and all-founder-footing regressions pass. Source, tests, and native
+verification are complete for this bounded slice. Receipts:
+`Code/testing/mesocosm/graft_menu/verification.json` and
+`Code/testing/mesocosm/graft_menu/README.md`. No inventory, natural encounter,
+expression, relative control, or descendant-program claim transfers into this
+slice.
+
 PE6 consumes the scale lane but does not silently rule its open S2-versus-S3
 order. S3's spatial index and cohort execution are required before the final
 large-roster proof; S2 remains the presentation route beyond the current atlas

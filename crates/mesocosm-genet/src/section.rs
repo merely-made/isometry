@@ -239,6 +239,11 @@ impl Section {
         self.half_height
     }
 
+    /// Host-owned framing, shared by terrain rays, body depth and culling.
+    pub fn set_half_height(&mut self, half: f32) {
+        self.half_height = half_height_or_default(half);
+    }
+
     /// The world box this camera actually shows, from the camera's own
     /// numbers. What falls outside cannot reach a pixel, so it is what the
     /// roster culls against.
@@ -335,6 +340,10 @@ impl Section {
                 eprintln!("{error}; using capsule fallback");
                 self.bodies.stats.last_error = Some(error);
                 self.bodies.fallback_all(frame.world);
+            }
+            if self.bodies.isolated && self.bodies.stats.fallback_bodies == 0 {
+                self.copy_to_display(encoder);
+                return Ok(());
             }
             let mut input = BrickFrameInput::for_camera(
                 &self.map,

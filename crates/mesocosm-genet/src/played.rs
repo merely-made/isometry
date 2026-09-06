@@ -43,6 +43,8 @@ pub enum SceneMode {
     #[default]
     Ecology,
     Terrarium,
+    /// Authored practice fixture, recorded distinctly from a natural encounter.
+    GraftPractice,
 }
 
 impl SceneMode {
@@ -50,6 +52,7 @@ impl SceneMode {
         match self {
             Self::Ecology => "ecology",
             Self::Terrarium => "terrarium",
+            Self::GraftPractice => "graft-practice",
         }
     }
 
@@ -57,6 +60,7 @@ impl SceneMode {
         match name.trim().to_ascii_lowercase().as_str() {
             "ecology" => Some(Self::Ecology),
             "terrarium" => Some(Self::Terrarium),
+            "graft-practice" => Some(Self::GraftPractice),
             _ => None,
         }
     }
@@ -203,6 +207,11 @@ pub struct PlayedReceipt {
     pub body_layout: &'static str,
     pub body_content: &'static str,
     pub inspecting: bool,
+    pub graft_menu: bool,
+    pub body_view: &'static str,
+    /// Body projection may show a disposable candidate; world/hash stay actual.
+    pub graft_preview: bool,
+    pub graft_root: Option<u32>,
     pub selected_part: Option<PartSelectionReceipt>,
     /// `played` for a session at the keyboard, `replay` for a driven one.
     pub mode: &'static str,

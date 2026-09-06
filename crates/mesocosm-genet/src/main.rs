@@ -70,6 +70,18 @@ fn main() {
     while let Some(arg) = args.next() {
         match arg.as_str() {
             "--frames" => config.frames = args.next().and_then(|v| v.parse().ok()),
+            "--size" => {
+                let size = args.next().unwrap_or_default();
+                let parsed = size
+                    .split_once('x')
+                    .and_then(|(w, h)| Some((w.parse::<u32>().ok()?, h.parse::<u32>().ok()?)));
+                let Some((width, height)) = parsed.filter(|(w, h)| *w > 0 && *h > 0) else {
+                    eprintln!("--size wants positive WIDTHxHEIGHT in logical pixels");
+                    std::process::exit(1);
+                };
+                config.width = width;
+                config.height = height;
+            },
             "--bodies" => {
                 let named = args.next().unwrap_or_default();
                 config.body_mode =
@@ -114,7 +126,7 @@ fn main() {
                 let named = args.next().unwrap_or_default();
                 config.scene =
                     mesocosm_genet::played::SceneMode::parse(&named).unwrap_or_else(|| {
-                        eprintln!("--scene wants ecology or terrarium");
+                        eprintln!("--scene wants ecology, terrarium or graft-practice");
                         std::process::exit(1);
                     });
             },
@@ -210,7 +222,7 @@ fn main() {
         }
     }
 
-    if config.scene == mesocosm_genet::played::SceneMode::Terrarium && !config.camera_explicit {
+    if config.scene != mesocosm_genet::played::SceneMode::Ecology && !config.camera_explicit {
         config.camera = CameraMode::TerrariumEast;
     }
 
@@ -242,13 +254,13 @@ fn main() {
         config.trace = Some(trace_path);
     }
 
-    if config.effective_scene() == mesocosm_genet::played::SceneMode::Terrarium
+    if config.effective_scene() != mesocosm_genet::played::SceneMode::Ecology
         && !config.camera_explicit
     {
         config.camera = CameraMode::TerrariumEast;
     }
 
-    if config.effective_scene() == mesocosm_genet::played::SceneMode::Terrarium && !slab_explicit {
+    if config.effective_scene() != mesocosm_genet::played::SceneMode::Ecology && !slab_explicit {
         config.slab_half_height = 18.0;
     }
 
@@ -265,6 +277,7 @@ const HELP: &str = "\
 mesocosm-genet: run Mesocosm in a window
 
   --frames N      run N frames and exit
+  --size WxH      initial window size in logical pixels (default 960x540)
   --bodies MODE   voxels (default) or capsules (comparison), presentation only
   --body-budget N maximum detailed bodies in the section (default 41)
   --body-content MODE generated (default) or fixtures for new worlds; replay uses saved content
@@ -275,7 +288,7 @@ mesocosm-genet: run Mesocosm in a window
   --replay PATH   drive the run from a recorded trace and assert its hash
   --scenario PATH drive the run from a text scenario and exit 1 if it fails
   --seed N        world seed
-  --scene MODE    ecology (default) or the fixed clearing-and-burrow terrarium
+  --scene MODE    ecology (default), terrarium, or authored graft-practice
   --terrarium-pitch DEG  shallow camera pitch, 0..45 degrees (default 12)
   --cutaway MODE  occupied (default), always (expose interior), or never
   --terrain-style MODE  auto (habitat in terrarium, classic in ecology),
@@ -298,6 +311,9 @@ headed-verify home: <Code>/testing/mesocosm/scratch_played.png, .trace.json and
 when one of those flags names it.
 
 controls: Z/V turn the terrarium left/right; WASD move along world axes, E/Space eat, Q deposit, C dig, arrows pan, Esc quit
+H opens Graft tissue beside a carcass (world paused):
+  arrows or J/L select a branch; Tab switches keep/regrow; Enter confirms
+  Esc cancels the menu; Z/V rotates the preview. Only confirmation enters the trace.
 at a checkpoint the world stops and the keys narrow:
   Enter  carry on unchanged
   T      take the body on offer (the newborn, or your eldest descendant)

@@ -168,6 +168,8 @@ impl Automatable for Host {
             return f(&[]);
         };
         let frame = (gpu.config.width, gpu.config.height);
+        let (graft_dom, graft_rect, graft_sheet) = lanes.grafting.probe(frame);
+        let graft = graft_dom.borrow();
         let (board_dom, board_rect, board_sheet) = lanes.board.probe(frame);
         let (held_dom, held_rect, held_sheet) = lanes.checkpoint.probe(frame);
         let (dev_dom, dev_rect, dev_sheet) = lanes.dev.probe(frame);
@@ -178,6 +180,14 @@ impl Automatable for Host {
         let vitals = vitals_dom.borrow();
 
         let mut surfaces = Vec::with_capacity(4);
+        if lanes.grafting.standing() {
+            surfaces.push(ProbeSurface {
+                name: "grafting",
+                dom: &graft,
+                rect: graft_rect,
+                sheet: graft_sheet,
+            });
+        }
         if lanes.board.standing() {
             surfaces.push(ProbeSurface {
                 name: "board",
@@ -194,7 +204,7 @@ impl Automatable for Host {
                 sheet: held_sheet,
             });
         }
-        if self.config.dev {
+        if self.config.dev && !self.grafting.open {
             surfaces.push(ProbeSurface {
                 name: "dev",
                 dom: &dev,
@@ -202,12 +212,14 @@ impl Automatable for Host {
                 sheet: dev_sheet,
             });
         }
-        surfaces.push(ProbeSurface {
-            name: "vitals",
-            dom: &vitals,
-            rect: vitals_rect,
-            sheet: vitals_sheet,
-        });
+        if !self.grafting.open {
+            surfaces.push(ProbeSurface {
+                name: "vitals",
+                dom: &vitals,
+                rect: vitals_rect,
+                sheet: vitals_sheet,
+            });
+        }
         f(&surfaces)
     }
 
@@ -237,6 +249,28 @@ impl Automatable for Host {
         ProbeSnapshot {
             focused: self.followed().map(|id| format!("critter {}", id.0)),
             fields: [
+                (
+                    "graft-menu",
+                    if self.grafting.open { "open" } else { "closed" }.to_string(),
+                ),
+                ("graft-available", self.grafting.sources.len().to_string()),
+                ("graft-selected", self.grafting.selected.to_string()),
+                (
+                    "graft-preview",
+                    if self.grafting.preview.is_some() {
+                        "yes"
+                    } else {
+                        "no"
+                    }
+                    .to_string(),
+                ),
+                (
+                    "graft-root",
+                    self.grafting
+                        .root
+                        .map_or(String::new(), |p| p.0.to_string()),
+                ),
+                ("graft-status", self.grafting.reading.status.clone()),
                 ("hash", format!("{hash:016x}")),
                 (
                     "expected",

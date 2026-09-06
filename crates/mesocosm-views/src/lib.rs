@@ -23,6 +23,7 @@
 
 pub mod caption;
 pub mod dev;
+pub mod grafting;
 pub mod leaf;
 pub mod minimap;
 pub mod review;
@@ -33,6 +34,10 @@ pub use caption::{Caption, CaptionChild, caption_css, caption_root};
 pub use dev::{
     Dev, DevChild, Follow, Lost, PartInspection, PartReading, dev_css, dev_root, follow_of,
     lost_of, lost_words, part_of, role_word,
+};
+pub use grafting::{
+    GRAFT_HEIGHT, GRAFT_WIDTH, GraftChild, GraftMenu, GraftRow, MAX_GRAFT_ROWS, grafting_css,
+    grafting_root,
 };
 pub use leaf::MinimapLeaf;
 pub use minimap::{

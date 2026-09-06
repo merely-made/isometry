@@ -2080,6 +2080,42 @@ functional evidence, not a new frame-time or ecology performance claim.
 
 ### VB4: a life changes the picture, then a descendant grows
 
+**Bounded graft menu/practice slice, locally verified 2026-09-06.** `H` is
+contextual: it lists only nearby reachable carcass branches
+the world currently exposes. Arrow keys choose that stable list; `Tab` switches
+the displayed Carry/Regrow candidate. Both routes call the shared core
+validation preview, so the menu reports the candidate the normal world action
+would accept or refuse rather than duplicating compatibility, reach, growth, or
+ground rules in Genet. The modal pauses ordinary play while open; `Z`/`V`
+camera controls remain view-only. While open it temporarily isolates the
+controlled voxel body against a plain background beside the panel, then restores
+the terrarium on close, through the existing resident renderer, depth path, and
+device. `Enter` queues the existing `Intent::Graft`; `Esc` closes without a
+mutation. When Carry requires an adapter, the menu explicitly says the tissue
+arrives inactive. `--size` accepts a logical `WxH` for native 960/1920 fit checks. This
+route uses the existing Cambium/Genet shared-GPU scene and input stack, not a
+second renderer or fixture-only action path.
+
+`World::graft_practice` is an authored compact recipient and nearby compatible
+two-part carcass on terrarium terrain. Its scene identity belongs in its own
+trace and receipt. It demonstrates a menu-addressable transaction, not a
+natural encounter. Stored tissue inventory remains outside this slice. Full
+VB4a still needs the unchanged-relative control, expression, revision and
+descendant-program distinction below. Native acceptance covers ten
+scenarios: 1920 preview, 960 small layout, four rotations, cancel, Carry,
+Regrow, empty menu, Carry replay, Regrow replay, and historical TG1
+turns/walk replay. The verifier reports zero dev intents, missing/fallback/
+omitted/projection failures, one graph submission, and the isolated preview's
+two actual and four projected parts in one body; cancel/browse remain tick 0, while
+commit is one step and one Graft intent. Genesis is `6a011fb0e2bfe633`, Carry
+`d55a291046b07b98`, Regrow `4759ff216707ff05`; both new replays are exact and
+TG1 hashes remain `8c655e425264e795` / `2fc1d29e8ce0e4b0`. The final joined
+suite is 848 passed, 0 failed, 2 ignored, including 424 core passed and one
+core ignored; the accounting and all-founder-footing regressions pass. Source,
+tests, and native verification are complete for this bounded slice. Receipts:
+`Code/testing/mesocosm/graft_menu/verification.json` and
+`Code/testing/mesocosm/graft_menu/README.md`.
+
 **VB4a, existing mechanics.** First join existing graft, whole-part consumption/loss, expression and filial
 realization. Compare two relatives: retain one unchanged, give the other a
 recorded graft or expressed discovery, show the local consequence, then use the
@@ -2087,13 +2123,12 @@ ordinary lineage revision and reproduction paths. Distinguish the inherited
 program from the parent's acquired part. This first proof need not wait for
 typed chemistry or add partial-voxel wounds.
 
-**Next host seam, reviewed 2026-09-05:** retain the root returned by an accepted
-`Outcome::Grafted`, as the driver already retains `Outcome::Bore`'s child, so
-inspection selects the allocated address rather than guessing a part ordinal.
-One bounded scenario fixture can then queue genuine graft, expression and
-lineage-revision intents and record their outcomes. Label the fixture and any
-dev-assisted birth explicitly; those receipts demonstrate the body/program
-join, while natural encounter and reproduction timing remain separate evidence.
+**Graft root tracking, completed 2026-09-06:** menu state retains the root from
+an accepted `Outcome::Grafted`, so inspection selects the allocated actual
+`PartId` rather than guessing a part ordinal. The remaining fixture join queues
+genuine expression and lineage-revision intents, then records the
+body/program distinction in a descendant. Label any dev-assisted birth
+explicitly; natural encounter and reproduction timing remain separate evidence.
 The relative control receives no intervention; compare its treatment against
 the same elapsed ecology rather than expecting ordinary upkeep to stop.
 

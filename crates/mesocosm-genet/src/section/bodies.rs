@@ -76,6 +76,7 @@ pub(super) struct BodyLayer {
     pub budget: usize,
     pub scale: f32,
     pub ground_anatomy: bool,
+    pub isolated: bool,
     focus_subject: Option<OrganismId>,
     selected: Option<BodySelection>,
     depth: wgpu::Texture,
@@ -95,6 +96,7 @@ impl BodyLayer {
             budget: DEFAULT_BODY_BUDGET,
             scale: 1.0,
             ground_anatomy: false,
+            isolated: false,
             focus_subject: None,
             selected: None,
             depth,
@@ -205,6 +207,7 @@ impl BodyLayer {
         let mut candidates: Vec<_> = world
             .organisms
             .iter()
+            .filter(|o| !self.isolated || Some(o.id) == controlled)
             .filter(|o| o.body().living().next().is_some())
             .filter(|o| {
                 Some(o.id) == controlled || intersects(o, window, self.scale, self.ground_anatomy)

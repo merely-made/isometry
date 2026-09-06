@@ -23,6 +23,12 @@ pub struct BodySelection {
 }
 
 impl Section {
+    /// An isolated body view reuses the resident body renderer and depth target.
+    /// The host restores ordinary scene rendering when its menu closes.
+    pub fn set_body_preview(&mut self, isolated: bool) {
+        self.bodies.isolated = isolated;
+    }
+
     /// Walks parts in the last successful voxel-body draw for `subject`.
     /// Capsule fallbacks deliberately contribute no selectable identity.
     pub fn select_part(

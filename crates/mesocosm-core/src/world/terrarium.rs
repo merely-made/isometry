@@ -6,10 +6,11 @@
 
 //! The small authored habitat used to inspect one clearing and burrow.
 
+use crate::body::{Attachment, PartId, Provenance, Yaw};
 use crate::development::{DevelopmentError, PartPalette};
 use crate::flow::Envelope;
 use crate::history::Event;
-use crate::organism::Kingdom;
+use crate::organism::{Kingdom, Organism, OrganismId, Stage};
 use crate::places::{Ground, Places, surface_stance_for};
 
 use super::{ENCLOSURE, Founding, World};
@@ -24,6 +25,19 @@ const CLEARING_RADIUS: i32 = 5;
 const HABITAT_HALF_WIDTH: i32 = 24;
 const HABITAT_ABOVE_CLEARING: i32 = 12;
 const HABITAT_BELOW_CHAMBER: i32 = 6;
+
+/// The authored carcass in [`World::graft_practice`].
+///
+/// It is deliberately outside the founded id range, so a host can identify the
+/// one practice source without inferring a generated creature's identity.
+pub const GRAFT_PRACTICE_DONOR: OrganismId = OrganismId(9_701);
+/// The non-root branch root on [`GRAFT_PRACTICE_DONOR`].
+pub const GRAFT_PRACTICE_BRANCH: PartId = PartId(1);
+const GRAFT_PRACTICE_ROOT_MG: u64 = 600;
+const GRAFT_PRACTICE_BRANCH_MG: u64 = 120;
+const GRAFT_PRACTICE_TIP_MG: u64 = 80;
+const GRAFT_PRACTICE_CLEARING_RADIUS: i32 = 7;
+const GRAFT_PRACTICE_CLEARING_HEIGHT: i32 = 16;
 
 /// World-aligned, immutable bounds for the CP1 camera and cutaway.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -144,6 +158,150 @@ impl World {
         Ok(world)
     }
 
+    /// Founds the CP1 terrain with one compact played recipient and one nearby
+    /// compatible carcass carrying a two-part branch.
+    ///
+    /// This is an authored practice fixture, not a claim about a natural
+    /// encounter. It uses the caller's admitted palette, the normal body and
+    /// phenotype attachment APIs, and a same-line carrion donor so either
+    /// normal graft preview has a deterministic affinity answer. The source
+    /// branch is paid out of the donor root before it is attached, leaving the
+    /// fixture's matter accounting whole before a graft ever occurs.
+    pub fn graft_practice(
+        seed: u64,
+        founding: Founding,
+        palette: PartPalette,
+    ) -> Result<Self, DevelopmentError> {
+        let mut world = Self::terrarium(seed, founding, palette)?;
+        let recipient_id = world.controlled_id().expect("a terrarium is embodied");
+        let recipient_index = world
+            .organisms
+            .iter()
+            .position(|organism| organism.id == recipient_id)
+            .expect("the embodied terrarium organism exists");
+        let recipient_at = world.organisms[recipient_index].position;
+        let species = world.organisms[recipient_index].species;
+        let bulk = palette.mass.default;
+
+        // A normal generated body can leave no plan-resolved landing site for
+        // a compact branch. This recipient is deliberately small, while still
+        // using the normal consumer constructor and the caller's vocabulary.
+        let recipient = Organism::founding(
+            recipient_id,
+            species,
+            Kingdom::Consumer,
+            bulk.volume,
+            bulk.half_extent,
+            recipient_at,
+            1_000,
+        )
+        .matured();
+        world.ground.author_walker_stance(
+            recipient_at,
+            GRAFT_PRACTICE_CLEARING_RADIUS,
+            GRAFT_PRACTICE_CLEARING_HEIGHT,
+            [0, 0],
+        );
+        assert!(recipient.walker_shape().stands(&world.ground, recipient_at));
+        world.organisms[recipient_index] = recipient;
+
+        // The clearing opened by `terrarium` holds this one-cell offset at the
+        // same grounded height. Keep the corpse close enough for the compact
+        // body's ordinary reach; its own footing remains part of the fixture.
+        let donor_at = [recipient_at[0] + 1, recipient_at[1], recipient_at[2]];
+        let mut donor = Organism {
+            stage: Stage::Carrion,
+            ..Organism::founding(
+                GRAFT_PRACTICE_DONOR,
+                species,
+                Kingdom::Decomposer,
+                bulk.volume,
+                bulk.half_extent,
+                donor_at,
+                GRAFT_PRACTICE_ROOT_MG + GRAFT_PRACTICE_BRANCH_MG + GRAFT_PRACTICE_TIP_MG,
+            )
+        };
+        world.ground.author_walker_stance(
+            donor_at,
+            GRAFT_PRACTICE_CLEARING_RADIUS,
+            GRAFT_PRACTICE_CLEARING_HEIGHT,
+            [0, 0],
+        );
+        assert!(donor.walker_shape().stands(&world.ground, donor_at));
+        assert_eq!(
+            donor
+                .phenotype
+                .spend_mass(GRAFT_PRACTICE_BRANCH_MG + GRAFT_PRACTICE_TIP_MG),
+            0,
+            "the authored donor funds its branch before it is attached"
+        );
+        let branch_shape = palette.sensor.default;
+        let root = donor.body().root;
+        let branch = donor
+            .phenotype
+            .attach(
+                branch_shape.volume,
+                GRAFT_PRACTICE_BRANCH_MG,
+                branch_shape.half_extent,
+                Attachment {
+                    parent: root,
+                    offset: [
+                        0,
+                        bulk.half_extent[1].abs() + branch_shape.half_extent[1],
+                        0,
+                    ],
+                    yaw: Yaw::Zero,
+                },
+                Provenance::founding(),
+            )
+            .expect("the authored branch attaches to its donor root");
+        assert_eq!(branch, GRAFT_PRACTICE_BRANCH);
+        donor
+            .phenotype
+            .attach(
+                branch_shape.volume,
+                GRAFT_PRACTICE_TIP_MG,
+                branch_shape.half_extent,
+                Attachment {
+                    parent: branch,
+                    offset: [branch_shape.half_extent[0] * 2, 0, 0],
+                    yaw: Yaw::Quarter,
+                },
+                Provenance::founding(),
+            )
+            .expect("the authored branch carries a second part");
+        assert!(
+            donor.walker_shape().stands(&world.ground, donor_at),
+            "the authored donor stays grounded with its branch"
+        );
+        world.organisms.push(donor);
+        // The wider graft clearing can remove support beneath a neighbour's
+        // footprint. Place affected founders on the finished terrain.
+        for organism in &mut world.organisms {
+            let shape = organism.walker_shape();
+            if !shape.stands(&world.ground, organism.position) {
+                let direction = match organism.kingdom() {
+                    Kingdom::Producer => [1, 1],
+                    Kingdom::Consumer => [-1, -1],
+                    Kingdom::Decomposer => [1, -1],
+                };
+                organism.position = stance_near(&world.ground, shape, recipient_at, direction);
+            }
+        }
+        world.next_organism = world
+            .next_organism
+            .max(GRAFT_PRACTICE_DONOR.0.saturating_add(1));
+        world.frontier = world
+            .controlled()
+            .map(|organism| world.intricacy(organism))
+            .unwrap_or(0);
+        // This scene begins at the menu with no fabricated births obscuring
+        // the first genuine graft record.
+        world.pending.clear();
+        let _ = world.ground.drain_dirty();
+        Ok(world)
+    }
+
     /// Reads CP1's fixed framing from its physical route.
     pub fn terrarium_habitat(&self) -> TerrariumHabitat {
         let route = pinned_entry().route;
@@ -235,12 +393,26 @@ fn bounds_for(clearing: [i32; 3], chamber: [i32; 3]) -> TerrariumBounds {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::places::{BODY_VOXELS_PER_GROUND_VOXEL, route_step_for};
+    use crate::body::Aabb;
+    use crate::graft::Crossing;
+    use crate::places::{BODY_VOXELS_PER_GROUND_VOXEL, WalkerShape, route_step_for};
     use crate::world::{Intent, Outcome};
 
     fn world() -> World {
         let founding = Founding::SpacedRoster;
         World::terrarium(41, founding, founding.palette()).expect("CP1 fixture")
+    }
+
+    fn world_aabb(aabb: Aabb, position: [i32; 3]) -> Aabb {
+        let origin = position.map(|axis| axis * BODY_VOXELS_PER_GROUND_VOXEL);
+        Aabb {
+            min: [0, 1, 2].map(|axis| aabb.min[axis] + origin[axis]),
+            max: [0, 1, 2].map(|axis| aabb.max[axis] + origin[axis]),
+        }
+    }
+
+    fn disjoint(left: Aabb, right: Aabb) -> bool {
+        (0..3).any(|axis| left.max[axis] <= right.min[axis] || right.max[axis] <= left.min[axis])
     }
 
     #[test]
@@ -307,5 +479,103 @@ mod tests {
             assert_eq!(world.apply(Intent::Move { delta }), Outcome::Moved);
         }
         assert_eq!(world.position(), Some(chamber));
+    }
+
+    #[test]
+    fn graft_practice_transfers_its_authored_branch_without_moving_matter() {
+        let founding = Founding::SpacedRoster;
+        let mut world = World::graft_practice(41, founding, founding.palette())
+            .expect("graft practice fixture");
+        assert!(
+            world.next_organism > GRAFT_PRACTICE_DONOR.0,
+            "a later birth cannot reuse the authored donor id"
+        );
+        let before = world.total_matter_mg();
+        let sources = world.graft_sources();
+        assert_eq!(
+            sources.first(),
+            Some(&(GRAFT_PRACTICE_DONOR, GRAFT_PRACTICE_BRANCH)),
+            "the branch root is the stable first menu source"
+        );
+        let recipient_at = world.position().expect("embodied");
+        for crossing in [Crossing::Carry, Crossing::Regrow] {
+            let preview = world
+                .preview_graft(GRAFT_PRACTICE_DONOR, GRAFT_PRACTICE_BRANCH, crossing)
+                .expect("the practice candidate is accepted");
+            assert!(
+                WalkerShape::from_aabb(preview.phenotype.body().aabb())
+                    .stands(world.ground(), recipient_at),
+                "the {crossing:?} candidate has a legal stance"
+            );
+        }
+        let outcome = world.apply(Intent::Graft {
+            organism: GRAFT_PRACTICE_DONOR,
+            part: GRAFT_PRACTICE_BRANCH,
+            crossing: Crossing::Carry,
+        });
+        assert!(
+            matches!(outcome, Outcome::Grafted { parts: 2, .. }),
+            "{outcome:?}"
+        );
+        let recipient = world
+            .controlled()
+            .expect("the graft leaves the body embodied");
+        assert!(
+            recipient
+                .walker_shape()
+                .stands(world.ground(), recipient.position),
+            "the published graft remains grounded"
+        );
+        assert_eq!(world.total_matter_mg(), before, "grafting conserves matter");
+    }
+
+    #[test]
+    fn graft_practice_preserves_every_founders_footing() {
+        for seed in [7, 41] {
+            let founding = Founding::SpacedRoster;
+            let world = World::graft_practice(seed, founding, founding.palette()).unwrap();
+            for organism in &world.organisms {
+                assert!(
+                    organism
+                        .walker_shape()
+                        .stands(world.ground(), organism.position),
+                    "seed {seed}: {:?} lost its footing",
+                    organism.id
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn graft_practice_keeps_its_donor_clear_of_each_checked_candidate() {
+        let founding = Founding::SpacedRoster;
+        let world = World::graft_practice(41, founding, founding.palette())
+            .expect("graft practice fixture");
+        let recipient = world.controlled().expect("embodied");
+        let donor = world
+            .organisms
+            .iter()
+            .find(|organism| organism.id == GRAFT_PRACTICE_DONOR)
+            .expect("authored donor");
+        let donor_aabb = world_aabb(donor.body().aabb(), donor.position);
+        assert!(
+            disjoint(
+                world_aabb(recipient.body().aabb(), recipient.position),
+                donor_aabb
+            ),
+            "the authored bodies start apart"
+        );
+        for crossing in [Crossing::Carry, Crossing::Regrow] {
+            let preview = world
+                .preview_graft(GRAFT_PRACTICE_DONOR, GRAFT_PRACTICE_BRANCH, crossing)
+                .expect("the authored candidate is valid");
+            assert!(
+                disjoint(
+                    world_aabb(preview.phenotype.body().aabb(), recipient.position),
+                    donor_aabb,
+                ),
+                "{crossing:?} candidate intersects the donor"
+            );
+        }
     }
 }

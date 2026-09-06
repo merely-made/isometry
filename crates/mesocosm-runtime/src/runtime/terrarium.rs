@@ -21,4 +21,17 @@ impl Runtime {
             .expect("the CP1 fixture population fits a trace count");
         Ok(Self::from_world(world, seed, organisms, ticks_per_second))
     }
+
+    /// Drives the authored graft-practice scene through the ordinary runtime.
+    pub fn graft_practice(
+        seed: u64,
+        ticks_per_second: u32,
+        founding: Founding,
+        palette: PartPalette,
+    ) -> Result<Self, DevelopmentError> {
+        let world = World::graft_practice(seed, founding, palette)?;
+        let organisms = u32::try_from(world.organisms.len().saturating_sub(1))
+            .expect("the graft-practice population fits a trace count");
+        Ok(Self::from_world(world, seed, organisms, ticks_per_second))
+    }
 }

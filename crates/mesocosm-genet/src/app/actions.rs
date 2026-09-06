@@ -113,6 +113,9 @@ impl Host {
     /// queue. At a lineage checkpoint the board's own two keys come first — one
     /// of which sends no intent at all.
     pub(super) fn press_key(&mut self, key: &Key) {
+        if self.try_graft_key(key) {
+            return;
+        }
         if self.try_camera_key(key) {
             return;
         }
@@ -189,6 +192,9 @@ impl Host {
             // the world answered to it belongs to this step, not the next one.
             self.note_outcomes();
             return true;
+        }
+        if self.grafting.open {
+            return false;
         }
         // The host actions below set state and start pumps; none of them takes
         // a tick, so there is nothing here for the world to have answered.
@@ -352,10 +358,15 @@ fn key_named(name: &str) -> Option<Key> {
         "space" => Some(Key::Named(NamedKey::Space)),
         "enter" => Some(Key::Named(NamedKey::Enter)),
         "tab" => Some(Key::Named(NamedKey::Tab)),
+        "escape" => Some(Key::Named(NamedKey::Escape)),
+        "up" => Some(Key::Named(NamedKey::ArrowUp)),
+        "down" => Some(Key::Named(NamedKey::ArrowDown)),
+        "left" => Some(Key::Named(NamedKey::ArrowLeft)),
+        "right" => Some(Key::Named(NamedKey::ArrowRight)),
         // Play: WASD, E, Q, C; T at a checkpoint; R at the board.
         // Dev (live only under `--dev`): P . , [ ] N B M X F K G.
         "w" | "a" | "s" | "d" | "e" | "q" | "c" | "t" | "r" | "p" | "." | "," | "[" | "]" | "n"
-        | "b" | "m" | "x" | "f" | "k" | "g" | "i" | "j" | "l" | "u" | "z" | "v" => {
+        | "b" | "m" | "x" | "f" | "k" | "g" | "h" | "i" | "j" | "l" | "u" | "z" | "v" => {
             Some(Key::Character(name.into()))
         },
         _ => None,

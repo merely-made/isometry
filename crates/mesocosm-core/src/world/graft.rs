@@ -37,9 +37,13 @@ use crate::body::{PartId, SpeciesId};
 use crate::flow::{Account, FlowEvent, Subject};
 use crate::graft::{Crossing, Verdict};
 use crate::organism::OrganismId;
-use crate::phenotype::Lowering;
+use crate::phenotype::{Branch, Lowering};
 
 use super::{Outcome, Rejection, World};
+
+mod preview;
+
+pub use preview::GraftPreview;
 
 /// A branch transfer, as the world recorded it.
 ///
@@ -72,6 +76,17 @@ pub struct Graft {
     pub cost_mg: u64,
     /// The phenotype revision the transfer created.
     pub revision: u32,
+}
+
+/// The checked, unpublished half of a graft.
+///
+/// Keeping the harvested branch beside the public preview lets the action
+/// publish exactly the candidate a caller saw. It is deliberately private:
+/// only the world may sever a donor or commit the candidate phenotype.
+struct PreparedGraft {
+    preview: GraftPreview,
+    donor_index: usize,
+    branch: Branch,
 }
 
 impl World {
@@ -124,111 +139,51 @@ impl World {
         part: PartId,
         crossing: Crossing,
     ) -> Outcome {
-        if Some(organism) == self.controlled {
-            return Outcome::Rejected(Rejection::Itself);
-        }
-        let Some(index) = self.organisms.iter().position(|o| o.id == organism) else {
-            return Outcome::Rejected(Rejection::NoSuchOrganism(organism));
+        let prepared = match self.prepare_graft(organism, part, crossing) {
+            Ok(prepared) => prepared,
+            Err(rejection) => return Outcome::Rejected(rejection),
         };
-        let donor = &self.organisms[index];
-        // Live dismemberment is a further gate (phenotype D3a). This proof's
-        // donor has stopped.
-        if donor.is_alive() {
-            return Outcome::Rejected(Rejection::StillLiving(organism));
-        }
-        let body = donor.body();
-        let Some(found) = body.part(part) else {
-            return Outcome::Rejected(Rejection::NoSuchPart(part));
+        let PreparedGraft {
+            preview,
+            donor_index,
+            branch,
+        } = prepared;
+        let GraftPreview {
+            recipient,
+            donor,
+            donor_line,
+            donor_part,
+            crossing,
+            verdict,
+            phenotype,
+            root,
+            parts,
+            mass_mg,
+            cost_mg,
+            revision,
+            ..
+        } = preview;
+        let carrion = Subject::of(&self.organisms[donor_index]);
+        let (position, eater) = {
+            let recipient = self
+                .organisms
+                .iter()
+                .find(|organism| organism.id == recipient)
+                .expect("the prepared recipient remains in the world");
+            (recipient.position, Subject::of(recipient))
         };
-        if part == body.root {
-            return Outcome::Rejected(Rejection::WholeBody(part));
-        }
-        if found.severed {
-            return Outcome::Rejected(Rejection::NothingLeft(part));
-        }
-        let (donor_at, line) = (donor.position, donor.species);
-        let carrion = Subject::of(donor);
-        let Some(branch) = donor.phenotype.harvest(part) else {
-            return Outcome::Rejected(Rejection::NothingLeft(part));
-        };
-        let mass_mg = branch.mass_mg();
-        if let Err(unmet) = self.reach_to(donor_at) {
-            return Outcome::Rejected(Rejection::OutOfReach(unmet));
-        }
-
-        let Some(me) = self.controlled() else {
-            return Outcome::Rejected(Rejection::Disembodied);
-        };
-        // **The terms, declared before anything moves.** A carry the table
-        // refuses is refused here and not silently rewritten into a regrowth;
-        // the player is told which boundary failed and regrowth is the route
-        // that remains.
-        let (from, into) = (self.lineages.domain(line), self.lineages.domain(me.species));
-        let verdict = self.affinity.verdict(from, into);
-        let lowering = match (crossing, verdict) {
-            (Crossing::Carry, Verdict::Native) => Lowering::Carried,
-            (Crossing::Carry, Verdict::Adapter) => Lowering::Adapted,
-            (Crossing::Carry, Verdict::Refused) => {
-                return Outcome::Rejected(Rejection::Incompatible { from, into });
-            }
-            (Crossing::Regrow, _) => Lowering::Regrown,
-        };
-
-        // Where the branch goes, by the ordinary body plan. The plan is asked
-        // about the **branch**, not about its root: a branch keeps its own
-        // joints, so room for the part at the top of it is not room for the
-        // thing. Resolved before the corpse gives anything up.
-        let (centre, half_extent) = branch.bounds();
-        let Some(growth) = crate::growth::resolve(me.body(), half_extent) else {
-            return Outcome::Rejected(Rejection::NoRoom);
-        };
-        // The plan sited the branch's box; the root is offset from its centre
-        // by however far off-centre the root sits inside its own branch.
-        let mut site = crate::growth::attachment(&growth);
-        site.offset = [0, 1, 2].map(|axis| site.offset[axis] - centre[axis]);
-        let (id, position, energy_mg, eater) = (me.id, me.position, me.energy_mg, Subject::of(me));
-
-        // A candidate, so a refusal costs nothing. One clone of one body at a
-        // deliberate moment, the same discipline the developmental verb uses.
-        let mut candidate = me.phenotype.clone();
-        let graftage = match candidate.receive(self.ruleset(), &branch, site, self.epoch, lowering)
-        {
-            Ok(graftage) => graftage,
-            Err(refusal) => return Outcome::Rejected(Rejection::Refused(refusal)),
-        };
-        // A branch is placed by its root and shaped by its own joints, so
-        // clearing the root's site is not enough: every arriving part has to
-        // clear what was already there.
-        if !clears(candidate.body(), &graftage.parts) {
-            return Outcome::Rejected(Rejection::NoRoom);
-        }
-        // A body cannot grow through Ground. Asked of the candidate rather than
-        // of a published body, so this refusal has nothing to undo: the whole
-        // transaction is still a value nobody else can see.
-        if !crate::places::WalkerShape::from_aabb(candidate.body().aabb())
-            .stands(&self.ground, position)
-        {
-            return Outcome::Rejected(Rejection::NoRoom);
-        }
-        if graftage.cost_mg > energy_mg {
-            return Outcome::Rejected(Rejection::InsufficientMass);
-        }
-
-        let revision = graftage.development.instruction.revision;
-        let cost_mg = graftage.cost_mg;
         {
             let organism = self
                 .organisms
                 .iter_mut()
-                .find(|o| o.id == id)
-                .expect("the controlled organism was just read");
-            organism.phenotype = candidate;
+                .find(|organism| organism.id == recipient)
+                .expect("the prepared recipient remains in the world");
+            organism.phenotype = phenotype;
             organism.energy_mg -= cost_mg;
         }
 
-        // **The source loses the branch**, and only now. Severing cascades, so
-        // this takes exactly what was harvested.
-        let lost = self.organisms[index].phenotype.sever(part);
+        // The source loses the branch only after the checked candidate lands.
+        let lost = self.organisms[donor_index].phenotype.sever(donor_part);
         debug_assert_eq!(lost.len(), branch.len(), "the branch left whole");
 
         self.flow(
@@ -257,12 +212,12 @@ impl World {
         }
         self.last_graft = Some(Graft {
             tick: self.tick,
-            recipient: id,
-            donor: organism,
-            donor_line: line,
-            donor_part: part,
-            root: graftage.root,
-            parts: graftage.parts.clone(),
+            recipient,
+            donor,
+            donor_line,
+            donor_part,
+            root,
+            parts: parts.clone(),
             mass_mg,
             crossing,
             verdict,
@@ -270,14 +225,130 @@ impl World {
             revision,
         });
         Outcome::Grafted {
-            root: graftage.root,
-            parts: graftage.parts.len() as u32,
-            from: organism,
-            from_part: part,
+            root,
+            parts: parts.len() as u32,
+            from: donor,
+            from_part: donor_part,
             mass_mg,
             crossing,
             verdict,
         }
+    }
+
+    fn prepare_graft(
+        &self,
+        organism: OrganismId,
+        part: PartId,
+        crossing: Crossing,
+    ) -> Result<PreparedGraft, Rejection> {
+        if Some(organism) == self.controlled {
+            return Err(Rejection::Itself);
+        }
+        let Some(index) = self.organisms.iter().position(|o| o.id == organism) else {
+            return Err(Rejection::NoSuchOrganism(organism));
+        };
+        let donor = &self.organisms[index];
+        // Live dismemberment is a further gate (phenotype D3a). This proof's
+        // donor has stopped.
+        if donor.is_alive() {
+            return Err(Rejection::StillLiving(organism));
+        }
+        let body = donor.body();
+        let Some(found) = body.part(part) else {
+            return Err(Rejection::NoSuchPart(part));
+        };
+        if part == body.root {
+            return Err(Rejection::WholeBody(part));
+        }
+        if found.severed {
+            return Err(Rejection::NothingLeft(part));
+        }
+        let (donor_at, line) = (donor.position, donor.species);
+        let Some(branch) = donor.phenotype.harvest(part) else {
+            return Err(Rejection::NothingLeft(part));
+        };
+        let mass_mg = branch.mass_mg();
+        if let Err(unmet) = self.reach_to(donor_at) {
+            return Err(Rejection::OutOfReach(unmet));
+        }
+
+        let Some(me) = self.controlled() else {
+            return Err(Rejection::Disembodied);
+        };
+        // **The terms, declared before anything moves.** A carry the table
+        // refuses is refused here and not silently rewritten into a regrowth;
+        // the player is told which boundary failed and regrowth is the route
+        // that remains.
+        let (from, into) = (self.lineages.domain(line), self.lineages.domain(me.species));
+        let verdict = self.affinity.verdict(from, into);
+        let lowering = match (crossing, verdict) {
+            (Crossing::Carry, Verdict::Native) => Lowering::Carried,
+            (Crossing::Carry, Verdict::Adapter) => Lowering::Adapted,
+            (Crossing::Carry, Verdict::Refused) => {
+                return Err(Rejection::Incompatible { from, into });
+            },
+            (Crossing::Regrow, _) => Lowering::Regrown,
+        };
+
+        // Where the branch goes, by the ordinary body plan. The plan is asked
+        // about the **branch**, not about its root: a branch keeps its own
+        // joints, so room for the part at the top of it is not room for the
+        // thing. Resolved before the corpse gives anything up.
+        let (centre, half_extent) = branch.bounds();
+        let Some(growth) = crate::growth::resolve(me.body(), half_extent) else {
+            return Err(Rejection::NoRoom);
+        };
+        // The plan sited the branch's box; the root is offset from its centre
+        // by however far off-centre the root sits inside its own branch.
+        let mut site = crate::growth::attachment(&growth);
+        site.offset = [0, 1, 2].map(|axis| site.offset[axis] - centre[axis]);
+        let (id, position, energy_mg) = (me.id, me.position, me.energy_mg);
+
+        // A candidate, so a refusal costs nothing. One clone of one body at a
+        // deliberate moment, the same discipline the developmental verb uses.
+        let mut candidate = me.phenotype.clone();
+        let graftage = match candidate.receive(self.ruleset(), &branch, site, self.epoch, lowering)
+        {
+            Ok(graftage) => graftage,
+            Err(refusal) => return Err(Rejection::Refused(refusal)),
+        };
+        // A branch is placed by its root and shaped by its own joints, so
+        // clearing the root's site is not enough: every arriving part has to
+        // clear what was already there.
+        if !clears(candidate.body(), &graftage.parts) {
+            return Err(Rejection::NoRoom);
+        }
+        // A body cannot grow through Ground. Asked of the candidate rather than
+        // of a published body, so this refusal has nothing to undo: the whole
+        // transaction is still a value nobody else can see.
+        if !crate::places::WalkerShape::from_aabb(candidate.body().aabb())
+            .stands(&self.ground, position)
+        {
+            return Err(Rejection::NoRoom);
+        }
+        if graftage.cost_mg > energy_mg {
+            return Err(Rejection::InsufficientMass);
+        }
+
+        Ok(PreparedGraft {
+            preview: GraftPreview {
+                recipient: id,
+                donor: organism,
+                donor_line: line,
+                donor_part: part,
+                crossing,
+                verdict,
+                attachment: site,
+                phenotype: candidate,
+                root: graftage.root,
+                parts: graftage.parts,
+                mass_mg,
+                cost_mg: graftage.cost_mg,
+                revision: graftage.development.instruction.revision,
+            },
+            donor_index: index,
+            branch,
+        })
     }
 }
 
@@ -314,3 +385,6 @@ fn clears(body: &crate::body::BodyDocument, arrived: &[PartId]) -> bool {
     }
     true
 }
+
+#[cfg(test)]
+mod tests;

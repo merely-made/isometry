@@ -616,6 +616,33 @@ remains real developed anatomy; diet-derived tissue waits for TG2/TG3. PE5's
 controller and PE6's scale work retain their own gates. CP1's ground-truth
 cutaway is not an organism's sensory knowledge.
 
+**Graft-practice menu, locally verified 2026-09-06.** A
+trace-distinct authored scene gives the native menu a compact recipient and a
+nearby compatible carcass branch. `H` reads contextual reachable sources;
+arrows select, `Tab` previews Carry or Regrow through the same core validator,
+`Enter` queues the existing graft intent, and `Esc` changes nothing. The modal
+pauses ordinary play while `Z`/`V` retain camera control. While open it isolates
+the controlled voxel body on a plain background beside the panel through the
+resident renderer, shared depth, and existing device, restoring the terrarium
+on close. When Carry requires an adapter, the menu explicitly says the tissue
+arrives inactive. `--size` takes a logical `WxH` for native 960/1920 fit
+checks. Native acceptance covers ten scenarios: 1920 preview, 960 small
+layout, four rotations, cancel, Carry, Regrow, empty menu, Carry replay, Regrow
+replay, and historical TG1 turns/walk replay. It reports zero dev intents,
+missing/fallback/omitted/projection failures and one graph submission; the
+isolated preview has one body with two actual and four projected parts. Cancel/browse
+remain tick 0; commit is one step and one Graft intent. New fixture genesis
+`6a011fb0e2bfe633`, Carry `d55a291046b07b98`, and Regrow
+`4759ff216707ff05` replay exactly, without moving TG1's retained hashes
+`8c655e425264e795` / `2fc1d29e8ce0e4b0`. The joined suite is 848 passed, 0
+failed, 2 ignored, including 424 core passed and one core ignored; accounting
+and all-founder-footing regressions pass. Source, tests, and native verification
+are complete for this bounded slice. Receipts:
+`Code/testing/mesocosm/graft_menu/verification.json` and
+`Code/testing/mesocosm/graft_menu/README.md`. It is a bounded presentation and transaction-admission
+receipt, not evidence of natural graft encounters, inventory, expression,
+inherited revision, descendants, or PE4 world criteria.
+
 The material scheme is ruled in section 6 item 4. Generate an immutable
 world-law record first, then admitted material
 and process parameters, viable founding programs, and candidate weights. Run

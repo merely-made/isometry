@@ -31,6 +31,7 @@ mod devworld;
 pub mod drive;
 mod follow;
 mod frame;
+mod grafting;
 mod inspection;
 mod receipts;
 mod setup;
@@ -137,6 +138,7 @@ pub struct Host {
     /// it after follow has snapped back.
     follow_lost: Option<mesocosm_views::Lost>,
     inspection: inspection::Inspection,
+    grafting: grafting::Grafting,
     /// The scenario driving this run, when `--scenario` gave it one. (DT4)
     ///
     /// `None` for an ordinary session at the keyboard, and for a bare
@@ -188,6 +190,7 @@ pub(crate) struct Lanes {
     vitals: crate::vitals::VitalsChrome,
     checkpoint: crate::succession::SuccessionChrome,
     board: crate::review::BoardChrome,
+    grafting: crate::grafting::GraftChrome,
     dev: crate::dev::DevChrome,
 }
 
@@ -237,7 +240,7 @@ impl Host {
             },
             None => None,
         };
-        let habitat = (config.effective_scene() == crate::played::SceneMode::Terrarium)
+        let habitat = (config.effective_scene() != crate::played::SceneMode::Ecology)
             .then(|| section::framed_habitat(runtime.world()));
         Self {
             habitat,
@@ -263,6 +266,7 @@ impl Host {
             follow,
             follow_lost: None,
             inspection: inspection::Inspection::default(),
+            grafting: grafting::Grafting::default(),
             scenario,
             events: Vec::new(),
             pump: None,
@@ -325,6 +329,10 @@ impl Host {
     /// a played session converts elapsed wall time into whole fixed steps.
     /// Returns true when a replay has reached the end of its trace.
     fn advance(&mut self) -> bool {
+        if self.grafting.open {
+            self.last = None;
+            return false;
+        }
         if let Some(replay) = &self.config.replay {
             let end = (self.cursor + REPLAY_STEPS_PER_FRAME).min(replay.intents.len());
             let batch = end - self.cursor;
@@ -381,6 +389,8 @@ impl ApplicationHandler for Host {
 
             WindowEvent::KeyboardInput { event, .. } if event.state == ElementState::Pressed => {
                 match &event.logical_key {
+                    key if self.grafting.open && !event.repeat => self.press_key(key),
+                    _ if self.grafting.open => {},
                     Key::Named(NamedKey::Escape) => self.finish(event_loop),
                     // Panning and quarter turns are presentation controls.
                     Key::Named(NamedKey::ArrowLeft) => self.pan.x -= section::PAN_STEP,
