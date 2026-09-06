@@ -77,17 +77,17 @@ impl Control {
                     return Err(IdentityError::AlreadyTaggedIn);
                 }
                 self.played = to;
-            }
+            },
             ControlIntent::TagOut { .. } => {
                 if !self.tagged_in() {
                     return Err(IdentityError::NotTaggedIn);
                 }
                 self.played = self.home;
-            }
+            },
             ControlIntent::Succeed { to, .. } => {
                 self.home = to;
                 self.played = to;
-            }
+            },
         }
         self.log.push(intent);
         Ok(())

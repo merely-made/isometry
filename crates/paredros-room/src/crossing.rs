@@ -213,7 +213,7 @@ impl Hud {
         );
         self.text.label(&mut scene, &status, [28., 55.], 18., ink);
         let task = if world.board_holder() == Some(player) {
-            "Holding board: approach the cut, face across, then E to place."
+            "Holding board: E to place ahead; G to let go, including while falling."
         } else if body.position[0] > 2. {
             "Across. Purple is a stationary practice body: face it and test a timed strike."
         } else if body.position[1] < -0.4 {
@@ -236,7 +236,7 @@ impl Hud {
         );
         self.text.label(
             &mut scene,
-            "E board   |   Q tether   |   Space strike   |   F practice counterstrike   |   R recover",
+            "E pickup/place   |   G let go   |   Q tether   |   Space strike   |   F counterstrike   |   R recover",
             [28., 630.],
             18.,
             ink,

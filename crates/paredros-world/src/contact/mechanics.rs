@@ -36,7 +36,9 @@ impl ContactWorld {
         } else if length_xz(move_) > 0.001 {
             body.heading = unit_xz(move_);
         }
-        if input.triggered.interact {
+        if input.triggered.release {
+            self.release_board(id, body);
+        } else if input.triggered.interact {
             self.toggle_board(id, &mut body);
         }
         if input.triggered.anchor {
@@ -150,6 +152,7 @@ impl ContactWorld {
                 board.position = position;
                 self.board = Some(board);
                 self.board_holder = None;
+                self.board_fall_velocity = None;
                 self.effects
                     .push(ContactEffect::BoardPlaced { by: id, position });
             }
@@ -170,6 +173,7 @@ impl ContactWorld {
             })
         {
             self.board_holder = Some(id);
+            self.board_fall_velocity = None;
             self.effects.push(ContactEffect::BoardHeld { by: id });
         }
     }

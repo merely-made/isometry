@@ -55,6 +55,10 @@ path = "src/bin/crossing.rs"
 required-features = ["r1-proof"]
 
 [[bin]]
+name = "body_sheet"
+path = "src/bin/body_sheet.rs"
+
+[[bin]]
 name = "v1_residency"
 path = "src/bin/v1_residency.rs"
 required-features = ["v1-proof"]

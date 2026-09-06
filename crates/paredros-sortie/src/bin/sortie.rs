@@ -36,7 +36,7 @@ fn main() {
                     name(*who),
                     dropped
                 )
-            }
+            },
             SortieEvent::Wounded { who, at, revision } => println!(
                 "t{}: {} is wounded (body revision {}).",
                 at.0,
@@ -46,21 +46,21 @@ fn main() {
             SortieEvent::Downed { who, at } => println!("t{}: {} is down.", at.0, name(*who)),
             SortieEvent::PactInvoked { at, .. } => {
                 println!("t{}: the pact is invoked.", at.0)
-            }
+            },
             SortieEvent::TaggedIn { at, to } => {
                 println!("t{}: the player becomes {}.", at.0, name(*to))
-            }
+            },
             SortieEvent::Tended { at, by, whom } => {
                 println!("t{}: {} tends {}.", at.0, name(*by), name(*whom))
-            }
+            },
             SortieEvent::TaggedOut { at } => println!("t{}: the player returns home.", at.0),
             SortieEvent::Dug { at, removed } => {
                 println!("t{}: digging; {} voxels hewn.", at.0, removed)
-            }
+            },
             SortieEvent::Took { at, .. } => println!("t{}: the salvage is taken.", at.0),
             SortieEvent::SharedOut { at, with } => {
                 println!("t{}: the salvage is shared with {}.", at.0, name(*with))
-            }
+            },
             SortieEvent::Returned { at } => println!("t{}: home again.", at.0),
         }
     }

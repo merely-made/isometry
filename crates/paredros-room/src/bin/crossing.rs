@@ -408,6 +408,7 @@ impl App {
         if event.state == ElementState::Pressed && !event.repeat {
             match code {
                 KeyCode::KeyE => self.input.triggered.interact = true,
+                KeyCode::KeyG => self.input.triggered.release = true,
                 KeyCode::KeyF => self.input.practice_strike = true,
                 KeyCode::KeyQ | KeyCode::KeyT => self.input.triggered.anchor = true,
                 KeyCode::Space => self.input.triggered.attack = true,
@@ -512,9 +513,11 @@ mod tests {
         let mut state = InputState::default();
         state.held.move_x = 1.0;
         state.triggered.attack = true;
+        state.triggered.release = true;
         let first = state.take();
         let second = state.take();
         assert!(first.triggered.attack && !second.triggered.attack);
+        assert!(first.triggered.release && !second.triggered.release);
         assert_eq!(second.held.move_x, 1.0);
     }
 

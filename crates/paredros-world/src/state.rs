@@ -146,7 +146,7 @@ impl GameState {
                     subject,
                     revision,
                 }]
-            }
+            },
             GameIntent::Name { name, .. } => {
                 name.validate()?;
                 let body = self
@@ -159,7 +159,7 @@ impl GameState {
                     subject,
                     name: name.clone(),
                 }]
-            }
+            },
             GameIntent::Move { toward, .. } => {
                 self.living(subject)?;
                 if !self.bodies.get(subject).unwrap().mobile() {
@@ -179,7 +179,7 @@ impl GameState {
                 let mut events = vec![event];
                 self.exert(subject, 1, 2, tick, &mut events);
                 events
-            }
+            },
             GameIntent::Observe { target, .. } => {
                 self.living(subject)?;
                 let body = self.bodies.get(subject).unwrap();
@@ -196,7 +196,7 @@ impl GameState {
                 }];
                 self.exert(subject, 1, 1, tick, &mut events);
                 events
-            }
+            },
             GameIntent::Take { item, .. } => {
                 self.living(subject)?;
                 let at = self
@@ -225,7 +225,7 @@ impl GameState {
                 }];
                 self.exert(subject, 1, 1, tick, &mut events);
                 events
-            }
+            },
             GameIntent::Eat { item, .. } => {
                 self.living(subject)?;
                 let food = *self.items.get(*item).ok_or(ItemError::Missing(*item))?;
@@ -246,7 +246,7 @@ impl GameState {
                 }];
                 self.exert(subject, 0, 1, tick, &mut events);
                 events
-            }
+            },
             GameIntent::Rest { .. } => {
                 self.living(subject)?;
                 let dressing = (self.bodies.get(subject).unwrap().wound > 0)
@@ -271,7 +271,7 @@ impl GameState {
                 }];
                 self.exert(subject, 1, 0, tick, &mut events);
                 events
-            }
+            },
             GameIntent::Fall { distance, .. } => {
                 self.living(subject)?;
                 let body = self.bodies.get_mut(subject).unwrap();
@@ -293,13 +293,13 @@ impl GameState {
                     self.exert(subject, 1, 1, tick, &mut events);
                 }
                 events
-            }
+            },
             GameIntent::Wait { .. } => {
                 self.living(subject)?;
                 let mut events = vec![GameEvent::Waited { tick, subject }];
                 self.exert(subject, 2, 1, tick, &mut events);
                 events
-            }
+            },
         };
         let returned = events.clone();
         self.intents.push(intent);

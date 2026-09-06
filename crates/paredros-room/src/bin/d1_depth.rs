@@ -151,9 +151,9 @@ impl ApplicationHandler for DepthApp {
                 if let Some(live) = self.live.as_mut() {
                     configure(live);
                 }
-            }
+            },
             WindowEvent::RedrawRequested => self.frame(event_loop),
-            _ => {}
+            _ => {},
         }
     }
 }
@@ -210,9 +210,9 @@ impl DepthApp {
                 );
                 live.window.pre_present_notify();
                 live.queue.present(frame);
-            }
+            },
             Acquired::Outdated | Acquired::Lost => configure(live),
-            Acquired::Timeout | Acquired::Occluded => {}
+            Acquired::Timeout | Acquired::Occluded => {},
             Acquired::Validation => panic!("surface acquisition failed validation"),
         }
 
@@ -224,9 +224,10 @@ impl DepthApp {
             let clip = camera.projection * camera.view;
             let probes = probe_defs(&live.pillars);
             let body = body_box(self.probe.at());
-            if probes.iter().all(|probe| {
-                probe.frames_well(clip, camera.eye.to_array(), &live.pillars, body)
-            }) {
+            if probes
+                .iter()
+                .all(|probe| probe.frames_well(clip, camera.eye.to_array(), &live.pillars, body))
+            {
                 self.judged = Some(JudgedFrame {
                     tick: self.probe.tick_count(),
                     clip,
@@ -307,12 +308,7 @@ fn probe_defs(pillars: &[Pillar; 3]) -> [ProbeDef; 4] {
             (pillar.min[2] + pillar.extent[2]) as f32,
         );
         let (ylo, yhi) = (pillar.min[1] as f32 + ylo, pillar.min[1] as f32 + yhi);
-        Some([
-            [x, ylo, zlo],
-            [x, ylo, zhi],
-            [x, yhi, zlo],
-            [x, yhi, zhi],
-        ])
+        Some([[x, ylo, zlo], [x, ylo, zhi], [x, yhi, zlo], [x, yhi, zhi]])
     };
     [
         ProbeDef {
@@ -510,7 +506,11 @@ fn report(
         let pixel = [at[0].round() as u32, at[1].round() as u32];
         let cyan = cyan_at(capture, pixel);
         assert!(
-            if def.expect_cyan { cyan == 9 } else { cyan == 0 },
+            if def.expect_cyan {
+                cyan == 9
+            } else {
+                cyan == 0
+            },
             "{}: probe {:?} at pixel {pixel:?} on tick {} saw {cyan}/9 cyan, expected {}",
             def.why,
             def.world,

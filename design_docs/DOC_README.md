@@ -25,6 +25,21 @@ any other index and is updated in the same session as any doc change.
 
 ## Active docs
 
+**Current design focus, 2026-09-06:** the founding plan's
+[borg generation and character-sheet proposal](2026-07-30_paredros_founding_plan.md#borg-generation-techniques-and-the-character-sheet)
+specifies classless capabilities, historically transmitted traditions,
+alternative anatomical technique bindings, deliberate learning, and inventory
+mapped to the body. The first implementation slice is an authored three-lives
+example and read-only technique query, now implemented locally and covered by
+the combined 43-test gate, using existing subject/revision and
+part addresses. A separate native read-only Body/Actions inspector is now
+implemented locally with a combined 52-test gate; durable equipment/learning
+remain later joins. The execution plan
+records the independent G/release crossing
+fix and unresolved presentation feedback. Charge and
+inhabitants are deferred during this design pass. Historical entry and
+inheritance policy live once in the Mesocosm wing founding record.
+
 The founding plan's **2026-09-05 player-experience proposal** covers embodied
 action, biological abilities, progression, communication, knowledge surfaces,
 structural world differences, and bounded sky-organism/topology experiments.

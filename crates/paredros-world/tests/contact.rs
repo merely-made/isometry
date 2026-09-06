@@ -49,7 +49,7 @@ fn restore_rejects_bad_initial_configuration_and_frame_order() {
         ..paredros_world::ContactBodyProfile::crawler()
     };
     let malformed = ContactSave {
-        version: 1,
+        version: 2,
         solids: vec![floor()],
         bodies: vec![(BodyKind::Crawler, invalid_profile, [0.0; 3])],
         board: None,
@@ -57,7 +57,7 @@ fn restore_rejects_bad_initial_configuration_and_frame_order() {
     };
     assert!(ContactWorld::restore(&malformed.to_bytes().unwrap()).is_err());
     let nan = ContactSave {
-        version: 1,
+        version: 2,
         solids: vec![floor()],
         bodies: vec![(
             BodyKind::Crawler,
@@ -80,7 +80,7 @@ fn restore_rejects_bad_initial_configuration_and_frame_order() {
         Err(paredros_world::ContactError::UnsupportedVersion(9))
     ));
     let bad_tick = ContactSave {
-        version: 1,
+        version: 2,
         solids: vec![floor()],
         bodies: vec![],
         board: None,

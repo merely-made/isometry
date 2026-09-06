@@ -1,8 +1,9 @@
 # Paredros Execution Plan (2026-08-07)
 
-**Status: in progress (2026-09-05); F0-F2 closed, F3 active, F3a landed.**
-The player-experience proposal below adds an embodied prototype alongside F3
-design; its implementation has not started.
+**Status: in progress (2026-09-06); F0-F2 closed, F3 active, F3a landed.**
+The dry crossing contact fixture is implemented alongside F3 design. The
+borg three-lives/action-query slice is implemented locally; the wider embodied
+encounter and graphical character sheet remain proposed.
 S0-S3 remain landed foundation receipts, with their stated headed judgments
 still open. They do not define a required entourage, sortie loop, or camera.
 **R4 was decided and executed
@@ -802,6 +803,122 @@ as F1 embodiment, F5 construction, and F7 danger establish locomotion,
 perception, reach, verticality, scene density, and how much off-body knowledge
 the player should receive. S0's close camera is evidence, not a ruling.
 
+### Current design focus: borgs, learning, and body-shaped equipment
+
+**First read-only slice complete locally, 2026-09-06.** Mark redirected
+exploration from extending the crossing toward borg generation and RPG growth.
+The [founding plan](2026-07-30_paredros_founding_plan.md#borg-generation-techniques-and-the-character-sheet)
+owns the proposed rules and three-lives fixture. Historical entry and the
+distinct inheritance routes live in
+`mesocosm/design_docs/2026-07-30_games_wing_founding.md`, under
+"Historical entry and lineage-shaped lives". Neither adds a mandatory
+Mesocosm-to-Paredros-to-Isometry progression sequence.
+
+Work through the following acceptance targets before broad procedural generation:
+
+1. **Three explainable lives.** Author the shared wetland lineage and the
+   keeper, surveyor, and repairer histories. Done when every starting part,
+   technique, attachment, and consequential relationship has a compatible
+   source; each life suggests useful work and danger choices; and the same
+   line produces distinct possibilities without hardcoded class exceptions.
+2. **One technique, alternative bodies.** Describe arresting a fall through
+   grip, adhesion, and equipment. Establish load, support, range, supply,
+   timing, and control requirements. Done when intact, damaged, occupied,
+   unsupported, and exhausted sources produce explainable different results;
+   failed binding preserves state; and losing the source preserves learning.
+3. **One readable subject sheet.** Prototype part/item selection, equipped
+   bindings, action explanations, learning choices, and known history. Done
+   when the player can explain an unavailable action, predict an equipment
+   tradeoff, find an alternate implementation, and release a held object
+   without needing a development inspector. Include non-spatial navigation.
+4. **One consequential improvement.** Join a learning opportunity and bounded
+   practice evidence to a deliberate choice, then test body change separately.
+   Done when the improvement changes an ordinary task and a dangerous one,
+   repeating trivial actions cannot farm unbounded progress, and replay
+   restores knowledge, condition, bindings, costs, and their source events.
+5. **One historical contrast.** Compare the tradition before and after a
+   disruption using dated fixtures. Done when available teachers, records,
+   materials, and relationships explain changed starts; future facts do not
+   leak backward; and a fresh generated history works without prior wing play.
+   This does not require implementing a complete historical world generator.
+
+Before code, map these examples onto current subject/body revision and part
+identities. Extend existing owners or name the missing owner explicitly;
+the contact fixture's numeric body id must not become a competing durable
+subject identity. Binding, learning, historical generation, and presentation
+are separate concerns even when one receipt exercises them together.
+Attribute scales, learning currency, starting-life customization limits,
+prepared-action limits, and historical checkpoint UX remain open decisions.
+
+**Bounded first slice:** an authored, runnable three-lives receipt plus a
+read-only action-binding query. Reuse `SubjectId`/`BodyRevisionId` from
+`paredros-identity` and `BodyDocument`/`PartId` from Mesocosm for anatomical
+addresses. Keep named lives, local traditions, dated sources, and authored
+scenario values in fixture data, not production class switches. The query
+must explain compatible sources and blockers without changing anatomy,
+knowledge, inventory, or resources. Admission of those facts into `GameState`,
+durable learning, live action execution, and the graphical sheet remain later
+joins. This slice is complete when the example explains each life and tests
+cover source chronology, alternative bindings, missing/occupied/severed
+sources, resource limits, and stale revision rejection. It is partial evidence
+for targets 1 and 2, not completion of the entire RPG prototype.
+
+Ownership mapped for this slice:
+
+| Fact | Existing owner / next join |
+| --- | --- |
+| Continuing subject and body revision | `paredros-identity::{SubjectId, BodyRevisionId}`; the query must reject mismatched subjects and stale revision references. |
+| Addressable anatomy and loss | Mesocosm `BodyDocument`/`PartId`; severed parts retain their addresses. Paredros `Body` has not yet joined this document to its numeric profile. |
+| Item identity and possession | `paredros-world::Items`; current possession is whole-subject `Carried(SubjectId)`, so attachment/function facts are caller-supplied query inputs until an equipment transition owns them. |
+| Technique meaning and availability | Paredros-owned read-only query over explicit learned facts, source functions, occupancy, support, and resource limits. Mesocosm's ecological capability enum stays unchanged. |
+| Authored lives and dated transmission | Example/test fixture data. A fixture source check does not implement generated world history or player-relative memory. |
+
+The receipt must distinguish possessing a part from that part supplying a
+function, and a supplied function from sufficient capacity in this situation.
+The same distinction applies to owning a harness versus having a complete,
+attached line with a reachable support. Query answers are previews; future
+execution must revalidate against current state before committing costs.
+
+The first query is deliberately concrete: `arrest_fall` explains grip plus
+line, adhesion, and harness plus line. Its supplied equivalent arrest demand
+and capacities use milligrams, reach uses body-scale voxels, and adhesive
+units are fixture doses. It does not calculate fall dynamics or define a
+general procedural technique language. A later usable limb/item is selected
+when an earlier candidate is occupied, severed, too short, or too weak.
+
+**Read-only sheet implemented locally, 2026-09-06:** uses this same query for the
+authored lives. Show named parts, exact sources, costs, knowledge blockers,
+and alternative bindings through both a part list and action inspection.
+Keep scenario comparisons separate from player control selection. Before
+making equipment/learning editable, define their admitted `GameState` facts
+and replayed transitions; the query's caller-supplied projections must not
+silently become a parallel save authority.
+
+This native prototype is a separate authored scenario inspector, not a
+player-control selector. `paredros-world` supplies read-only presentation
+rows from body/query facts; `paredros-room` owns selection, navigation,
+layout and rendering on the existing Netrender host. The three-lives fixture
+has one public demo-data home so tests, the text receipt and native inspector
+read the same facts. It is not a new procedural start generator.
+
+Done for this slice when named living/severed parts can be selected without
+spatial picking, action selection identifies sources and plain-language
+blockers/costs, mouse and keyboard navigation change only view state, long
+details remain accessible, and native captures show the keeper, untrained
+surveyor and injured repairer correctly. Editable equipment, learning,
+authoritative anatomy admission and action execution stay outside this slice.
+
+The dry crossing remains a useful contact fixture. Mark's play feedback found
+that the held plank could leave the player stuck in the gap and that the blue
+structure's purpose was unclear. The 2026-09-06 narrow fix separates release
+from placement: E picks up/places, G lets go even while falling or obstructed.
+Released boards retain their location and descend under fixture-scale vertical
+gravity with swept landing against solids/bodies. This is not full rigid-body
+tumbling or impact damage. Player confirmation, visible exit guidance, and
+body-specific affordance explanations remain open acceptance targets.
+Earlier automated route checks do not override that feedback.
+Charge and inhabitants are deferred while the borg design is explored.
+
 ### Embodied prototype alongside F3: proposed 2026-09-05
 
 The [founding plan's player-experience proposal](2026-07-30_paredros_founding_plan.md#player-experience-body-place-and-other-lives)
@@ -1125,6 +1242,27 @@ play, and subjective traversal acceptance remain unclaimed.
 
 ## 6. Findings
 
+- **2026-09-06:** the three-lives query reuses subject/revision and anatomical
+  part identities without changing Mesocosm's ecological capability enum.
+  Anatomy presence, function, and situational viability need separate checks.
+  Selecting the first matching grip or line hides valid later sources; both
+  grip and line reach must constrain the result. Learning facts are retained
+  when anatomical sources are severed. The authored history fixture checks
+  source identity, acquisition chronology and place; it is not a historical
+  generator or a player-memory model.
+
+- **2026-09-06:** `contact/mechanics.rs::toggle_board` requires a supported,
+  clear placement destination; `contact/spatial.rs` can halt movement when the
+  carried board lacks clearance. Release must bypass both placement checks and
+  remove the carry constraint before movement. Contact recording version 2 adds
+  the release input; older binary fixture recordings are explicitly rejected.
+
+- **2026-09-05 (borg design):** `bodies.rs` has a small generated numeric
+  profile and durable condition; `contact.rs` has two authored presets and
+  fixture actions. Neither establishes learned techniques with alternative
+  anatomical bindings or a body-shaped equipment sheet. The new proposal
+  names those missing joins without claiming the contact probe implements them.
+
 - **2026-09-05 (dry contact ownership):** Mere's pinned Conatus supplies the
   3D character controller; Seiche's inspected scene API is Rapier 2D and
   Mesocosm's inspected `places::step` is integer Ground navigation. The dry
@@ -1274,6 +1412,72 @@ play, and subjective traversal acceptance remain unclaimed.
   target.
 
 ## 7. Progress
+
+- **2026-09-06: native Body/Actions inspector.** Luna supplied the read-only
+  `SubjectSheet` projection and shared fixture home; Terra supplied the native
+  `body_sheet` host. Root integrated them, corrected selection tests, separated
+  list/detail scrolling, guarded row hit tests, and repaired inspection layout.
+  The combined world/room library, body-sheet/crossing binary, contact,
+  crossing and three-lives gate passed **52 tests**. Selection and navigation
+  preserve supplied facts; severed parts remain inspectable, stale revisions
+  block availability, and the untrained surveyor retains anatomical capability.
+  Reproduce with:
+  `cargo test -p paredros-world -p paredros-room --lib --bin body_sheet --bin crossing --test three_lives --test crossing --test contact --test contact_actions --locked --offline -j 2 --target-dir target-contact`.
+  Launch `target-contact/debug/body_sheet.exe`: 1/2/3 compare lives, Tab switches
+  lists, arrows select, mouse clicks select rows, wheel scrolls the hovered
+  list/detail area, PgUp/PgDn scroll inspection, and Escape quits.
+  `PAREDROS_BODY_SHEET_SMOKE=1` captures three authored states and exits;
+  `PAREDROS_BODY_SHEET_OUTPUT` selects its output directory and `PAREDROS_FONT`
+  can supply a font file. The prototype scales a fixed 1280x720 canvas.
+  It uses list/source cross-highlighting, not a spatial anatomy diagram.
+  Player usability acceptance, generated history, action execution, and durable
+  equipment/learning remain open. Existing unused-Vello-patch and room
+  dead-code warnings remain unrelated. The final gate passed again after label
+  cleanup. Native smoke exited successfully and root visually inspected all
+  three 1280x720 captures at
+  `Code/testing/paredros/body_sheet/run-1788673253414/{sedge,tremor,mend}.png`:
+  Sedge shows harness equipment and attached-part sources; Tremor shows missing
+  training and line equipment; Mend preserves the selected severed limb while
+  grip/adhesion alternatives remain available. These are native rendered-frame
+  receipts; physical mouse/keyboard usability and a spatial body view remain
+  unverified/unimplemented respectively. Work remains local and uncommitted.
+
+- **2026-09-06: three-lives/action-query local slice.** Terra implemented
+  `src/technique.rs` and its tests; Luna authored the three-lives fixture and
+  example. Root integrated/reviewed them, repaired the harness blocker type,
+  consolidated example/test inputs, and tightened source chronology and
+  symbiont donor references. The combined world/room library, contact,
+  crossing and three-lives gate passed **43 tests**. The nine new query/fixture
+  tests cover stale/mismatched/unlearned context, alternative sources, finite
+  line reach, missing support/line, adhesive exhaustion, loss without erased
+  knowledge, source chronology/place, and the exact example inputs. Querying
+  preserves anatomy, knowledge and resources. This is partial evidence for
+  targets 1 and 2; ordinary livelihoods are narrative, and at that gate GUI, execution,
+  durable equipment/learning, and historical generation remain unimplemented.
+  The final three-lives tests passed again after integration cleanup. Built
+  and ran `target-contact/debug/examples/three_lives.exe`: keeper selects a
+  free second grip or its harness; surveyor reports `NotLearned`; repairer
+  selects a surviving grip or its incorporated adhesive organ. Example build:
+  `cargo build -p paredros-world -p paredros-room --example three_lives --locked --offline -j 2 --target-dir target-contact`.
+  Existing unused-Vello-patch and room dead-code warnings remain unrelated.
+
+- **2026-09-06: crossing release fix implemented locally.** Added independent
+  G/release input and HUD hint while preserving E/pickup-placement. Release
+  wins over simultaneous interaction and does not require support or carry
+  capability. Released boards use vertical gravity, swept landing and body
+  clearance so walking out from underneath remains possible. The focused
+  `contact`, `contact_actions`, crossing integration and crossing binary suites
+  passed 21 tests, including the actual held-plank trap, subsequent exit route,
+  placement regression, airborne release, support removal and replay. Command:
+  `cargo test -p paredros-world --test contact --test contact_actions -p paredros-room --test crossing --bin crossing --locked --offline -j 2 --target-dir target-contact`.
+  Contact save grammar is now v2. Headed player confirmation remains open.
+
+- **2026-09-05 (borg design):** recorded classless capability foundations,
+  historically transmitted traditions, alternative technique implementations,
+  deliberate learning, and a body-shaped subject sheet. Added a three-lives
+  fixture and acceptance ordering. Recorded Mark's crossing feedback as open
+  recovery/legibility failures; paused charge/inhabitant expansion. Doc-only
+  design work, not new generation, progression, or historical-entry code.
 
 - **2026-09-05 (dry contact implementation):** added the `crossing` host,
   authored scene/HUD, replayable contact rules, and Conatus movement adapter.

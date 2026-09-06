@@ -332,7 +332,7 @@ impl EpistemicLog {
                         proposition,
                         supports,
                     })
-                }
+                },
                 _ => None,
             })
             .collect()
@@ -351,8 +351,8 @@ impl EpistemicLog {
                 } if *found == claim => reports.push(*report),
                 EpistemicRecord::Correction { corrects, .. } if *corrects == claim => {
                     corrections.push(entry.id)
-                }
-                _ => {}
+                },
+                _ => {},
             }
         }
         Ok(ClaimHistory {
@@ -386,7 +386,7 @@ impl EpistemicLog {
                             found: *observation,
                         });
                     }
-                }
+                },
                 EpistemicRecord::Claim {
                     claim,
                     claimant,
@@ -400,7 +400,7 @@ impl EpistemicLog {
                             found: *claim,
                         });
                     }
-                }
+                },
                 EpistemicRecord::Report {
                     report,
                     reporter,
@@ -416,7 +416,7 @@ impl EpistemicLog {
                             found: *report,
                         });
                     }
-                }
+                },
                 EpistemicRecord::Correction {
                     corrector,
                     corrects,
@@ -424,7 +424,7 @@ impl EpistemicLog {
                     supports,
                 } => {
                     replayed.correct(entry.at, *corrector, *corrects, *replacement, supports)?;
-                }
+                },
             }
             if replayed.entries.last() != Some(entry) {
                 return Err(EpistemicError::ReplayRecordMismatch(entry.id));
@@ -470,7 +470,7 @@ impl EpistemicLog {
                     if event != proposition.event {
                         return Err(EpistemicError::MismatchedSupport(*support));
                     }
-                }
+                },
                 Evidence::Report(id) => {
                     let (_, hearer, _, reported) = self.report_details(*id)?;
                     if hearer != actor {
@@ -479,7 +479,7 @@ impl EpistemicLog {
                     if reported != proposition {
                         return Err(EpistemicError::MismatchedSupport(*support));
                     }
-                }
+                },
             }
         }
         Ok(supports)

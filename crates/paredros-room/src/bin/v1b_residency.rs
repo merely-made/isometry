@@ -16,12 +16,12 @@
 
 use std::{path::Path, sync::Arc, time::Instant};
 
-use modulus::{BrickMap, BrickProjectionRevision};
 use mesocosm_core::places::BRICK;
-use netrender::WgpuHandles;
 use mesocosm_lens::{
     BrickChange, BrickDiagnostics, BrickFrameInput, BrickRevision, BrickTracer, Grade,
 };
+use modulus::{BrickMap, BrickProjectionRevision};
+use netrender::WgpuHandles;
 use paredros_room::{
     gpu::{self, Composer, SIZE},
     residency::{
@@ -228,9 +228,9 @@ impl ApplicationHandler for StableApp {
                 if let Some(live) = self.live.as_mut() {
                     configure(live);
                 }
-            }
+            },
             WindowEvent::RedrawRequested => self.frame(event_loop),
-            _ => {}
+            _ => {},
         }
     }
 }
@@ -320,16 +320,16 @@ impl StableApp {
                 );
                 live.window.pre_present_notify();
                 live.queue.present(surface_frame);
-            }
+            },
             Acquired::Outdated | Acquired::Lost => {
                 configure(live);
                 live.window.request_redraw();
                 return;
-            }
+            },
             Acquired::Timeout | Acquired::Occluded => {
                 live.window.request_redraw();
                 return;
-            }
+            },
             Acquired::Validation => panic!("V1b surface acquisition failed validation"),
         }
 

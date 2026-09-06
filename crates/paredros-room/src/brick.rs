@@ -6,8 +6,8 @@
 
 //! Paredros's Ground source binding for the shared brick ABI.
 
-use modulus::{BrickMap, BrickMapError, BrickProjectionRevision};
 use mesocosm_core::places::Ground;
+use modulus::{BrickMap, BrickMapError, BrickProjectionRevision};
 
 pub(crate) fn from_ground(ground: &Ground) -> Result<BrickMap, BrickMapError> {
     from_ground_keys(ground, BrickProjectionRevision(0), ground.keys())

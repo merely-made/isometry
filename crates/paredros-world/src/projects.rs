@@ -150,7 +150,7 @@ impl Projects {
                     project,
                     subject,
                 }
-            }
+            },
         };
         self.intents.push(intent);
         self.events.push(event);

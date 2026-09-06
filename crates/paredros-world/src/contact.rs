@@ -10,6 +10,7 @@
 //! generated terrain. It is a fixture-scale f32 world-unit simulation; the
 //! integer Mesocosm `Aabb` remains the durable anatomical/spatial document.
 
+mod board;
 mod math;
 mod mechanics;
 mod spatial;
@@ -111,6 +112,7 @@ pub struct HeldInput {
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct TriggeredInput {
+    pub release: bool,
     pub interact: bool,
     pub anchor: bool,
     pub attack: bool,
@@ -168,6 +170,10 @@ pub enum ContactEffect {
         by: BodyId,
     },
     BoardPlaced {
+        by: BodyId,
+        position: Position,
+    },
+    BoardReleased {
         by: BodyId,
         position: Position,
     },
@@ -237,6 +243,7 @@ pub struct ContactWorld {
     bodies: BTreeMap<BodyId, BodyState>,
     board: Option<MovableBoard>,
     board_holder: Option<BodyId>,
+    board_fall_velocity: Option<f32>,
     initial_board: Option<MovableBoard>,
     starts: Vec<(BodyKind, BodyProfile, Position)>,
     effects: Vec<ContactEffect>,
@@ -252,6 +259,7 @@ impl ContactWorld {
             bodies: BTreeMap::new(),
             board: None,
             board_holder: None,
+            board_fall_velocity: None,
             initial_board: None,
             starts: Vec::new(),
             effects: Vec::new(),
@@ -373,6 +381,7 @@ impl ContactWorld {
         for (id, input) in accepted {
             self.step_body(id, input);
         }
+        self.advance_released_board();
         self.tick += 1;
         Ok(())
     }
@@ -405,7 +414,7 @@ impl ContactWorld {
 
     pub fn save_record(&self) -> ContactSave {
         ContactSave {
-            version: 1,
+            version: 2,
             solids: self.solids.clone(),
             bodies: self.starts.clone(),
             board: self.initial_board,
@@ -422,8 +431,15 @@ impl ContactWorld {
         self.save_record().to_bytes()
     }
     pub fn restore(bytes: &[u8]) -> Result<Self, ContactError> {
+        // Postcard encodes the leading u8 directly. Reject old input grammars
+        // before attempting to decode their differently shaped frames.
+        if let Some(&version) = bytes.first() {
+            if version != 2 {
+                return Err(ContactError::UnsupportedVersion(version));
+            }
+        }
         let save: ContactSave = snapshot::decode(bytes).map_err(|_| ContactError::Decode)?;
-        if save.version != 1 {
+        if save.version != 2 {
             return Err(ContactError::UnsupportedVersion(save.version));
         }
         Self::replay(save.solids, &save.bodies, save.board, &save.frames)

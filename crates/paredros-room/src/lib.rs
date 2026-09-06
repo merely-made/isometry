@@ -26,8 +26,9 @@
 
 #[cfg(feature = "r1-proof")]
 mod brick;
-pub mod frame_health;
 pub mod crossing;
+pub mod body_sheet;
+pub mod frame_health;
 pub mod gpu;
 pub mod probe;
 #[cfg(feature = "v1-proof")]

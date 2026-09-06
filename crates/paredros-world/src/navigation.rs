@@ -106,7 +106,7 @@ impl Navigation {
                     target,
                     *self,
                 )
-            }
+            },
             Layer::Underground => {
                 let goals = self.underground_stances(world, slot)?;
                 if goals.is_empty() {
@@ -120,7 +120,7 @@ impl Navigation {
                     place_hint(world, slot)?,
                     *self,
                 )
-            }
+            },
         }
     }
 

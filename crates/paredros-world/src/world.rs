@@ -200,7 +200,7 @@ impl World {
                     removed,
                     ground_revision: self.ground.revision(),
                 }
-            }
+            },
             WorldIntent::InheritSite {
                 tick,
                 slot,
@@ -216,7 +216,7 @@ impl World {
                     kind,
                     fact,
                 }
-            }
+            },
         };
         self.intents.push(intent);
         self.events.push(event);

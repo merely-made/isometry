@@ -26,6 +26,7 @@
 
 mod bodies;
 mod contact;
+pub mod fixtures;
 mod items;
 mod movement;
 mod navigation;
@@ -35,6 +36,8 @@ mod simulation;
 mod simulation_record;
 mod sites;
 mod state;
+mod subject_sheet;
+mod technique;
 mod transitions;
 mod world;
 
@@ -61,6 +64,15 @@ pub use simulation::{Decision, LifeReport, Pursuit, Simulation, SimulationError}
 pub use simulation_record::{SIMULATION_VERSION, SimulationSave};
 pub use sites::{HistoryFactId, Layer, Site, SiteKind, SiteSource, SlotId, WorldMap};
 pub use state::GameState;
+pub use subject_sheet::{
+    ActionRow, CapabilityRow, EquipmentRow, PartRow, ResourceRow, SubjectSheet, SubjectSheetInput,
+};
+pub use technique::{
+    ActionBlocker, ActionQuery, AdhesiveResource, AdhesiveSurface, ArrestFallEnvironment,
+    BindingBlocker, BindingKind, BindingQuery, EquipmentFunction, EquipmentProjection,
+    PartCapability, PartFunction, ResourceCost, ResourceKind, ResourceReserve, SourceQuery,
+    SubjectBody, TechniqueId, TechniqueInputs, TechniqueKnowledge, arrest_fall,
+};
 pub use transitions::{DeathCause, GAME_STATE_VERSION, GameError, GameEvent, GameIntent, GameSave};
 pub use world::{
     GENERATOR_VERSION, World, WorldConfig, WorldError, WorldEvent, WorldIntent, WorldSave,

@@ -338,6 +338,155 @@ its own scale. Products need declared support for the world's required
 mechanisms; sharing a seed alone cannot establish compatibility. Missing
 mechanisms require an explicit admission result rather than a silent rewrite.
 
+#### Borg generation, techniques, and the character sheet
+
+**Design proposal, 2026-09-05.** Prefer classless capability foundations, with
+professions and traditions supplying recognizable starting practices,
+equipment, contacts, and livelihoods. A profession is an acquired social and
+practical history; it does not prohibit another body from learning a technique.
+The wing's historical-entry and inheritance direction lives once in
+`mesocosm/design_docs/2026-07-30_games_wing_founding.md`, under
+"Historical entry and lineage-shaped lives". The rules below are Paredros's
+reading of those facts, not a universal wing character schema.
+
+##### Generating a particular life
+
+Generate a subject in its historical place rather than independently rolling
+a race, class, and stat block. Select an available biological line and develop
+a viable body under local conditions; then apply a bounded, causally possible
+personal history of nourishment, practice, injuries, tools, teachers, and
+relationships. No history can award training from an institution that did not
+yet exist or a tool absent from that place's supply. A generated history need
+not replay every childhood tick, but each consequential starting fact needs
+a source and compatible prerequisites.
+
+Keep four layers visible: body, current capacities, learned techniques, and
+experience/knowledge. An inherited developmental possibility is not an
+expressed organ; an organ is not mastery; knowledge of a technique is not
+proof that the current body can perform it. Naming adds identity recognition,
+not an automatic ability package. Imported bodies and generated starts use
+the same admission checks, with explicit treatment of unsupported mechanisms.
+
+Offer players inspectable starting lives, with regeneration or customization
+within the selected scenario's constraints. Show tradeoffs and likely
+livelihoods, not a hidden viability lottery. Birth environment and history
+shape options without fixing personality, allegiances, or future occupation.
+
+##### Attributes and techniques
+
+Candidate sheet summaries are force, coordination, endurance, sensory acuity,
+attention, and memory. This list and its scales remain open. Each summary
+must explain its sources and limits: strong limbs may exceed the load that
+available footing supports; additional manipulators may compete for attention.
+Mental capacity is not one intelligence number deciding speech, sapience,
+crafting, social success, and supernatural power together. Different sensory
+and cognitive arrangements can implement comparable practical functions.
+
+A technique declares an intended effect, required capabilities, admissible
+alternative implementations, resource/attention commitments, timing,
+interruption rules, and relevant environmental conditions. Bind requirements
+to actual part addresses, equipment, or symbionts. Reject incompatible bindings
+with an understandable reason. The binding is inspectable and can be suggested
+automatically; ordinary play should not require wiring a graph before every act.
+
+For example, **arrest a fall** requires a reachable support, a load path strong
+enough for the moving body, attachment, and tolerable arrest force. A gripping
+appendage, adhesive organ, or harness and line can satisfy attachment, with
+different surfaces, reach, resource costs, and failure modes. A harness alone
+does not conjure a line or anchor. The player can learn the general technique
+and practice a particular implementation; changing anatomy may require
+adaptation rather than relearning the principle from nothing.
+
+Compatible bindings are not interchangeable numerical skins. A gripped line
+occupies its manipulator; an adhesive pad may need preparation and fail on a
+particular surface; a symbiont consumes resources and may have its own behavior.
+Structural support, functional supply, and sensory/control requirements must
+all hold. A severed or exhausted source disables the action without erasing
+the subject's learned technique. Skills should also introduce useful choices
+in work, travel, rescue, and communication, not only combat bonuses.
+
+##### Improvement and constraint
+
+Separate acquisition, practice, and expression. Teachers, observation,
+experiments, and records make a technique learnable. Meaningful application
+supplies practice evidence. Rest or instruction offers deliberate improvement
+choices: greater reliability/efficiency, a new application, or adaptation to
+another compatible source. Exact learning currency and rates remain open;
+do not implement universal XP or usage grinding as an accidental default.
+Repeated identical safe actions must have bounded learning value.
+
+Body changes require an actual developmental, medical, symbiotic, equipment,
+or world-rule process. A selection in the sheet previews that process and its
+cost; it does not instantly mint anatomy. Show resources, recovery, capacity
+competition, and likely lost options. Improvements need not all be tradeoffs,
+but indefinite growth must not make metabolic, structural, and attention limits
+irrelevant. A wide learned repertoire is compatible with a smaller prepared
+set of fluent actions. Automatic routine movement should not spend an
+attention slot simply to manufacture a restriction.
+
+Injury can interrupt expression while leaving knowledge intact. Preserve the
+distinction between repairing a body, rehabilitating control, and learning an
+alternative technique. The individual can retain a learned principle through
+body revision; transfer to a descendant or another subject requires the wing's
+explicit transmission rules. Episodic lineage adaptation does not replace
+individual practice, and individual level-up does not revise a lineage.
+
+##### Body-shaped inventory and character sheet
+
+Use one subject sheet with Body, Actions, Learning, and History readings.
+The default answers: what can I do, what am I carrying, what changed, and why?
+Deeper anatomy and provenance are available on inspection. Use ordinary words
+for missing requirements rather than exposing internal predicate names.
+
+- **Body:** select a part to inspect condition, functions, support/supply links,
+  attachments, and competing uses. Distinguish inherited potential from current
+  expression. Keep a stable named part list alongside the spatial view so
+  unusual anatomy and occluded parts remain navigable.
+- **Actions:** show a small prepared set and the full learned repertoire.
+  Selecting an action highlights its current sources, commitments, costs,
+  alternatives, and blockers. An anchor attempt should explain "no support
+  within reach" or "this limb is holding the plank" before commitment.
+- **Inventory:** offer both an item list and body/container locations.
+  Grip, strap, enclose, implant, and symbiotic carriage are different bindings.
+  Containers have capacity and access conditions; attachments can obstruct
+  senses, change balance, or compete for supply. Preview consequences before
+  equipping. Keep intentional release accessible when normal placement fails;
+  a held item must not trap the player in a menu or unresolved action.
+- **Learning:** show acquired principles, practiced implementations, available
+  improvements, teachers, and unresolved prerequisites. Keep undiscovered
+  mechanisms uncertain rather than revealing every generated unlock.
+- **History:** explain why this body, technique, item, or relationship is here.
+  Distinguish observed/learned accounts from the developer's complete provenance.
+  Ancestral events do not become autobiographical memories automatically.
+
+##### One line, three lives: first design fixture
+
+Use an authored wetland line with four gripping limbs, a vibration-sensitive
+mantle, and a fibre-secreting gland. Its ancestors survived seasonal floods;
+the biological record explains the inherited developmental options. Three
+contemporary subjects from this line have different histories:
+
+1. **A crossing keeper** learned load sharing and rescue from a local teacher.
+   It wears a harness and practices fibre tensioning. Its useful chain is
+   place line, brace, catch, and haul. Maintenance and rescue share mechanisms
+   with restraining an attacker; secreted fibre spends water and stored matter.
+2. **A marsh surveyor** learned to interpret vibration and travelled widely.
+   It uses a contact probe and practiced attention to distinguish movement
+   through connected surfaces. It can find a safer route or detect an approach,
+   but disconnected ground and competing vibration obscure its reading.
+3. **A displaced repairer** lost a gripping limb and learned an alternative
+   binding using a cultivated adhesive symbiont. It retains the same general
+   rescue principle, with different attachment and maintenance requirements.
+   The relationship and transmission history explain the symbiont's presence;
+   injury is not a requirement for obtaining an interesting build.
+
+These are fixture descriptions, not production classes or ancestry destiny.
+All three can change livelihood, exchange knowledge, and acquire compatible
+equipment. Their differences must create useful choices in the same ordinary
+task and the same danger. Later, place their tradition before and after a
+historical disruption: what changes is available transmission, supply, and
+practice, not an unconditional era buff to every descendant.
+
 #### Sky creatures and unusual world shapes
 
 Naming, agency, sapience, social recognition, and faction affiliation are

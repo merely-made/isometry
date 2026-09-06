@@ -77,9 +77,9 @@ impl Items {
                         ItemKind::Dressing,
                         ItemKind::Dressing,
                     ]);
-                }
+                },
                 SiteKind::Ruin => kinds.push(ItemKind::Scrap),
-                _ => {}
+                _ => {},
             }
             for kind in kinds {
                 let id = ItemId(next);

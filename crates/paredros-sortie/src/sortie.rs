@@ -356,7 +356,7 @@ impl Sortie {
                     if !self.in_tend_reach(played, down) {
                         self.walk(played, [at[0], at[2]]);
                     }
-                }
+                },
                 _ => {
                     let goal = self.goal();
                     let before = Self::distance_to(self.positions[&played], goal);
@@ -375,7 +375,7 @@ impl Sortie {
                             self.progress.1 += 1;
                         }
                     }
-                }
+                },
             }
         }
 
@@ -428,7 +428,7 @@ impl Sortie {
                     if mine + LEAD > theirs && !march::arrived(self.positions[&subject], goal) {
                         self.walk(subject, goal);
                     }
-                }
+                },
                 Part::Healer { .. } => {
                     if let Some(down) = self.downed {
                         if !self.in_tend_reach(subject, down) {
@@ -439,7 +439,7 @@ impl Sortie {
                         let a = anchor;
                         self.walk(subject, [a[0], a[2]]);
                     }
-                }
+                },
             }
         }
 

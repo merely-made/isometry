@@ -144,9 +144,9 @@ impl ApplicationHandler for ResidencyApp {
                 if let Some(live) = self.live.as_mut() {
                     configure(live);
                 }
-            }
+            },
             WindowEvent::RedrawRequested => self.frame(event_loop),
-            _ => {}
+            _ => {},
         }
     }
 }
@@ -229,16 +229,16 @@ impl ResidencyApp {
                 );
                 live.window.pre_present_notify();
                 live.queue.present(surface_frame);
-            }
+            },
             Acquired::Outdated | Acquired::Lost => {
                 configure(live);
                 live.window.request_redraw();
                 return;
-            }
+            },
             Acquired::Timeout | Acquired::Occluded => {
                 live.window.request_redraw();
                 return;
-            }
+            },
             Acquired::Validation => panic!("V1 surface acquisition failed validation"),
         }
 

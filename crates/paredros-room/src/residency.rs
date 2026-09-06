@@ -12,9 +12,9 @@
 
 use std::{collections::BTreeSet, fmt};
 
-use modulus::{BrickMap, BrickMapError, BrickProjectionRevision};
 use mesocosm_core::places::{BRICK, Ground, Places, WALKER_HEIGHT};
 use mesocosm_lens::TraceCamera;
+use modulus::{BrickMap, BrickMapError, BrickProjectionRevision};
 use renderling::glam::Vec3;
 
 use crate::room::SEED;
@@ -106,7 +106,7 @@ pub fn zoom_distance(frame: u64) -> f32 {
             let t = (frame - 12) as f32 / 23.0;
             let smooth = t * t * (3.0 - 2.0 * t);
             CLOSE_DISTANCE + (FAR_DISTANCE - CLOSE_DISTANCE) * smooth
-        }
+        },
         36..=47 => FAR_DISTANCE,
         48..=59 => CLOSE_DISTANCE,
         _ => FAR_DISTANCE,
@@ -181,7 +181,7 @@ impl fmt::Display for ResidencyError {
             ),
             Self::ProjectionRevisionOverflow => {
                 write!(formatter, "brick projection revision overflow")
-            }
+            },
             Self::BrickMap(error) => error.fmt(formatter),
         }
     }
@@ -307,13 +307,14 @@ impl StableResidency {
                 high[axis] = high[axis].max(key[axis]);
             }
         }
-        let world =
-            [0, 1, 2].map(|axis| (i32::from(high[axis]) - i32::from(low[axis]) + 1) as u32);
+        let world = [0, 1, 2].map(|axis| (i32::from(high[axis]) - i32::from(low[axis]) + 1) as u32);
         let widest = *PAGE_RANGES.last().expect("V1 has residency bands");
         let reach = (2 * widest / BRICK + 2) as u32;
         let pointer_extent = [world[0].min(reach), world[1], world[2].min(reach)];
-        let pointer_bytes =
-            u64::from(pointer_extent[0]) * u64::from(pointer_extent[1]) * u64::from(pointer_extent[2]) * 4;
+        let pointer_bytes = u64::from(pointer_extent[0])
+            * u64::from(pointer_extent[1])
+            * u64::from(pointer_extent[2])
+            * 4;
         // Whole atlas slot rows under what the budget leaves: one row is
         // 16 x 16 slots of 512 bytes.
         let row_bytes = 16 * 16 * 512;

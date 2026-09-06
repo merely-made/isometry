@@ -124,3 +124,47 @@ fn fixture_camera_and_visible_geometry_are_finite() {
     }
     assert!(crossing::geometry(&world).len() >= world.solids().len() * 36);
 }
+
+#[test]
+fn release_escapes_the_held_plank_trap_and_replays() {
+    let (mut world, id) = crossing::new_world(BodyKind::Crawler);
+    let action = |release, interact| Input {
+        triggered: TriggeredInput {
+            release,
+            interact,
+            ..Default::default()
+        },
+        ..Default::default()
+    };
+    world.step(&[(id, action(false, true))]).unwrap();
+    walk(&mut world, id, 1., 0., 130);
+    walk(&mut world, id, 0., 0., 60);
+    let trapped = *world.body(id).unwrap();
+    assert_eq!(world.board_holder(), Some(id));
+    assert!(!trapped.grounded && trapped.vertical_velocity < 0.);
+    walk(&mut world, id, 0., 0., 10);
+    assert_eq!(world.body(id).unwrap().position, trapped.position);
+    world.step(&[(id, action(false, true))]).unwrap();
+    assert_eq!(world.board_holder(), Some(id), "placement is obstructed");
+    let board_before = world.board().unwrap().position;
+    // Release wins over a simultaneous placement request.
+    world.step(&[(id, action(true, true))]).unwrap();
+    assert_eq!(world.board_holder(), None);
+    assert!(world.body(id).unwrap().position[1] < trapped.position[1]);
+    assert!(world.board().unwrap().position[1] <= board_before[1]);
+    assert_eq!(
+        ContactWorld::restore(&world.save().unwrap()).unwrap(),
+        world
+    );
+    walk(&mut world, id, 0., 1., 160);
+    walk(&mut world, id, 1., 0., 70);
+    let body = world.body(id).unwrap();
+    assert!(
+        body.position[0] > 2. && body.position[1] >= -0.01,
+        "{body:?}"
+    );
+    assert_eq!(
+        ContactWorld::restore(&world.save().unwrap()).unwrap(),
+        world
+    );
+}

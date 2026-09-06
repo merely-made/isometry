@@ -171,7 +171,7 @@ impl Movement {
                 self.positions.insert(subject, at);
                 self.trails.insert(subject, vec![at]);
                 MovementEvent::Spawned { tick, subject, at }
-            }
+            },
             MovementIntent::Step {
                 tick,
                 subject,
@@ -200,7 +200,7 @@ impl Movement {
                         to,
                     }
                 }
-            }
+            },
         };
         self.intents.push(intent);
         self.events.push(event);
