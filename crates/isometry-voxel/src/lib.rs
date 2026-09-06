@@ -22,6 +22,7 @@ mod voxel;
 
 pub mod body;
 pub mod demo;
+pub mod watchtower;
 
 pub use bake::{BakeParams, Sheet, bake_facing, bake_strip};
 pub use body::{BODY_SCHEMA, BodyError, BodyProfile, PartOrigin};

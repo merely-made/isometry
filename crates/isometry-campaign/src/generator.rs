@@ -12,8 +12,7 @@ use serde::{Deserialize, Serialize};
 use crate::{CampaignDraft, LocalMapProposal, StoryletProposal, WorldFact};
 
 /// One typed value crossing the pack-generator ABI.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(tag = "type", rename_all = "snake_case")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum GenValue {
     Text { value: String },
     Object { fields: BTreeMap<String, GenValue> },
@@ -25,6 +24,67 @@ pub enum GenValue {
     Storylet { storylet: StoryletProposal },
     LocalMap { map: LocalMapProposal },
     Campaign { campaign: CampaignDraft },
+}
+
+// Pack JSON is intentionally internally tagged: it is pleasant to author and
+// keeps the discriminator beside the value's fields. Compact binary formats
+// such as postcard cannot encode that map-shaped representation, though. The
+// session wire therefore uses the ordinary enum below while human-readable
+// formats retain the established pack ABI exactly.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(remote = "GenValue", tag = "type", rename_all = "snake_case")]
+enum GenValueJson {
+    Text { value: String },
+    Object { fields: BTreeMap<String, GenValue> },
+    List { values: Vec<GenValue> },
+    Item { item: ItemProposal },
+    Npc { npc: NpcProposal },
+    MapPatch { patch: MapPatchProposal },
+    WorldFact { fact: WorldFact },
+    Storylet { storylet: StoryletProposal },
+    LocalMap { map: LocalMapProposal },
+    Campaign { campaign: CampaignDraft },
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(remote = "GenValue")]
+enum GenValueWire {
+    Text { value: String },
+    Object { fields: BTreeMap<String, GenValue> },
+    List { values: Vec<GenValue> },
+    Item { item: ItemProposal },
+    Npc { npc: NpcProposal },
+    MapPatch { patch: MapPatchProposal },
+    WorldFact { fact: WorldFact },
+    Storylet { storylet: StoryletProposal },
+    LocalMap { map: LocalMapProposal },
+    Campaign { campaign: CampaignDraft },
+}
+
+impl Serialize for GenValue {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        if serializer.is_human_readable() {
+            GenValueJson::serialize(self, serializer)
+        } else {
+            GenValueWire::serialize(self, serializer)
+        }
+    }
+}
+
+impl<'de> Deserialize<'de> for GenValue {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        if deserializer.is_human_readable() {
+            GenValueJson::deserialize(deserializer)
+        } else {
+            GenValueWire::deserialize(deserializer)
+        }
+    }
 }
 
 impl GenValue {
@@ -263,10 +323,124 @@ mod tests {
             )]),
         };
         let json = serde_json::to_string(&request).unwrap();
+        assert!(json.contains("\"type\":\"text\""));
         assert!(json.contains("river-clans"));
         assert_eq!(
             serde_json::from_str::<GeneratorRequest>(&json).unwrap(),
             request
+        );
+    }
+
+    #[test]
+    fn generator_values_round_trip_over_the_binary_carrier() {
+        let value = GenValue::Object {
+            fields: BTreeMap::from([
+                (
+                    "text".into(),
+                    GenValue::Text {
+                        value: "river".into(),
+                    },
+                ),
+                (
+                    "list".into(),
+                    GenValue::List {
+                        values: vec![GenValue::Text {
+                            value: "stone".into(),
+                        }],
+                    },
+                ),
+                (
+                    "item".into(),
+                    GenValue::Item {
+                        item: ItemProposal {
+                            template: "river-key".into(),
+                            name: "River Key".into(),
+                            tags: vec![],
+                        },
+                    },
+                ),
+                (
+                    "npc".into(),
+                    GenValue::Npc {
+                        npc: NpcProposal {
+                            key: "warden".into(),
+                            name: "Mara".into(),
+                            tags: vec![],
+                        },
+                    },
+                ),
+                (
+                    "patch".into(),
+                    GenValue::MapPatch {
+                        patch: MapPatchProposal {
+                            target: "shore".into(),
+                            operations: vec![GenValue::Text {
+                                value: "raise".into(),
+                            }],
+                        },
+                    },
+                ),
+                (
+                    "fact".into(),
+                    GenValue::WorldFact {
+                        fact: WorldFact {
+                            id: "oath".into(),
+                            kind: "reveal".into(),
+                            text: "The oath is known.".into(),
+                            tags: vec![],
+                        },
+                    },
+                ),
+                (
+                    "storylet".into(),
+                    GenValue::Storylet {
+                        storylet: StoryletProposal {
+                            key: "oath".into(),
+                            entry: "The oath speaks.".into(),
+                            tags: vec![],
+                            requirements: Default::default(),
+                            roles: vec![],
+                            effects: vec![],
+                        },
+                    },
+                ),
+                (
+                    "map".into(),
+                    GenValue::LocalMap {
+                        map: LocalMapProposal {
+                            id: "shore".into(),
+                            name: "Shore".into(),
+                            width: 2,
+                            height: 2,
+                            default_ground: "sand".into(),
+                            cells: vec![],
+                            spawn_zones: vec![],
+                            transitions: vec![],
+                            encounter_anchors: vec![],
+                        },
+                    },
+                ),
+                (
+                    "campaign".into(),
+                    GenValue::Campaign {
+                        campaign: CampaignDraft {
+                            id: "river-oath".into(),
+                            name: "River Oath".into(),
+                            world: Default::default(),
+                            maps: vec![],
+                            secrets: vec![],
+                            rewards: vec![],
+                            starting_map: "shore".into(),
+                            final_storylet: "oath".into(),
+                        },
+                    },
+                ),
+            ]),
+        };
+        let bytes = postcard::to_allocvec(&value).expect("encode generator value");
+        assert_eq!(
+            postcard::from_bytes::<GenValue>(&bytes).expect("decode generator value"),
+            value
         );
     }
 

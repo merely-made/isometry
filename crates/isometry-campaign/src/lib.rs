@@ -42,7 +42,7 @@ pub use pack::{
 };
 pub use store::CampaignStore;
 pub use world::{
-    CampaignDraft, CampaignWorld, DraftMap, HistoryEvent, RoleSlot, StoryletEffect, StoryletError,
-    StoryletProposal, StoryletRequirements, StoryletResolution, WorldCharacter, WorldError,
-    WorldEvent, WorldFaction, WorldLaw, WorldPlace, WorldRoute,
+    CampaignDraft, CampaignWorld, DraftMap, HistoryEvent, MapInhabitant, RoleSlot, StoryletEffect,
+    StoryletError, StoryletProposal, StoryletRequirements, StoryletResolution, WorldCharacter,
+    WorldError, WorldEvent, WorldFaction, WorldLaw, WorldPlace, WorldRoute,
 };

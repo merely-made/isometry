@@ -186,6 +186,9 @@ pub fn board_root(ui: &UiState) -> UiChild {
             .attr("class", "board")
             .attr("style", format!("left: {camx}px; top: {camy}px;")),
     )];
+    if let Some(overlay) = crate::character::character_overlay(ui) {
+        pane_children.push(overlay);
+    }
     if let Some(overlay) = crate::sheet::sheet_overlay(ui) {
         pane_children.push(overlay);
     }

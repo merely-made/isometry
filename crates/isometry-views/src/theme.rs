@@ -3,6 +3,9 @@
 //! diamonds stand in for sprites until a pixel tileset lands (and the
 //! `image-rendering: pixelated` engine seam opens, probe P1).
 
+mod watchtower;
+mod tokens;
+
 /// The floor every overlay panel stacks from, above the whole board.
 ///
 /// A tile carries its depth as an *inline* z-index, from
@@ -126,6 +129,10 @@ pub fn board_css() -> String {
 }
 .cmd-line .field-caret { color: #fff0a3; }
 .cmd-result { color: #b9c0cf; font-size: 12px; padding: 1px 6px; }
+.character-field { align-items: center; gap: 8px; }
+.character-name, .character-owner { display: flex; align-items: center; flex: 1; min-width: 0; height: 28px; box-sizing: border-box; padding: 3px 8px; background-color: #232734; border: 1px solid #46516a; margin: 4px 0; }
+.character-name input, .character-owner input { flex: 1; color: #e8ebf2; background-color: transparent; border: 0; padding: 0; font-size: 14px; }
+.character-name .field-caret, .character-owner .field-caret { color: #9fd48a; }
 
 /* The whisper composer's field. Same shape as the > line, its own colour: the
    two lanes share the "> " prefix and must not read as the same thing. */
@@ -302,7 +309,13 @@ pub fn board_css() -> String {
 .tile-water.alt { background-color: #2a5a93; }
 .tile-stone { background-color: #8d9098; }
 .tile-stone.alt { background-color: #84878f; }
-.tile-under { background-color: #3b5c2d; }
+
+/* Elevation is real geometry: each raised roof emits only the two exposed
+   foreground trapezoids, rather than a stack of dark diamonds. The faces are
+   deliberately distinct so height survives clean tessellation. */
+.tile-face { position: absolute; }
+.tile-face-left { background-color: #355f2b; }
+.tile-face-right { background-color: #294d27; }
 
 /* State tints come after the kind classes: equal specificity, source
    order decides, and these must win over any tile kind. */
@@ -402,7 +415,8 @@ pub fn board_css() -> String {
     // Voxel-baked pixel tileset: the pixel sprites this sheet was waiting for
     // (design_docs/2026-07-08_campaign_packs_plan.md). Knight is the demo rig;
     // goblin is the same rig recoloured, proving palette-swap on the board.
-    css.push_str(&voxel_token_css());
+    css.push_str(&tokens::voxel_token_css());
+    css.push_str(watchtower::css());
     css.push_str(&force_css());
     css.push_str(COMPENDIUM_CSS);
     // Structure from the catalog, palette from here. The swatch's own classes
@@ -551,49 +565,3 @@ const COMPENDIUM_CSS: &str = r#"
 .search-hint { color: #6a7080; font-style: italic; }
 .search-clear { color: #8a90a0; cursor: pointer; }
 "#;
-
-/// Bake the demo voxel rig to `.token-*` sprite rules (data-URI PNGs), called
-/// once from [`board_css`]. `background-size: contain` plus a bottom anchor
-/// stands the sprite in the 24x36 token box with its feet at the tile.
-fn voxel_token_css() -> String {
-    use isometry_voxel::{bake_facing, demo, BakeParams, Palette};
-    let p = BakeParams {
-        half_w: 2,
-        cube_h: 2,
-        facings: 4,
-        margin: 2,
-    };
-    let (rig, base) = demo::hero();
-    // Palette-swap the one rig into per-monster recolours (skin index 0, shirt
-    // index 1). Proves recolour across the starter bestiary; per-monster voxel
-    // models arrive with parts packs (P3).
-    let recolor = |skin: [u8; 3], shirt: [u8; 3]| -> Palette {
-        Palette::new(
-            base.0
-                .iter()
-                .enumerate()
-                .map(|(i, c)| match i {
-                    0 => skin,
-                    1 => shirt,
-                    _ => *c,
-                })
-                .collect(),
-        )
-    };
-    let variants: [(&str, Palette); 5] = [
-        ("knight", base.clone()),
-        ("goblin", recolor([140, 165, 110], [72, 110, 60])),
-        ("orc", recolor([120, 140, 95], [92, 70, 55])),
-        ("skeleton", recolor([226, 223, 211], [198, 194, 180])),
-        ("wolf", recolor([150, 150, 158], [92, 92, 100])),
-    ];
-    let mut css = String::new();
-    for (class, pal) in &variants {
-        let uri = bake_facing(&rig, pal, 0, &p).to_png_data_uri();
-        css.push_str(&format!(
-            ".token-{class} {{ background-image: url(\"{uri}\"); \
-             background-size: contain; background-position: bottom center; }}\n"
-        ));
-    }
-    css
-}

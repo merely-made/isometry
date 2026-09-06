@@ -217,11 +217,16 @@ impl UiState {
             .collect();
         let mut visible = HashSet::new();
         for (at, radius) in origins {
-            let rules = SightRules {
+            let rules = isometry_core::HeightSightRules {
                 radius,
-                opaque: &|kind| kind == "tree" || kind == "wall",
+                eye_height: 1,
+                obstacle_height: &|kind| match kind {
+                    "tree" | "forest-tree" => 3,
+                    "wall" | "tower-wall-east" | "tower-wall-west" => 1,
+                    _ => 0,
+                },
             };
-            visible.extend(visible_from(&self.map, at, &rules));
+            visible.extend(isometry_core::visible_from_height(&self.map, at, &rules));
         }
         self.visible = visible;
         self.explored.extend(self.visible.iter().copied());

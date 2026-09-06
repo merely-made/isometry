@@ -198,6 +198,17 @@ pub fn apply_game(state: &mut GameSnapshot, event: &GameEvent) -> Result<(), Gam
             sync_active_map(state);
             Ok(())
         }
+        GameEvent::CharacterCreated { token, sheet } => {
+            // Validate and insert the token before attaching its sheet. This is
+            // one event, so a rejected placement leaves neither half behind and
+            // a replicated character is never observable without its system
+            // defaults.
+            apply(&mut state.map, &isometry_core::SessionEvent::TokenPlaced(token.clone()))
+                .map_err(GameError::Core)?;
+            state.map.set_sheet(token.id, sheet.clone());
+            sync_active_map(state);
+            Ok(())
+        }
         GameEvent::Fact(fact) => {
             if !fact.id.is_empty() {
                 if let Some(existing) = state.journal.iter().find(|entry| entry.id == fact.id) {

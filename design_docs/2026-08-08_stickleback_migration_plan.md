@@ -9,7 +9,7 @@ plan** and stamped so at the source.
 
 ## 1. The debt
 
-Live `campaign_sync.rs` (isometry-net) still assembles `LogSync` and
+Live `campaign_sync.rs` (isonetry) still assembles `LogSync` and
 `SyncedSpace` directly. That is pre-rebase construction: Isometry doing
 by hand what Stickleback's `JoinedSpace` now owns.
 
@@ -72,3 +72,14 @@ dispositions and the code matches them.
 ## Progress
 
 - **2026-08-08:** founded from the audit; shared-authority plan stamped.
+- **2026-09-04, endpoint-readiness ruling.** K0 will remove Isometry's direct
+  `LogSync`/`SyncedSpace` assembly, but it will not remove endpoint binding:
+  `JoinedSpace::join` still takes the host's already-created p2panda
+  `Endpoint` and `Gossip`. The loaded-machine flake in
+  `host_bridge_delivers_actor_state_to_the_kernel` therefore belongs to the
+  bridge receipt, not to the carrier migration. Its fixed two-second polling
+  budget was replaced in the working tree by a failure-aware 30-second
+  deadline for actor readiness and the returned actor update. The focused test
+  passed once after a clean test-profile build and five immediate repeats,
+  each completing in 0.16-0.29 seconds. K0 remains required for the ownership
+  reasons in §2.

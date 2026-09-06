@@ -13,11 +13,9 @@ use isometry_campaign::{
     CampaignMap, CampaignStore, EquipmentSlot, Inventory, ItemId, ItemInstance, MapPoint, MapScale,
     MapTransition,
 };
-use isometry_core::{
-    Facing, MapDocument, SessionEvent, SheetData, Token, TokenId, TurnList,
-};
-use isometry_net::sim::Sim;
-use isometry_net::{
+use isometry_core::{Facing, MapDocument, SessionEvent, SheetData, Token, TokenId, TurnList};
+use isonetry::sim::Sim;
+use isonetry::{
     GameError, GameEvent, GameSnapshot, GameSourceHistory, HostSession, PeerId, RequestId,
     TransitionResolved, apply_game, resolve_transition,
 };
@@ -25,6 +23,33 @@ use isometry_net::{
 /// Two prepared maps joined by a door. `field` holds A's knight and a goblin
 /// that is DM furniture, so the knight is the last player out and the board
 /// follows it through; `hut`'s entry door faces back.
+#[test]
+fn uncontrolled_faction_residents_do_not_hold_the_party_board() {
+    let mut state = origin();
+    state.map.tokens[0].at = (3, 3);
+    state.world.factions.insert(
+        "scavengers".to_owned(),
+        isometry_campaign::WorldFaction {
+            id: "scavengers".to_owned(),
+            name: "Scavengers".to_owned(),
+            tags: vec![],
+            claims: vec![],
+        },
+    );
+    state.map.tokens[1].owner = Some("scavengers".to_owned());
+    let result = resolve_transition(&state, TokenId(1), RequestId::host(901)).unwrap();
+    assert_eq!(result.activated.as_deref(), Some("hut"));
+    state
+        .world
+        .faction_control
+        .insert("scavengers".to_owned(), "B".to_owned());
+    let result = resolve_transition(&state, TokenId(1), RequestId::host(902)).unwrap();
+    assert!(
+        result.activated.is_none(),
+        "a player-controlled faction still holds the board"
+    );
+}
+
 fn origin() -> GameSnapshot {
     let mut field_doc = MapDocument::new("field", 8, 8);
     let grass = field_doc.intern_tile_kind("grass");
@@ -93,7 +118,7 @@ fn origin() -> GameSnapshot {
         active_map: Some("field".to_owned()),
         world: Default::default(),
         clocks: Default::default(),
-        party_cap: isometry_net::default_party_cap(),
+        party_cap: isonetry::default_party_cap(),
         last_beats: Vec::new(),
         beat_seq: 0,
         applied_actions: Default::default(),
@@ -223,7 +248,10 @@ fn a_doorway_crossing_names_every_consequence() {
     assert_eq!(host.clocks.get("hut").copied(), Some(5));
     let field = &host.maps["field"].document;
     assert!(field.token(TokenId(1)).is_none(), "it left the field");
-    assert!(field.token(TokenId(2)).is_some(), "the furniture stayed home");
+    assert!(
+        field.token(TokenId(2)).is_some(),
+        "the furniture stayed home"
+    );
     assert_converged(&sim);
 }
 
@@ -231,13 +259,18 @@ fn a_doorway_crossing_names_every_consequence() {
 fn an_identity_collision_is_named_with_the_inventory_that_follows_it() {
     let mut base = origin();
     // The hut already has a resident holding the knight's id.
-    base.maps.get_mut("hut").unwrap().document.tokens.push(Token {
-        id: TokenId(1),
-        at: (4, 4),
-        facing: Facing::South,
-        sprite: "goblin".to_owned(),
-        owner: None,
-    });
+    base.maps
+        .get_mut("hut")
+        .unwrap()
+        .document
+        .tokens
+        .push(Token {
+            id: TokenId(1),
+            at: (4, 4),
+            facing: Facing::South,
+            sprite: "goblin".to_owned(),
+            owner: None,
+        });
     let mut sim = Sim::new(HostSession::new(base));
     sim.connect(PeerId(10));
     sim.host_event(GameEvent::InventorySet {
@@ -255,11 +288,20 @@ fn an_identity_collision_is_named_with_the_inventory_that_follows_it() {
 
     sim.host_event(GameEvent::TransitionResolved(ruled));
     let host = sim.host.state();
-    assert!(host.inventories.contains_key(&TokenId(3)), "the sword crossed");
+    assert!(
+        host.inventories.contains_key(&TokenId(3)),
+        "the sword crossed"
+    );
     assert!(!host.inventories.contains_key(&TokenId(1)));
-    let resident = host.map.token(TokenId(1)).expect("the resident kept its id");
+    let resident = host
+        .map
+        .token(TokenId(1))
+        .expect("the resident kept its id");
     assert_eq!(resident.sprite, "goblin");
-    assert_eq!(host.map.token(TokenId(3)).map(|t| t.sprite.as_str()), Some("knight"));
+    assert_eq!(
+        host.map.token(TokenId(3)).map(|t| t.sprite.as_str()),
+        Some("knight")
+    );
     assert_converged(&sim);
 }
 
@@ -287,7 +329,11 @@ fn a_late_joiner_reconstructs_the_crossing_from_the_log_alone() {
     let seq_at_join = sim.host.seq();
     sim.connect(PeerId(20));
     let joiner = &sim.clients[&PeerId(20)];
-    assert_eq!(joiner.state(), Some(sim.host.state()), "the arrival is state");
+    assert_eq!(
+        joiner.state(),
+        Some(sim.host.state()),
+        "the arrival is state"
+    );
     assert_eq!(joiner.log_hash(), hash_at_join);
     assert_eq!(joiner.applied(), seq_at_join);
 

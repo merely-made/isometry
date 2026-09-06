@@ -56,6 +56,14 @@ fn proposal_details(value: &GenValue) -> Vec<String> {
             map.map.name, map.scale, map.map.width, map.map.height
         )
     }));
+    details.extend(campaign.maps.iter().flat_map(|map| {
+        map.inhabitants.iter().map(move |inhabitant| {
+            format!(
+                "Inhabitant: {} in {} ({}, {})",
+                inhabitant.name, map.map.name, inhabitant.at.col, inhabitant.at.row
+            )
+        })
+    }));
     details.extend(
         campaign
             .world

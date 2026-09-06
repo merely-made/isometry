@@ -361,7 +361,14 @@ impl HostSession {
             }
         }
 
-        let mut events = vec![GameEvent::Generation(record)];
+        // The generation receipt is public, while the draft's secrets are
+        // host-private campaign state. Keep the original `draft` above for
+        // staging, then redact only the public record that enters the log.
+        let mut public_record = record;
+        if let isometry_campaign::GenValue::Campaign { campaign } = &mut public_record.proposal {
+            campaign.secrets.clear();
+        }
+        let mut events = vec![GameEvent::Generation(public_record)];
         events.extend(
             draft
                 .public_world_events()
@@ -370,8 +377,7 @@ impl HostSession {
         );
         for draft_map in &draft.maps {
             let map = draft_map
-                .map
-                .lower(draft_map.scale)
+                .lower()
                 .map_err(|error| format!("campaign map is invalid: {error}"))?;
             events.push(GameEvent::MapStored(map));
         }

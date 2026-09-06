@@ -8,8 +8,8 @@
 use isometry_core::{
     Beat, Facing, MapDocument, RollRecord, SheetData, SheetDelta, Token, TokenId, TurnList,
 };
-use isometry_net::sim::Sim;
-use isometry_net::{
+use isonetry::sim::Sim;
+use isonetry::{
     ActionIntent, ActionResolved, ClientSession, GameEvent, GameSnapshot, HostSession, NetMessage,
     PeerId, Recipient, RequestId, PROTOCOL_VERSION,
 };
@@ -49,7 +49,7 @@ fn snapshot() -> GameSnapshot {
         active_map: None,
         world: Default::default(),
         clocks: Default::default(),
-        party_cap: isometry_net::default_party_cap(),
+        party_cap: isonetry::default_party_cap(),
         last_beats: Vec::new(),
         beat_seq: 0,
         applied_actions: Default::default(),
@@ -72,6 +72,22 @@ fn roll(total: i32) -> RollRecord {
         dice: vec![14],
         total,
     }
+}
+
+#[test]
+fn character_created_round_trips_in_the_binary_envelope() {
+    let event = GameEvent::CharacterCreated {
+        token: Token {
+            id: TokenId(7),
+            at: (3, 1),
+            facing: Facing::East,
+            sprite: "hero".to_owned(),
+            owner: Some("A".to_owned()),
+        },
+        sheet: sheet("Ari", 11),
+    };
+    let bytes = postcard::to_allocvec(&event).expect("event encodes");
+    assert_eq!(postcard::from_bytes::<GameEvent>(&bytes).expect("event decodes"), event);
 }
 
 /// A hit answering `request`, shaped as the rules system produces it.

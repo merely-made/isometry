@@ -107,7 +107,7 @@ player types a question
         │
         ▼
 [6] replicate to players             iroh, players are pure receivers
-    (isometry-net)
+    (isonetry)
 ```
 
 Steps 1, 5, and 6 are pure substrate and exist today. Steps 2 and 3 are the context projection and the driver seam. Step 4 is the buffered-checkpoint gate (the spike). Secrets referenced in step 3 must be system-partitioned per 1.3, not merely withheld by a cooperative model.
@@ -189,7 +189,7 @@ Two findings shape the design more than model choice:
 
 ### 3.5 Recommended architecture: one seam, DM-only, external-first, burn-eventual
 
-A single trait seam (`DialogEngine` / `NpcBrain`, new crate e.g. `isometry-brain`) shaped on the **OpenAI chat+tools** contract, which all three candidate runtimes speak. Tools bridge to `isometry-system` Lua actions and `isometry-core` reads; results and streamed text propagate over `isometry-net`.
+A single trait seam (`DialogEngine` / `NpcBrain`, new crate e.g. `isometry-brain`) shaped on the **OpenAI chat+tools** contract, which all three candidate runtimes speak. Tools bridge to `isometry-system` Lua actions and `isometry-core` reads; results and streamed text propagate over `isonetry`.
 
 | Engine | Cross-platform GPU (4 targets) | Tool calling | In-process | Verdict |
 |---|---|---|---|---|

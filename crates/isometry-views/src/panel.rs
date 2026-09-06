@@ -390,6 +390,7 @@ fn turns_section(ui: &UiState) -> UiChild {
                 "div",
                 (
                     action_button("Sheet", true, |ui| ui.open_or_bind_sheet()),
+                    action_button("Character", ui.can_edit_inventory, |ui| ui.open_character()),
                     action_button("Bestiary", true, |ui| ui.open_compendium()),
                     action_button("Generate", ui.can_edit_inventory, |ui| ui.open_generator()),
                     action_button("Story", ui.can_edit_inventory, |ui| ui.open_storylets()),

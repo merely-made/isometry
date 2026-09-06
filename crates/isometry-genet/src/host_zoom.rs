@@ -305,7 +305,10 @@ fn the_panel_toggle_relayouts_the_board() {
     harness.relayout();
     assert!(!harness.state().integer_pixel_rounding);
     let (_, _, raw_w, _) = rect(&harness, "tile");
-    assert_eq!(raw_w, 32.0, "off, the board is back to the sheet's geometry");
+    assert_eq!(
+        raw_w, 32.0,
+        "off, the board is back to the sheet's geometry"
+    );
 
     assert!(harness.click_on(&Selector::class("px-grid")));
     harness.relayout();
@@ -336,7 +339,9 @@ fn a_click_still_lands_on_the_tile_under_it_at_a_fractional_zoom() {
 
     let class_at = |harness: &mut BoardHarness| {
         harness.move_to(x, y);
-        let hit = harness.hit().expect("something is painted under the pointer");
+        let hit = harness
+            .hit()
+            .expect("something is painted under the pointer");
         harness
             .with_dom(|dom| {
                 dom.attribute(hit, &Namespace::from(""), &LocalName::from("class"))
@@ -360,7 +365,6 @@ fn a_click_still_lands_on_the_tile_under_it_at_a_fractional_zoom() {
         "the tile under the pointer is the one that got selected"
     );
 }
-
 
 /// A whisper draft typed into the composer, the state the diet's transient
 /// table measures. The same 19 characters `selftest::maybe_whisper_selftest`

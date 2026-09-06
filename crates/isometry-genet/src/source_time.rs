@@ -27,7 +27,7 @@ impl App {
         let source = self
             .history_origin
             .clone()
-            .map(|origin| isometry_net::GameSourceHistory::new(origin, self.history.clone()));
+            .map(|origin| isonetry::GameSourceHistory::new(origin, self.history.clone()));
         let next_len = source.as_ref().map(|source| source.live_cursor() as usize);
         if self.source_history_attached && next_len == self.source_history_len {
             return;

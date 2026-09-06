@@ -285,6 +285,43 @@ fn typing_a_whisper_reaches_the_field_and_enter_sends_it() {
     );
 }
 
+/// The character panel's name is another host-owned text lane. Its shortcut
+/// letters must reach the `TextInput`, never trigger board verbs such as `w`.
+#[test]
+fn typing_a_character_name_reaches_the_creation_field() {
+    let mut harness = board();
+    harness.update(|ui| ui.open_character());
+    assert!(harness.state().character_open);
+    assert!(
+        hooks::focused_text(harness.runner()).is_some(),
+        "opening character creation put the caret in its name field"
+    );
+    assert_focused_field_is_drawn(&harness, "the character name field");
+
+    for c in ["w", "i", "n"] {
+        harness.key_char(c);
+    }
+
+    assert_eq!(harness.state().character_name.text(), "win");
+    assert!(
+        !harness.state().composing,
+        "w belonged to the name field, not the whisper shortcut"
+    );
+
+    assert!(
+        harness.click_on(&Selector::class("character-owner")),
+        "the optional owner field has a live hit box"
+    );
+    assert!(
+        hooks::focused_text(harness.runner()).is_some(),
+        "clicking owner moved the host text focus"
+    );
+    for c in ["m", "i", "r", "a"] {
+        harness.key_char(c);
+    }
+    assert_eq!(harness.state().character_owner.text(), "mira");
+}
+
 /// Typing in the compendium filters its index.
 ///
 /// The receipt is the *rendered* index, not the query string: what the filter

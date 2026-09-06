@@ -258,7 +258,7 @@ call and are recorded here as the closing step, not performed by this plan.
   p2panda resolution failure (mere-transport now wants
   `mere-p2panda-net =0.7.2`); the lock was refreshed, which pulled sceno
   0.0.4 and a newer fork rev, and `--all-features` now fails with six
-  errors in isometry-net's campaign lanes against the fork's API. Isometry
+  errors in isonetry's campaign lanes against the fork's API. Isometry
   does not mirror mere's `tag = "mere-p2panda-net-0.7.2"` block.
   **Behavior changes recorded:** a side-panel press no longer dismisses an
   open token menu; a paint drag begun over an overlay paints beneath it;
@@ -335,7 +335,7 @@ call and are recorded here as the closing step, not performed by this plan.
   finding is recorded in the stickleback migration plan for K0.
   `cargo check --workspace --all-features --all-targets` green; tests 302
   under all features against 293 default; zero unused-patch lines; from
-  outside the repo `isometry-net --all-features` compiles clean.
+  outside the repo `isonetry --all-features` compiles clean.
 - **2026-09-03, M3 and the three follow-ons landed in the working tree
   (uncommitted).** Whisper composer and compendium search are `TextInput`s
   under `caret_text_field` (in-flow caret, matching the command line);
@@ -429,3 +429,9 @@ call and are recorded here as the closing step, not performed by this plan.
   crates land in mere. Woodshed's bump stays deferred for the reason
   recorded above, and now also owes the `Accessibility::sync` signature
   change and the new trackpad wheel feel.
+- **2026-09-04, two recorded host gaps closed in the working trees.**
+  Cambium's `AppCtx` now exposes read-only `painted_rect(NodeId)` geometry,
+  while `HostPointer` has a one-shot `SecondaryPress`. Isometry uses the
+  geometry seam for the Turns headed self-test. The 23 rootstock tests, the
+  native host check, and `cargo check -p isometry-genet` are green. Beat timing
+  remains a separate issue and keeps the recorded 750 ms behavior in this cut.

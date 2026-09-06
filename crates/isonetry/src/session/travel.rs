@@ -64,7 +64,10 @@ pub fn resolve_transition(
                 .map(|c| (c.col as i32, c.row as i32))
         })
         .unwrap_or((1, 1));
-    let (w, h) = (target.document.ground.width(), target.document.ground.height());
+    let (w, h) = (
+        target.document.ground.width(),
+        target.document.ground.height(),
+    );
     let occupied: Vec<TileCoord> = target.document.tokens.iter().map(|t| t.at).collect();
     let mut landing = anchor;
     for d in 0..64 {
@@ -119,11 +122,15 @@ pub fn resolve_transition(
 
     // The board follows the last player out. Read here, with the traveler still
     // standing on the near side, so "is anyone left" means anyone but it.
-    let others_remain = state
-        .map
-        .tokens
-        .iter()
-        .any(|t| t.id != token && t.owner.is_some());
+    let others_remain = state.map.tokens.iter().any(|t| {
+        t.id != token
+            && t.owner.as_deref().is_some_and(|owner| {
+                // Faction-owned residents are not a player party unless the
+                // campaign has assigned that faction to a player controller.
+                !state.world.factions.contains_key(owner)
+                    || state.world.faction_controller(owner).is_some()
+            })
+    });
     let activated = (!others_remain).then(|| to_map.clone());
 
     Ok(TransitionResolved {
@@ -197,7 +204,9 @@ pub(crate) fn apply_transition(
         }
     }
 
-    state.clocks.insert(res.to_map.clone(), res.destination_clock);
+    state
+        .clocks
+        .insert(res.to_map.clone(), res.destination_clock);
 
     if let Some(id) = &res.activated {
         let document = state

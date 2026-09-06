@@ -30,7 +30,7 @@ already uses for tactical actions, extended to the two travel paths.
 
 ## 3. Protocol envelope hardening
 
-`ActionIntent` / `ActionResolved` (isometry-net `protocol.rs`) gain, as
+`ActionIntent` / `ActionResolved` (isonetry `protocol.rs`) gain, as
 one versioned change:
 
 - an explicit **protocol version**;
@@ -84,7 +84,7 @@ two-peer receipt exists.
   handshake gives: the client's `Hello` and the host's `Snapshot` are
   each the first thing that side sends. Both are also already
   asymmetric-first messages, so no new round trip was added.
-  (`crates/isometry-net/src/protocol.rs`, `PROTOCOL_VERSION`.)
+  (`crates/isonetry/src/protocol.rs`, `PROTOCOL_VERSION`.)
 
 - **2026-08-08.** **`apply_game` was the only honest home for the
   idempotency ledger.** Three separate call sites apply events: the host
@@ -222,7 +222,7 @@ two-peer receipt exists.
   ledger is in the snapshot rather than in a session, every application
   site is covered at once, including the source-time replay.
 
-  **Receipts.** `crates/isometry-net/tests/protocol_envelope.rs`:
+  **Receipts.** `crates/isonetry/tests/protocol_envelope.rs`:
   `a_duplicate_resolution_is_a_no_op` (whole-snapshot equality after the
   second apply, plus named assertions that hit points, the roll log, and
   `beat_seq` are each unmoved, and that host and client log hashes still
@@ -244,7 +244,7 @@ two-peer receipt exists.
   `isometry-views` (55) and `isometry-genet` (5) also pass, and
   `cargo check --workspace --all-features --all-targets` is clean apart
   from `isometry-graphshell` (see Findings). `cargo clippy -p
-  isometry-net --all-targets` produces exactly the warning counts it
+  isonetry --all-targets` produces exactly the warning counts it
   produced before this change.
 
   **Breaking wire change, as the plan expects.** `ActionResolved` and
@@ -296,7 +296,7 @@ two-peer receipt exists.
   authority), and the sim tests' `cross` helper. `intent_refusal` refuses
   a client-sent `TransitionResolved` as the verdict it now is.
 
-  **Receipts.** `crates/isometry-net/tests/transition_resolution.rs`:
+  **Receipts.** `crates/isonetry/tests/transition_resolution.rs`:
   `a_doorway_crossing_names_every_consequence` (whole-payload equality
   against the values the old derivation produced for the same fixture,
   then the applied board);
@@ -316,12 +316,12 @@ two-peer receipt exists.
   cannot_rule_it` moved its refusal to where the ruling is: an off-door
   crossing now fails at `resolve_transition` and mints no event at all.
 
-  **Re-greened.** `cargo test -p isometry-net --all-features`: 11 lib
+  **Re-greened.** `cargo test -p isonetry --all-features`: 11 lib
   (including the iroh transport's), 5 `protocol_envelope.rs`, 43
   `replication.rs`, 5 new. `isometry-core` (56), `isometry-views` (55),
   `isometry-genet` (5). `cargo check --workspace --all-features
   --all-targets` clean apart from `isometry-graphshell` (see Findings).
-  `cargo clippy -p isometry-net --all-targets` produces the identical
+  `cargo clippy -p isonetry --all-targets` produces the identical
   warning set to HEAD, verified by stashing this work and re-running.
   Headed runtime receipt: `ISOMETRY_TRAVEL_SELFTEST=1` walks the knight
   onto the field's door at (12, 14); the board follows it to `hut`, it

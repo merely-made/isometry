@@ -6,7 +6,7 @@ members = [
     "crates/isometry-graphshell",
     "crates/isometry-views",
     "crates/isometry-genet",
-    "crates/isometry-net",
+    "crates/isonetry",
     "crates/isometry-system",
     "crates/isometry-voxel",
 ]
@@ -25,7 +25,7 @@ isometry-core = { path = "crates/isometry-core", version = "0.1.0" }
 isometry-campaign = { path = "crates/isometry-campaign", version = "0.1.0" }
 isometry-voxel = { path = "crates/isometry-voxel", version = "0.1.0" }
 isometry-views = { path = "crates/isometry-views", version = "0.1.0" }
-isometry-net = { path = "crates/isometry-net", version = "0.1.0" }
+isonetry = { path = "crates/isonetry", version = "0.1.0" }
 isometry-system = { path = "crates/isometry-system", version = "0.1.0" }
 # Private host-side choice receipts. The committed source stays on Git; a local
 # Cleromancy checkout is supplied by the machine-local source patch during
@@ -40,7 +40,7 @@ postcard = { version = "1", features = ["alloc"], default-features = false }
 # backend for private desktop campaign state; the future web host can swap
 # the backend without changing campaign data.
 muniment = { git = "https://github.com/merely-made/mere.git", branch = "main" }
-# Host-neutral actor runtime for background host/session work. The SerVal
+# Host-neutral actor runtime for background host/session work. The Genet
 # application owns its state on the winit thread and drains typed updates.
 armillary = { git = "https://github.com/merely-made/mere.git", branch = "main" }
 personae = { git = "https://github.com/merely-made/mere.git", branch = "main" }
@@ -58,7 +58,7 @@ murm = { git = "https://github.com/merely-made/mere.git", branch = "main" }
 p2panda-core = "0.7.0"
 # The net crate is the **published** `mere-p2panda-net =0.7.2`, taken exactly
 # as `mere-transport` and `stickleback` take it: same package, same exact
-# version, same features. isometry-net composes `LogSync` on the endpoint
+# version, same features. isonetry composes `LogSync` on the endpoint
 # `P2pandaTransport::sync_parts` hands it, so a different dep line here lands a
 # second net crate and the endpoint types stop matching. Every feature except
 # `sqlite`: the address book runs on stickleback's muniment-backed store, and
@@ -191,7 +191,7 @@ ipc-channel = { git = "https://github.com/merely-made/genet.git", rev = "115d348
 # other, so repointing one alone lands two `p2panda-core` copies and the trait
 # bounds stop matching. `p2panda-sync` is patched even though nothing but the
 # net crate reaches it in mere, because this workspace declares it directly for
-# isometry-net's LogSync composition and would otherwise pull a registry copy.
+# isonetry's LogSync composition and would otherwise pull a registry copy.
 #
 # The reference is mere's, and it is the immutable release tag rather than a
 # branch: a branch lets the two workspaces drift a commit apart, which is the

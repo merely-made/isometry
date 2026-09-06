@@ -10,74 +10,15 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use cambium_genet_winit_host::{
-    CloseDisposition, FocusedTextSlot, HostHooks, HostWake, HostWindow, Init, Key, KeyPress,
-    NamedKey,
+    CloseDisposition, HostHooks, HostWake, HostWindow, Init, Key, KeyPress, NamedKey,
 };
-use genet_scripted_dom::NodeId;
-use layout_dom_api::{LayoutDom as _, LocalName, Namespace};
 
 use super::*;
 
-/// Isometry's three editable lanes.
-#[derive(Clone, Copy, PartialEq, Eq)]
-enum Lane {
-    /// The side panel's `>` command line.
-    Command,
-    /// The side panel's whisper composer.
-    Whisper,
-    /// The compendium index's filter.
-    Search,
-}
+mod text;
 
-/// Which lane holds the caret, and the `<input>` node that carries it.
-///
-/// Recognized by the class of the field's wrapper, the way woodshed recognizes
-/// its two: the DOM the host hands back is the only place the app and the host
-/// can agree on which control has the caret. Those three class names are
-/// therefore load-bearing — `panel.rs` and `compendium.rs` set them, and a
-/// rename in either place breaks typing rather than styling.
-fn focused_lane(runner: &Runner) -> Option<(NodeId, Lane)> {
-    let node = runner.focus()?;
-    let dom = runner.dom();
-    let dom = dom.borrow();
-    if dom.element_name(node)?.local.as_ref() != "input" {
-        return None;
-    }
-    let parent = dom.parent(node)?;
-    let lane = match dom.attribute(parent, &Namespace::from(""), &LocalName::from("class"))? {
-        "cmd-line" => Lane::Command,
-        "compose-line" => Lane::Whisper,
-        "search-field" => Lane::Search,
-        _ => return None,
-    };
-    Some((node, lane))
-}
-
-/// The text seam: which field has the caret, and how to reach its `TextInput`.
-///
-/// All three lanes ride `caret_text_field` as of M3, so the host owns the
-/// caret, the selection, drag-selection, visual caret movement and IME in each
-/// of them, and no key is rebuilt into a `String` on this side any more.
-pub(crate) fn focused_text(runner: &Runner) -> Option<FocusedTextSlot<UiState>> {
-    let (node, lane) = focused_lane(runner)?;
-    Some(match lane {
-        Lane::Command => FocusedTextSlot {
-            node,
-            get: Box::new(|ui: &UiState| &ui.command_draft),
-            get_mut: Box::new(|ui: &mut UiState| &mut ui.command_draft),
-        },
-        Lane::Whisper => FocusedTextSlot {
-            node,
-            get: Box::new(|ui: &UiState| &ui.whisper_draft),
-            get_mut: Box::new(|ui: &mut UiState| &mut ui.whisper_draft),
-        },
-        Lane::Search => FocusedTextSlot {
-            node,
-            get: Box::new(|ui: &UiState| &ui.compendium_search),
-            get_mut: Box::new(|ui: &mut UiState| &mut ui.compendium_search),
-        },
-    })
-}
+pub(crate) use text::focused_text;
+use text::{Lane, focused_lane};
 
 /// Whether `press` is this character with no command chord held.
 fn plain_char(press: &KeyPress, want: &str) -> bool {
@@ -125,6 +66,9 @@ pub(crate) fn key_intercept(runner: &mut Runner, press: &KeyPress) -> bool {
                 Lane::Command => runner.update(|ui| ui.command_cancel()),
                 Lane::Whisper => runner.update(|ui| ui.compose_cancel()),
                 Lane::Search => runner.update(|ui| ui.compendium_escape()),
+                Lane::CharacterName | Lane::CharacterOwner => {
+                    runner.update(|ui| ui.close_character())
+                },
             }
             return true;
         }
@@ -134,7 +78,10 @@ pub(crate) fn key_intercept(runner: &mut Runner, press: &KeyPress) -> bool {
                 Lane::Whisper => runner.update(|ui| ui.compose_send()),
                 // The filter has nothing to submit, but Enter must not reach
                 // `end_turn` behind an open compendium either.
-                Lane::Search => {}
+                Lane::Search => {},
+                Lane::CharacterName | Lane::CharacterOwner => {
+                    runner.update(|ui| ui.create_character())
+                },
             }
             return true;
         }
@@ -147,6 +94,14 @@ pub(crate) fn key_intercept(runner: &mut Runner, press: &KeyPress) -> bool {
     if runner.state().compendium_open {
         if named(press, NamedKey::Escape) {
             runner.update(|ui| ui.compendium_escape());
+        }
+        return true;
+    }
+    // The creation panel has no board verb behind it. Its name field normally
+    // owns focus; this also covers a focus loss before Escape arrives.
+    if runner.state().character_open {
+        if named(press, NamedKey::Escape) {
+            runner.update(|ui| ui.close_character());
         }
         return true;
     }
@@ -220,7 +175,7 @@ pub(crate) fn init(
                 .filter(|&n| n > 1)
                 .unwrap_or(30);
             synth_map(n, n)
-        }
+        },
         Err(_) => demo_map(),
     };
     let can_restore = !matches!(app.net_intent.as_ref(), Some(NetIntent::Join(_)));
@@ -240,7 +195,7 @@ pub(crate) fn init(
                     app.source_history_attached = false;
                     restored_public = Some(checkpoint.public);
                     restore_status = Some(format!("restored campaign {name}"));
-                }
+                },
                 Ok(None) => restore_status = Some(format!("campaign {name} has no checkpoint")),
                 Err(error) => restore_status = Some(format!("campaign restore failed: {error}")),
             }
@@ -290,7 +245,7 @@ pub(crate) fn init(
         app.ensure_history_origin(&initial_snapshot);
     }
     if let Some(origin) = app.history_origin.clone() {
-        ui.set_overmap_source_history(Some(isometry_net::GameSourceHistory::new(
+        ui.set_overmap_source_history(Some(isonetry::GameSourceHistory::new(
             origin,
             app.history.clone(),
         )));
@@ -336,7 +291,7 @@ pub(crate) fn init(
                 },
                 wake.callback(),
             ));
-        }
+        },
         Some(NetIntent::Join(ticket)) => {
             ui.net_mode = NetMode::Remote;
             ui.can_edit_inventory = false;
@@ -349,8 +304,8 @@ pub(crate) fn init(
                 Role::Client { ticket, name },
                 wake.callback(),
             ));
-        }
-        None => {}
+        },
+        None => {},
     }
     // Boot clock. The net selftest waits on it, and so does the combat
     // selftest, which runs solo (there is no session to wait for).
@@ -441,11 +396,11 @@ impl App {
                         );
                         self.last_overmap_swatch = Some(swatch);
                     }
-                }
+                },
                 None => {
                     ctx.leaves.remove(&isometry_views::OVERMAP_LEAF_KEY);
                     self.last_overmap_swatch = None;
-                }
+                },
             }
         } else if self.last_overmap_swatch.is_some() {
             ctx.leaves.remove(&isometry_views::OVERMAP_LEAF_KEY);
@@ -469,12 +424,12 @@ impl App {
                 self.beat_until = None;
                 ctx.runner.update(|ui| ui.clear_beats());
                 false
-            }
+            },
             Some(_) => true,
             None => {
                 self.beat_until = Some(Instant::now() + BEAT_HOLD);
                 true
-            }
+            },
         }
     }
 
@@ -494,8 +449,9 @@ impl App {
                 return;
             };
             let path = dir.join("isometry_capture.png");
+            let pending = dir.join("isometry_capture.png.tmp");
             if let Err(e) = std::fs::create_dir_all(&dir).and_then(|_| {
-                let file = std::fs::File::create(&path)?;
+                let file = std::fs::File::create(&pending)?;
                 let mut enc = png::Encoder::new(std::io::BufWriter::new(file), width, height);
                 enc.set_color(png::ColorType::Rgba);
                 enc.set_depth(png::BitDepth::Eight);
@@ -503,6 +459,8 @@ impl App {
                 writer
                     .write_image_data(&frame.rgba)
                     .map_err(std::io::Error::other)?;
+                writer.finish().map_err(std::io::Error::other)?;
+                std::fs::rename(&pending, &path)?;
                 Ok(())
             }) {
                 eprintln!("[isometry] capture failed: {e}");
@@ -518,11 +476,13 @@ impl App {
     fn selftests_pending(&self) -> bool {
         (self.travel_selftest && !self.travel_fired)
             || (self.cmd_selftest && !self.cmd_fired)
+            || (self.watchtower_selftest && !self.watchtower_fired)
             || (self.convince_selftest && !self.convince_fired)
             || (self.storylet_selftest && !self.storylet_fired)
             || (self.overmap_selftest && !self.overmap_fired)
             || (self.compendium_selftest && !self.compendium_fired)
             || (self.whisper_selftest && !self.whisper_fired)
+            || (self.turns_selftest && !self.turns_fired)
             || (self.net_selftest && !self.selftest_fired)
             || (self.combat_selftest && !(self.combat_swings == 0 && self.combat_emoted))
     }
@@ -532,11 +492,13 @@ impl App {
         self.maybe_combat_selftest(ctx);
         self.maybe_travel_selftest(ctx);
         self.maybe_cmd_selftest(ctx);
+        self.maybe_watchtower_selftest(ctx);
         self.maybe_convince_selftest(ctx);
         self.maybe_storylet_selftest(ctx);
         self.maybe_overmap_selftest(ctx);
         self.maybe_compendium_selftest(ctx);
         self.maybe_whisper_selftest(ctx);
+        self.maybe_turns_selftest(ctx);
         if self.net.is_some() {
             self.maybe_selftest(ctx);
         }

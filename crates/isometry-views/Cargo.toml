@@ -10,7 +10,7 @@ description = "Isometry's Cambium view layer: board + chrome view fns and the CS
 [dependencies]
 isometry-core = { workspace = true }
 isometry-campaign = { workspace = true }
-isometry-net = { workspace = true }
+isonetry = { workspace = true }
 isometry-voxel = { workspace = true }
 muniment = { workspace = true }
 cambium = { workspace = true }

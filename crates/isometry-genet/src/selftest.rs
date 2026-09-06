@@ -9,7 +9,7 @@
 //! Split out of `main.rs` on 2026-07-24, and grouped into the modules below
 //! on 2026-09-04; behavior unchanged both times.
 
-use cambium_genet_winit_host::{Key, KeyPress, NamedKey};
+use cambium_genet_winit_host::{HostPointer, Key, KeyPress, NamedKey};
 use layout_dom_api::{LayoutDom as _, LocalName, Namespace};
 
 use super::*;
@@ -18,6 +18,7 @@ mod adjudicate;
 mod session;
 mod surfaces;
 mod world;
+mod watchtower;
 
 // The 2026-09-04 split moved the lanes into the modules above, grouped by
 // what each one drives; this file keeps the shared imports and the four

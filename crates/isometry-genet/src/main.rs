@@ -38,7 +38,8 @@
 //! `ISOMETRY_OVERMAP_SELFTEST=1` (overmap capture),
 //! `ISOMETRY_OVERMAP_SOURCE_TIME_SELFTEST=1` (historical-overmap capture),
 //! `ISOMETRY_COMPENDIUM_SELFTEST=1` and `ISOMETRY_WHISPER_SELFTEST=1` (the two
-//! M3 text lanes, typed through the field and held open for a capture).
+//! M3 text lanes, typed through the field and held open for a capture), and
+//! `ISOMETRY_TURNS_SELFTEST=1` (collapse the Turns section through its trigger).
 
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -49,9 +50,10 @@ use isometry_campaign::{
     ItemInstance, MapScale, WorldEvent, WorldFact,
 };
 use isometry_core::{
-    Facing, FieldValue, MapDocument, Rng, SessionEvent, SheetData, TileCoord, Token, TokenId,
+    apply, Facing, FieldValue, MapDocument, Rng, SessionEvent, SheetData, TileCoord, Token,
+    TokenId,
 };
-use isometry_net::{
+use isonetry::{
     apply_game, ActionIntent, ActionResolved, GameEvent, GameSnapshot, HostSession, RequestId,
 };
 use isometry_system::{
@@ -78,6 +80,8 @@ mod host_routing;
 // The design fit and the board's pixel grid, on the same harness.
 #[cfg(test)]
 mod host_zoom;
+#[cfg(test)]
+mod watchtower_tests;
 mod net;
 mod overmap;
 mod selection_rows;
@@ -238,6 +242,8 @@ struct App {
     /// full `>gen npc` generate/commit into a statted NPC.
     cmd_selftest: bool,
     cmd_fired: bool,
+    watchtower_selftest: bool,
+    watchtower_fired: bool,
     /// `ISOMETRY_CONVINCE_SELFTEST`: a bard wins a goblin over, then hits the
     /// party cap on the next one. Proves allegiance + the cap + fog.
     convince_selftest: bool,
@@ -264,6 +270,10 @@ struct App {
     /// capture. The headed half of M3's composer lane.
     whisper_selftest: bool,
     whisper_fired: bool,
+    /// `ISOMETRY_TURNS_SELFTEST`: click the Turns disclosure through the
+    /// host's own laid-out geometry and leave the collapsed panel for capture.
+    turns_selftest: bool,
+    turns_fired: bool,
     /// `ISOMETRY_COMBAT_SELFTEST`: drive a short adjudicated exchange on boot.
     combat_selftest: bool,
     /// Swings left to throw, when the last one landed, and whether the winner
@@ -395,6 +405,8 @@ fn generator_pack_roots() -> Vec<std::path::PathBuf> {
             .join("../isometry-system/examples/packs/core"),
         std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../isometry-system/examples/packs/demo"),
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../isometry-system/examples/packs/watchtower"),
     ];
     let local = std::path::PathBuf::from("packs");
     if local.is_dir() {
@@ -491,6 +503,8 @@ impl App {
             travel_fired: false,
             cmd_selftest: std::env::var_os("ISOMETRY_CMD_SELFTEST").is_some(),
             cmd_fired: false,
+            watchtower_selftest: std::env::var_os("ISOMETRY_WATCHTOWER_SELFTEST").is_some(),
+            watchtower_fired: false,
             convince_selftest: std::env::var_os("ISOMETRY_CONVINCE_SELFTEST").is_some(),
             convince_fired: false,
             storylet_selftest: std::env::var_os("ISOMETRY_STORYLET_SELFTEST").is_some(),
@@ -503,6 +517,8 @@ impl App {
             compendium_fired: false,
             whisper_selftest: std::env::var_os("ISOMETRY_WHISPER_SELFTEST").is_some(),
             whisper_fired: false,
+            turns_selftest: std::env::var_os("ISOMETRY_TURNS_SELFTEST").is_some(),
+            turns_fired: false,
             combat_selftest: std::env::var_os("ISOMETRY_COMBAT_SELFTEST").is_some(),
             combat_swings: 4,
             last_swing: None,

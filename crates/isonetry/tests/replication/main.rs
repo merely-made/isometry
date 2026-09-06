@@ -10,7 +10,7 @@ use isometry_campaign::{
     CampaignDraft, CampaignMap, CampaignWorld, DraftMap, EncounterAnchor, EntropyTape,
     EquipmentSlot, GenValue, GenerationRecord, GeneratorRequest, HiddenItemModifier, HistoryEvent,
     Inventory, ItemId, ItemInstance, ItemModifier, ItemModifierKind, ItemProposal,
-    LocalMapProposal, MapCellProposal, MapPoint, MapScale, MapTransition, RevealCondition,
+    LocalMapProposal, MapCellProposal, MapInhabitant, MapPoint, MapScale, MapTransition, RevealCondition,
     RoleSlot, SecretFact, SpawnZone, StoryletEffect, StoryletProposal, StoryletRequirements,
     WorldCharacter, WorldEvent, WorldFact, WorldFaction, WorldLaw, WorldPlace, WorldRoute,
 };
@@ -18,10 +18,10 @@ use isometry_core::{
     Beat, Facing, MapDocument, RollRecord, SessionEvent, SheetData, SheetDelta, Token, TokenId,
     TurnList,
 };
-use isometry_net::sim::Sim;
-use isometry_net::{
-    ActionIntent, ActionResolved, GameError, GameEvent, GameSnapshot, HostSession, PeerId,
-    RequestId, TransitionResolved,
+use isonetry::sim::Sim;
+use isonetry::{
+    ActionIntent, ActionResolved, ClientSession, GameError, GameEvent, GameSnapshot, HostSession,
+    NetMessage, PeerId, Recipient, RequestId, TransitionResolved,
 };
 
 // The 2026-09-04 split moved the tests into the modules below; this file
@@ -29,6 +29,7 @@ use isometry_net::{
 // `use super::*`.
 mod adjudication;
 mod authority;
+mod character;
 mod convergence;
 mod generation;
 mod items;
@@ -71,7 +72,7 @@ fn snapshot() -> GameSnapshot {
         world: Default::default(),
         clocks: Default::default(),
 
-        party_cap: isometry_net::default_party_cap(),
+        party_cap: isonetry::default_party_cap(),
         last_beats: Vec::new(),
         beat_seq: 0,
         applied_actions: Default::default(),

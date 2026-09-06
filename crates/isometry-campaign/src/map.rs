@@ -95,6 +95,10 @@ pub enum MapProposalError {
     MissingDefaultGround,
     OutOfBounds(MapPoint),
     MissingMetadataId(&'static str),
+    InvalidInhabitantId,
+    DuplicateInhabitantId(u32),
+    DuplicateInhabitantPosition(MapPoint),
+    MissingInhabitantField(&'static str),
 }
 
 impl LocalMapProposal {
@@ -195,6 +199,20 @@ impl std::fmt::Display for MapProposalError {
                 )
             }
             Self::MissingMetadataId(kind) => write!(f, "generated {kind} id is required"),
+            Self::InvalidInhabitantId => write!(f, "generated inhabitant id must be nonzero"),
+            Self::DuplicateInhabitantId(id) => {
+                write!(f, "generated inhabitant id is duplicated: {id}")
+            },
+            Self::DuplicateInhabitantPosition(point) => {
+                write!(
+                    f,
+                    "generated inhabitant position is duplicated: {},{}",
+                    point.col, point.row
+                )
+            },
+            Self::MissingInhabitantField(field) => {
+                write!(f, "generated inhabitant {field} is required")
+            },
         }
     }
 }

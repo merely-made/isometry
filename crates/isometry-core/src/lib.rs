@@ -32,4 +32,4 @@ pub use narrate::{bearing, describe_from, describe_scene, describe_token, facing
 pub use overmap::{Overmap, OvermapEdge, OvermapNode};
 pub use path::{path_to, reachable, MoveRules};
 pub use turn::TurnList;
-pub use visibility::{visible_from, visible_tiles, SightRules};
+pub use visibility::{visible_from, visible_from_height, visible_tiles, HeightSightRules, SightRules};

@@ -12,7 +12,7 @@ use super::*;
 /// The app's door sweep in one line: resolve once, on the authority, and
 /// broadcast a payload that names every consequence.
 fn cross(sim: &mut Sim, token: TokenId) {
-    let ruled = isometry_net::resolve_transition(sim.host.state(), token, next_request())
+    let ruled = isonetry::resolve_transition(sim.host.state(), token, next_request())
         .expect("the traveler is standing on a door");
     sim.host_event(GameEvent::TransitionResolved(ruled));
 }
@@ -168,7 +168,7 @@ fn travel_off_a_door_is_refused_and_clients_cannot_rule_it() {
 
     // Not standing on a transition point: there is nothing to rule, so the
     // refusal now happens where the ruling would have, and no event is minted.
-    let ruling = isometry_net::resolve_transition(sim.host.state(), TokenId(1), next_request());
+    let ruling = isonetry::resolve_transition(sim.host.state(), TokenId(1), next_request());
     assert_eq!(ruling, Err(GameError::NotOnTransition(TokenId(1))));
     assert_eq!(sim.host.seq(), seq, "an off-door travel entered the log");
 

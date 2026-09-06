@@ -19,7 +19,11 @@ impl App {
             .started
             .map(|t| t.elapsed() > Duration::from_secs(3))
             .unwrap_or(false);
-        if ready {
+        // A two-machine controller can wait for both initial frames before
+        // releasing the same shipping end-turn path used by this self-test.
+        let released = std::env::var_os("ISOMETRY_NET_SELFTEST_TRIGGER")
+            .is_none_or(|path| std::path::Path::new(&path).exists());
+        if ready && released {
             self.selftest_fired = true;
             eprintln!("[isometry] selftest: firing end_turn");
             {
@@ -27,6 +31,33 @@ impl App {
                 runner.update(|ui| ui.end_turn());
             }
             self.pump_net(ctx);
+        }
+    }
+
+    /// Pair native frame captures with the public state actually mirrored into
+    /// the view. Runs only on a network update and only for opt-in captures.
+    pub(crate) fn capture_network_receipt(&self, ui: &UiState, version: u64) {
+        let Some(directory) = std::env::var_os("ISOMETRY_CAPTURE_DIR") else {
+            return;
+        };
+        let directory = std::path::PathBuf::from(directory);
+        let result = (|| -> Result<(), String> {
+            std::fs::create_dir_all(&directory).map_err(|error| error.to_string())?;
+            let snapshot = self.snapshot_of(ui);
+            let bytes = serde_json::to_vec(&snapshot).map_err(|error| error.to_string())?;
+            let pending = directory.join(format!("network-{version}.json.tmp"));
+            let final_path = directory.join(format!("network-{version}.json"));
+            std::fs::write(&pending, bytes).map_err(|error| error.to_string())?;
+            std::fs::rename(pending, final_path).map_err(|error| error.to_string())?;
+            eprintln!(
+                "[isometry] network receipt: version={version} map={} active={:?}",
+                ui.map.name,
+                ui.turns.active()
+            );
+            Ok(())
+        })();
+        if let Err(error) = result {
+            eprintln!("[isometry] network receipt failed: {error}");
         }
     }
 

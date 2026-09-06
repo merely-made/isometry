@@ -5,11 +5,11 @@ use isometry_campaign::{
     Inventory, ItemId,
 };
 use isometry_core::{
-    apply, distance, reachable, roll, template_tiles, visible_from, Facing, IsoGeometry, Layer,
-    MapDocument, MoveRules, Rng, RollRecord, SessionEvent, SightRules, TemplateKind, TileCoord,
+    apply, distance, reachable, roll, template_tiles, Facing, IsoGeometry, Layer, MapDocument,
+    MoveRules, Rng, RollRecord, SessionEvent, TemplateKind, TileCoord,
     TileKindId, Token, TokenId, TurnList,
 };
-use isometry_net::{apply_game, GameEvent, GameSnapshot, ROLL_LOG_CAP};
+use isonetry::{apply_game, GameEvent, GameSnapshot, ROLL_LOG_CAP};
 
 use cambium::{
     CommandState, DisclosureState, SelectionItem, SelectionState, Slider, TabStrip, TextInput,
@@ -55,6 +55,7 @@ fn point_selection(state: &mut SelectionState, index: usize) {
 }
 
 mod interaction;
+mod character;
 mod lanes;
 mod play;
 mod pixels;
@@ -152,6 +153,12 @@ pub struct UiState {
     pub command_active: bool,
     pub command_draft: TextInput,
     pub command_results: Vec<String>,
+    /// Bounded character-creation inputs. They are UI draft state; only the
+    /// resulting token and system sheet become campaign authority.
+    pub character_open: bool,
+    pub character_name: TextInput,
+    pub character_owner: TextInput,
+    pub character_sprite: String,
     /// Whether a whisper is being composed (the lane's field is on screen and
     /// holds the caret).
     pub composing: bool,
@@ -176,6 +183,10 @@ pub struct UiState {
     pub sheet_effective: Option<isometry_core::SheetData>,
     pub sheet_derived: BTreeMap<String, i64>,
     pub bind_sheet_request: Option<TokenId>,
+    /// A host-authoring request for one token and a system-default sheet. The
+    /// view never selects mechanics; it carries only the display name typed in
+    /// the creation panel.
+    pub character_create_request: Option<CharacterCreateRequest>,
     pub sheet_edit: Option<(TokenId, String, i64)>,
     pub sheet_action: Option<(TokenId, String)>,
     /// Target-pick mode: `(actor, action_key)` is waiting for the player to
@@ -296,7 +307,7 @@ pub struct UiState {
     pub overmap_dragged_node: Option<String>,
     /// The host-supplied origin and authority history, kept separate from the
     /// live world so historical Swatch selection cannot write truth backwards.
-    overmap_source: Option<isometry_net::GameSourceHistory>,
+    overmap_source: Option<isonetry::GameSourceHistory>,
     /// `None` means the live tail. A prefix cursor selects a replayed snapshot.
     overmap_source_cursor: Option<u64>,
     /// Disposable historical projection; `self.world` remains live at all times.
@@ -427,6 +438,10 @@ impl UiState {
             command_active: false,
             command_draft: TextInput::default(),
             command_results: Vec::new(),
+            character_open: false,
+            character_name: TextInput::default(),
+            character_owner: TextInput::default(),
+            character_sprite: "hero".to_owned(),
             composing: false,
             whisper_draft: TextInput::default(),
             whisper_target: None,
@@ -437,6 +452,7 @@ impl UiState {
             sheet_effective: None,
             sheet_derived: BTreeMap::new(),
             bind_sheet_request: None,
+            character_create_request: None,
             sheet_edit: None,
             sheet_action: None,
             action_pick: None,
@@ -451,7 +467,7 @@ impl UiState {
             generations: Vec::new(),
             campaign_maps: BTreeMap::new(),
             clocks: BTreeMap::new(),
-            party_cap: isometry_net::default_party_cap(),
+            party_cap: isonetry::default_party_cap(),
             active_map: None,
             world: CampaignWorld::default(),
             storylets: Vec::new(),

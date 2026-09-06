@@ -22,6 +22,14 @@ pub struct SheetSchema {
     pub actions: Vec<(String, String, bool)>,
 }
 
+/// The UI's bounded request to make a character. Token geometry and ownership
+/// are substrate facts; the host adds the system's default sheet and name.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CharacterCreateRequest {
+    pub token: Token,
+    pub name: String,
+}
+
 /// How initiative builds the turn order (a system choice over the same
 /// turn list; `advance` just walks whatever order results).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

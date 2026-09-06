@@ -121,6 +121,7 @@ fn storylet_matches_private_fact_casts_existing_role_and_commits_effects() {
 
 #[test]
 fn campaign_commit_keeps_secrets_private_and_applies_public_draft() {
+    const SECRET_TEXT: &str = "The witness lied.";
     let mut world = CampaignWorld::default();
     world.factions.insert(
         "tide".into(),
@@ -159,10 +160,19 @@ fn campaign_commit_keeps_secrets_private_and_applies_public_draft() {
                 transitions: vec![],
                 encounter_anchors: vec![],
             },
+            inhabitants: vec![MapInhabitant {
+                id: 31,
+                name: "Watchtower Keeper".into(),
+                sprite: "keeper".into(),
+                at: MapPoint { col: 2, row: 1 },
+                system: "demo".into(),
+                stats: BTreeMap::from([("vigilance".into(), 3)]),
+                owner: None,
+            }],
         }],
         secrets: vec![SecretFact {
             id: "oath.secret".into(),
-            text: "The witness lied.".into(),
+            text: SECRET_TEXT.into(),
             tags: vec![],
             reveal: RevealCondition::Manual,
         }],
@@ -187,18 +197,153 @@ fn campaign_commit_keeps_secrets_private_and_applies_public_draft() {
         proposal: GenValue::Campaign { campaign: draft },
     };
     let mut host = HostSession::new(snapshot());
-    host.commit_campaign(record, Some(TokenId(1))).unwrap();
+    let peer = PeerId(31);
+    let mut client = ClientSession::new();
+    let snapshot = host.on_connect(peer).pop().unwrap().1;
+    assert!(client.on_message(snapshot).is_empty());
+    let out = host.commit_campaign(record, Some(TokenId(1))).unwrap();
+    for (recipient, message) in out {
+        assert_eq!(recipient, Recipient::All);
+        let bytes = postcard::to_allocvec(&message).unwrap();
+        assert!(
+            !bytes
+                .windows(SECRET_TEXT.len())
+                .any(|window| window == SECRET_TEXT.as_bytes()),
+            "the public event stream must never contain a campaign secret"
+        );
+        let replayed: NetMessage = postcard::from_bytes(&bytes).unwrap();
+        assert!(client.on_message(replayed).is_empty());
+    }
 
     assert!(host.campaign().secret("oath.secret").is_some());
     assert!(host.state().world.factions.contains_key("tide"));
     assert_eq!(host.state().active_map.as_deref(), Some("march"));
-    assert!(host.state().inventories[&TokenId(1)]
-        .items
-        .values()
-        .any(|item| item.name == "Witness Blade"));
-    assert!(host
-        .state()
-        .journal
-        .iter()
-        .all(|fact| fact.text != "The witness lied."));
+    let keeper = host.state().map.token(TokenId(31)).unwrap();
+    assert_eq!(keeper.sprite, "keeper");
+    assert_eq!(
+        host.state()
+            .map
+            .sheet(TokenId(31))
+            .unwrap()
+            .int("vigilance"),
+        Some(3)
+    );
+    assert_eq!(host.state().turns.entries(), &[TokenId(31)]);
+    assert_eq!(client.state(), Some(host.state()));
+    assert!(
+        host.state().inventories[&TokenId(1)]
+            .items
+            .values()
+            .any(|item| item.name == "Witness Blade")
+    );
+    assert!(
+        host.state()
+            .journal
+            .iter()
+            .all(|fact| fact.text != SECRET_TEXT)
+    );
+    let public_history = postcard::to_allocvec(host.history().entries()).unwrap();
+    assert!(
+        !public_history
+            .windows(SECRET_TEXT.len())
+            .any(|window| window == SECRET_TEXT.as_bytes()),
+        "the durable public history must not retain a campaign secret"
+    );
+    let late_snapshot = host.on_connect(PeerId(32)).pop().unwrap().1;
+    let late_snapshot_bytes = postcard::to_allocvec(&late_snapshot).unwrap();
+    assert!(
+        !late_snapshot_bytes
+            .windows(SECRET_TEXT.len())
+            .any(|window| window == SECRET_TEXT.as_bytes()),
+        "a late joiner must not receive a campaign secret"
+    );
+}
+
+#[test]
+fn campaign_commit_refuses_invalid_inhabitants_without_changing_public_or_private_state() {
+    let mut host = HostSession::new(snapshot());
+    let state_before = host.state().clone();
+    let campaign_before = host.campaign().clone();
+    let seq_before = host.seq();
+    let log_hash_before = host.log_hash();
+    let record = GenerationRecord {
+        id: "generated.bad-campaign.1".into(),
+        request: GeneratorRequest {
+            generator: "demo:campaign".into(),
+            args: GenValue::Text {
+                value: "tower".into(),
+            },
+            locks: BTreeMap::new(),
+        },
+        entropy: 9,
+        proposal: GenValue::Campaign {
+            campaign: CampaignDraft {
+                id: "bad-tower".into(),
+                name: "Bad Tower".into(),
+                world: CampaignWorld {
+                    storylets: BTreeMap::from([(
+                        "finale".into(),
+                        StoryletProposal {
+                            key: "finale".into(),
+                            entry: "Finish".into(),
+                            tags: vec![],
+                            requirements: Default::default(),
+                            roles: vec![],
+                            effects: vec![],
+                        },
+                    )]),
+                    ..Default::default()
+                },
+                maps: vec![DraftMap {
+                    scale: MapScale::Local,
+                    map: LocalMapProposal {
+                        id: "tower".into(),
+                        name: "Ruined Watchtower".into(),
+                        width: 2,
+                        height: 2,
+                        default_ground: "stone".into(),
+                        cells: vec![],
+                        spawn_zones: vec![],
+                        transitions: vec![],
+                        encounter_anchors: vec![],
+                    },
+                    inhabitants: vec![
+                        MapInhabitant {
+                            id: 4,
+                            name: "Warden".into(),
+                            sprite: "warden".into(),
+                            at: MapPoint { col: 0, row: 0 },
+                            system: "demo".into(),
+                            stats: BTreeMap::new(),
+                            owner: None,
+                        },
+                        MapInhabitant {
+                            id: 4,
+                            name: "Other Warden".into(),
+                            sprite: "warden".into(),
+                            at: MapPoint { col: 1, row: 1 },
+                            system: "demo".into(),
+                            stats: BTreeMap::new(),
+                            owner: None,
+                        },
+                    ],
+                }],
+                secrets: vec![SecretFact {
+                    id: "bad-tower.secret".into(),
+                    text: "must not persist".into(),
+                    tags: vec![],
+                    reveal: RevealCondition::Manual,
+                }],
+                rewards: vec![],
+                starting_map: "tower".into(),
+                final_storylet: "finale".into(),
+            },
+        },
+    };
+
+    assert!(host.commit_campaign(record, None).is_err());
+    assert_eq!(host.state(), &state_before);
+    assert_eq!(host.campaign(), &campaign_before);
+    assert_eq!(host.seq(), seq_before);
+    assert_eq!(host.log_hash(), log_hash_before);
 }

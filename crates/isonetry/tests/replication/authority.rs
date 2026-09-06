@@ -102,6 +102,23 @@ fn a_player_commands_its_own_tokens_and_may_not_edit_the_board() {
         sim.host.state().map.sheets.get(&TokenId(1)).is_none(),
         "a player wrote another token's sheet"
     );
+    sim.client_intent(
+        PeerId(10),
+        GameEvent::CharacterCreated {
+            token: Token {
+                id: TokenId(50),
+                at: (3, 3),
+                facing: Facing::South,
+                sprite: "hero".to_owned(),
+                owner: Some("B".to_owned()),
+            },
+            sheet: sheet("forged", 20, 12),
+        },
+    );
+    assert!(
+        sim.host.state().map.token(TokenId(50)).is_none(),
+        "a player authored a complete character"
+    );
 
     assert_eq!(
         sim.host.seq(),

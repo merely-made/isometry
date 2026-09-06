@@ -11,7 +11,7 @@ description = "Isometry's desktop application over the shared Cambium desktop ho
 isometry-core = { workspace = true }
 isometry-campaign = { workspace = true }
 isometry-views = { workspace = true }
-isometry-net = { workspace = true, features = ["iroh"] }
+isonetry = { workspace = true, features = ["iroh"] }
 isometry-system = { workspace = true }
 cleromancy = { workspace = true }
 tokio = { version = "1", features = ["rt-multi-thread", "sync", "macros", "time"] }

@@ -375,3 +375,12 @@ panel's `painted_rect` is `None` for exactly that reason.
   instead — that is what would close the transients without a click, at
   the cost of hiding the initiative list from a table that wants it
   standing. And whether the collapsed state is worth its own capture.
+- **2026-09-04, collapsed headed self-test added in the working tree.**
+  `ISOMETRY_TURNS_SELFTEST=1` finds the retained Turns disclosure trigger,
+  asks `AppCtx::painted_rect` for the host's actual hit box, and queues the
+  normal move/press/release gesture at its centre. It leaves Turns collapsed
+  for capture. A 2200x1504 headed run clicked at logical `(114.0, 383.5)` and
+  wrote `Code/testing/isometry/images/2026-09-04_turns_selftest/isometry_capture.png`;
+  inspection confirms the `[+] Turns` collapsed state
+  and the full remaining panel inside the frame. The default remains expanded;
+  changing that is still the product choice above.

@@ -49,7 +49,7 @@ fn remote_mode_routes_moves_as_events_not_local_mutation() {
         world: Default::default(),
         clocks: Default::default(),
 
-        party_cap: isometry_net::default_party_cap(),
+        party_cap: isonetry::default_party_cap(),
         last_beats: Vec::new(),
         beat_seq: 0,
         applied_actions: Default::default(),

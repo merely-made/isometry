@@ -7,6 +7,7 @@
 //! web host both drive [`board_root`].
 
 mod board;
+mod character;
 mod command;
 mod compendium;
 mod demo;
@@ -34,7 +35,7 @@ pub use projection::{
 };
 pub use state::{mode_items, pace_items, stance_items, PACE_PCTS, STANCE_KEYS};
 pub use state::{
-    ActionRow, CompendiumTab, EditMode, FactionMoveRow, FogLevel, GenerationRequest,
+    ActionRow, CharacterCreateRequest, CompendiumTab, EditMode, FactionMoveRow, FogLevel, GenerationRequest,
     GeneratorSelectionRequest, GovernanceBindingRow, GovernanceConflict,
     GovernanceResolutionRequest, InitiativeMode, InventoryRequest, ItemRow, MonsterRow, NetMode,
     SheetSchema, SpellRow, StoryletRow, UiState, BOARD_UNIT, MESSAGES_CAP, PANEL_W,

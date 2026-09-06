@@ -23,7 +23,7 @@ use serde::{Deserialize, Serialize};
 /// the space: a body that *does* decode and means something else. Bump it for
 /// any change to the wire shape, and move `iroh_link::ALPN` with it so an
 /// incompatible peer cannot even dial.
-pub const PROTOCOL_VERSION: u16 = 2;
+pub const PROTOCOL_VERSION: u16 = 4;
 
 /// A peer's identity within a session. For the iroh transport this wraps
 /// the remote node id; the pure-sync core only needs it to route.
@@ -418,6 +418,12 @@ pub enum GameEvent {
         #[serde(default)]
         forage: i64,
     },
+    /// Place a newly authored character and bind its initial system sheet in
+    /// one replicated fact. A character is never visible to another peer as a
+    /// sheetless token between two log entries.
+    ///
+    /// Appended deliberately: postcard tags enum variants by index.
+    CharacterCreated { token: isometry_core::Token, sheet: SheetData },
 }
 
 /// One message on the wire. The host is the authority: clients send

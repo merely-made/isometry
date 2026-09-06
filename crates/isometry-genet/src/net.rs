@@ -10,8 +10,8 @@ use std::time::Duration;
 use armillary::{ActorHandle, Correlated, Emitter, RequestId, RequestIds, Wake};
 use isometry_campaign::{CampaignStore, GenerationRecord};
 use isometry_core::TokenId;
-use isometry_net::iroh_link::{ClientNet, HostNet};
-use isometry_net::{ActionIntent, GameEvent, GameSnapshot};
+use isonetry::iroh_link::{ClientNet, HostNet};
+use isonetry::{ActionIntent, GameEvent, GameSnapshot};
 use muniment::Journal;
 
 /// Which side of the session this process runs.
@@ -65,7 +65,7 @@ enum BridgeUpdate {
     },
     ClientState(GameSnapshot),
     /// Client action requests the host must adjudicate. They surface here rather
-    /// than being answered inside the session, because `isometry-net` is
+    /// than being answered inside the session, because `isonetry` is
     /// rules-blind: only the app holds a `System` that can say whether you hit.
     ActionIntents(Vec<ActionIntent>),
     Whispers(Vec<(String, String)>),
@@ -473,6 +473,24 @@ mod tests {
     use isometry_campaign::{GenValue, GeneratorRequest};
     use isometry_core::{MapDocument, TurnList};
     use std::collections::BTreeMap;
+    use std::time::Instant;
+
+    const ACTOR_DEADLINE: Duration = Duration::from_secs(30);
+
+    fn wait_for(bridge: &mut NetBridge, what: &str, mut ready: impl FnMut(&NetBridge) -> bool) {
+        let deadline = Instant::now() + ACTOR_DEADLINE;
+        loop {
+            bridge.poll();
+            if ready(bridge) {
+                return;
+            }
+            if let Some(error) = bridge.take_failure() {
+                panic!("{what} failed: {error}");
+            }
+            assert!(Instant::now() < deadline, "timed out waiting for {what}");
+            std::thread::sleep(Duration::from_millis(20));
+        }
+    }
 
     fn snapshot() -> GameSnapshot {
         GameSnapshot {
@@ -487,7 +505,7 @@ mod tests {
             world: Default::default(),
             clocks: Default::default(),
 
-            party_cap: isometry_net::default_party_cap(),
+            party_cap: isonetry::default_party_cap(),
             last_beats: Vec::new(),
             beat_seq: 0,
             applied_actions: Default::default(),
@@ -507,13 +525,9 @@ mod tests {
             std::sync::Arc::new(|| {}),
         );
 
-        for _ in 0..100 {
-            bridge.poll();
-            if bridge.ticket().is_some() && bridge.latest().is_some() {
-                break;
-            }
-            std::thread::sleep(Duration::from_millis(20));
-        }
+        wait_for(&mut bridge, "host actor readiness", |bridge| {
+            bridge.ticket().is_some() && bridge.latest().is_some()
+        });
         assert!(
             bridge.ticket().is_some(),
             "host actor bound and published a ticket"
@@ -522,14 +536,9 @@ mod tests {
 
         let version = bridge.version();
         bridge.submit(GameEvent::TurnAdvance);
-        for _ in 0..100 {
-            bridge.poll();
-            if bridge.version() > version {
-                return;
-            }
-            std::thread::sleep(Duration::from_millis(20));
-        }
-        panic!("host command did not return through the actor update channel");
+        wait_for(&mut bridge, "host command actor update", |bridge| {
+            bridge.version() > version
+        });
     }
 
     #[test]

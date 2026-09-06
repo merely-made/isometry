@@ -10,7 +10,7 @@ commit-reveal mechanics are **superseded** by the
 live `campaign_sync.rs` assembling `LogSync`/`SyncedSpace` directly is
 named pre-rebase debt there. The original conclusion
 that one ordered log should survive every tier was too broad. The first
-multi-writer campaign-space slice is landed behind `isometry-net`'s
+multi-writer campaign-space slice is landed behind `isonetry`'s
 `campaign-p2p` feature; tactical play still uses the existing sequencer.
 **Related:** [worldbuilding_generation_plan](2026-07-09_worldbuilding_generation_plan.md)
 (decision 8 two-store split, W0 landed, the W2 generator ABI this doc leans

@@ -166,13 +166,58 @@ pub struct RoleSlot {
     pub tags: Vec<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(tag = "type", rename_all = "snake_case")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum StoryletEffect {
     Fact { fact: WorldFact },
     History { event: HistoryEvent },
     Item { item: ItemProposal },
     LocalMap { map: LocalMapProposal },
+}
+
+// Storylets remain authored as tagged JSON. Their accepted proposals travel in
+// the public session history, where postcard needs an externally tagged enum.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(remote = "StoryletEffect", tag = "type", rename_all = "snake_case")]
+enum StoryletEffectJson {
+    Fact { fact: WorldFact },
+    History { event: HistoryEvent },
+    Item { item: ItemProposal },
+    LocalMap { map: LocalMapProposal },
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(remote = "StoryletEffect")]
+enum StoryletEffectWire {
+    Fact { fact: WorldFact },
+    History { event: HistoryEvent },
+    Item { item: ItemProposal },
+    LocalMap { map: LocalMapProposal },
+}
+
+impl Serialize for StoryletEffect {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        if serializer.is_human_readable() {
+            StoryletEffectJson::serialize(self, serializer)
+        } else {
+            StoryletEffectWire::serialize(self, serializer)
+        }
+    }
+}
+
+impl<'de> Deserialize<'de> for StoryletEffect {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        if deserializer.is_human_readable() {
+            StoryletEffectJson::deserialize(deserializer)
+        } else {
+            StoryletEffectWire::deserialize(deserializer)
+        }
+    }
 }
 
 /// A quality-based narrative opportunity. Matching and casting are pure;

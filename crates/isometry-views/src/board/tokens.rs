@@ -21,6 +21,13 @@ pub(super) fn token_el(ui: &UiState, token: &Token) -> UiChild {
     let s = ui.board_scale;
     let (x, y) = (cx - TOKEN_BOX.0 / 2.0 * s, cy - 32.0 * s);
     let mut class = format!("token token-{}", token.sprite);
+    let facing = match token.facing {
+        isometry_core::Facing::South => "south",
+        isometry_core::Facing::East => "east",
+        isometry_core::Facing::North => "north",
+        isometry_core::Facing::West => "west",
+    };
+    class.push_str(&format!(" token-facing-{facing}"));
     // Equipment appearance remains pack CSS: public layer keys become stable
     // token classes, while the future voxel compositor can replace the same
     // projection with a baked recipe without changing campaign data.
@@ -34,12 +41,13 @@ pub(super) fn token_el(ui: &UiState, token: &Token) -> UiChild {
             }
         }
     }
-    // One drawn side, mirrored for the other two facings (the GBA
-    // economy): E/N flip, S/W stay.
-    let flipped = matches!(
-        token.facing,
-        isometry_core::Facing::East | isometry_core::Facing::North
-    );
+    // The creature has four baked views. The starter humanoids still mirror
+    // one view; keep that transform out of the creature's scaled inline style.
+    let flipped = token.sprite != "tower-beast"
+        && matches!(
+            token.facing,
+            isometry_core::Facing::East | isometry_core::Facing::North
+        );
     if flipped {
         class.push_str(" token-flip");
     }
@@ -87,7 +95,11 @@ pub(super) fn token_el(ui: &UiState, token: &Token) -> UiChild {
     let sprite: Vec<UiChild> = vec![if s == 1.0 {
         Box::new(sprite_el)
     } else {
-        let mut style = format!("width: {}px; height: {}px;", TOKEN_BOX.0 * s, TOKEN_BOX.1 * s);
+        let mut style = format!(
+            "width: {}px; height: {}px;",
+            TOKEN_BOX.0 * s,
+            TOKEN_BOX.1 * s
+        );
         if flipped {
             style.push_str(&format!(
                 " transform: translateX({}px) scaleX(-1);",
@@ -132,7 +144,11 @@ fn layer_class(key: &str) -> String {
 
 /// A ground marker diamond under a token (turn-active gold, selection
 /// green), one depth step above the tile it stands on.
-pub(super) fn marker_el(ui: &UiState, token_id: isometry_core::TokenId, class: &str) -> Option<UiChild> {
+pub(super) fn marker_el(
+    ui: &UiState,
+    token_id: isometry_core::TokenId,
+    class: &str,
+) -> Option<UiChild> {
     let token = ui.map.token(token_id)?;
     let elev = *ui
         .map

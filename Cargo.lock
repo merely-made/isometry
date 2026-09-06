@@ -954,15 +954,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "buckram"
-version = "0.0.1"
-source = "git+https://github.com/merely-made/genet.git?rev=115d348deddc344d949754e63beaece47cf49f34#115d348deddc344d949754e63beaece47cf49f34"
-dependencies = [
- "genet-taffy",
- "stacker",
-]
-
-[[package]]
 name = "built"
 version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1110,7 +1101,7 @@ version = "0.1.0"
 dependencies = [
  "cambium",
  "cambium-winit",
- "genet-livery 0.0.2 (git+https://github.com/merely-made/genet.git?rev=115d348deddc344d949754e63beaece47cf49f34)",
+ "genet-livery",
  "genet-render",
  "genet-render-host",
  "genet-scripted-dom",
@@ -2751,16 +2742,7 @@ dependencies = [
 name = "genet-document-resources"
 version = "0.2.0"
 dependencies = [
- "genet-host-api 0.2.0",
- "layout-dom-api",
-]
-
-[[package]]
-name = "genet-document-resources"
-version = "0.2.0"
-source = "git+https://github.com/merely-made/genet.git?rev=115d348deddc344d949754e63beaece47cf49f34#115d348deddc344d949754e63beaece47cf49f34"
-dependencies = [
- "genet-host-api 0.2.0 (git+https://github.com/merely-made/genet.git?rev=115d348deddc344d949754e63beaece47cf49f34)",
+ "genet-host-api",
  "layout-dom-api",
 ]
 
@@ -2769,46 +2751,19 @@ name = "genet-host-api"
 version = "0.2.0"
 
 [[package]]
-name = "genet-host-api"
-version = "0.2.0"
-source = "git+https://github.com/merely-made/genet.git?rev=115d348deddc344d949754e63beaece47cf49f34#115d348deddc344d949754e63beaece47cf49f34"
-
-[[package]]
 name = "genet-livery"
 version = "0.0.2"
 dependencies = [
- "buckram 0.0.1",
+ "buckram",
  "cssparser",
  "data-url",
  "euclid",
  "fontsan",
- "genet-document-resources 0.2.0",
+ "genet-document-resources",
  "genet-taffy",
  "image",
  "layout-dom-api",
- "livery 0.0.3",
- "paint_list_api",
- "parley",
- "selectors",
- "serde",
- "stacker",
-]
-
-[[package]]
-name = "genet-livery"
-version = "0.0.2"
-source = "git+https://github.com/merely-made/genet.git?rev=115d348deddc344d949754e63beaece47cf49f34#115d348deddc344d949754e63beaece47cf49f34"
-dependencies = [
- "buckram 0.0.1 (git+https://github.com/merely-made/genet.git?rev=115d348deddc344d949754e63beaece47cf49f34)",
- "cssparser",
- "data-url",
- "euclid",
- "fontsan",
- "genet-document-resources 0.2.0 (git+https://github.com/merely-made/genet.git?rev=115d348deddc344d949754e63beaece47cf49f34)",
- "genet-taffy",
- "image",
- "layout-dom-api",
- "livery 0.0.3 (git+https://github.com/merely-made/genet.git?rev=115d348deddc344d949754e63beaece47cf49f34)",
+ "livery",
  "paint_list_api",
  "parley",
  "selectors",
@@ -2831,7 +2786,7 @@ dependencies = [
 name = "genet-probe"
 version = "0.1.0"
 dependencies = [
- "genet-livery 0.0.2",
+ "genet-livery",
  "genet-scripted-dom",
  "layout-dom-api",
 ]
@@ -2843,7 +2798,7 @@ source = "git+https://github.com/merely-made/genet.git?rev=115d348deddc344d94975
 dependencies = [
  "accesskit",
  "document-session-api",
- "genet-livery 0.0.2 (git+https://github.com/merely-made/genet.git?rev=115d348deddc344d949754e63beaece47cf49f34)",
+ "genet-livery",
  "genet-scripted-dom",
  "layout-dom-api",
  "netrender",
@@ -3106,6 +3061,7 @@ dependencies = [
  "graphshell-client",
  "graphshell-endpoint",
  "sceno",
+ "scenomise",
  "scenotime",
  "serde_json",
  "windows-sys 0.59.0",
@@ -4338,9 +4294,9 @@ dependencies = [
  "genet-scripted-dom",
  "isometry-campaign",
  "isometry-core",
- "isometry-net",
  "isometry-system",
  "isometry-views",
+ "isonetry",
  "layout-dom-api",
  "muniment",
  "png 0.17.16",
@@ -4367,33 +4323,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "isometry-net"
-version = "0.1.0"
-dependencies = [
- "gemot",
- "iroh",
- "iroh-tickets",
- "isometry-campaign",
- "isometry-core",
- "mere-p2panda-net",
- "mere-transport",
- "mooting",
- "muniment",
- "murm",
- "p2panda-core",
- "p2panda-store",
- "p2panda-sync",
- "personae",
- "pollster",
- "postcard",
- "serde",
- "stickleback",
- "thiserror 1.0.69",
- "tokio",
- "tracing",
-]
-
-[[package]]
 name = "isometry-system"
 version = "0.1.0"
 dependencies = [
@@ -4411,8 +4340,8 @@ dependencies = [
  "cambium",
  "isometry-campaign",
  "isometry-core",
- "isometry-net",
  "isometry-voxel",
+ "isonetry",
  "muniment",
  "sceno",
  "scenomise",
@@ -4427,6 +4356,34 @@ dependencies = [
  "postcard",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "isonetry"
+version = "0.1.0"
+dependencies = [
+ "gemot",
+ "iroh",
+ "iroh-tickets",
+ "isometry-campaign",
+ "isometry-core",
+ "isometry-system",
+ "mere-p2panda-net",
+ "mere-transport",
+ "mooting",
+ "muniment",
+ "murm",
+ "p2panda-core",
+ "p2panda-store",
+ "p2panda-sync",
+ "personae",
+ "pollster",
+ "postcard",
+ "serde",
+ "stickleback",
+ "thiserror 1.0.69",
+ "tokio",
+ "tracing",
 ]
 
 [[package]]
@@ -4767,18 +4724,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "livery"
-version = "0.0.3"
-source = "git+https://github.com/merely-made/genet.git?rev=115d348deddc344d949754e63beaece47cf49f34#115d348deddc344d949754e63beaece47cf49f34"
-dependencies = [
- "cssparser",
- "precomputed-hash",
- "selectors",
- "serde",
- "toml",
-]
-
-[[package]]
 name = "lock_api"
 version = "0.4.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4936,7 +4881,7 @@ dependencies = [
  "emblem",
  "esp",
  "euclid",
- "genet-livery 0.0.2 (git+https://github.com/merely-made/genet.git?rev=115d348deddc344d949754e63beaece47cf49f34)",
+ "genet-livery",
  "genet-scripted-dom",
  "layout-dom-api",
  "mere-cartography",
@@ -5567,6 +5512,7 @@ version = "0.1.2"
 dependencies = [
  "log",
  "pollster",
+ "web-time",
  "wgpu",
 ]
 

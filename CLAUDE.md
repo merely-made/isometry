@@ -77,7 +77,7 @@ crates/
                     stylesheets). Host-agnostic.
   isometry-genet/  Native winit host: window, input, netrender present.
                     ISOMETRY_PROFILE=1 prints frame timers.
-  isometry-net/     DM-authority replication over a pure protocol seam, with
+  isonetry/        DM-authority replication over a pure protocol seam, with
                     iroh behind a feature.
   isometry-system/  System plugin lane: schemas plus piccolo Lua rules, with
                     the 5e SRD content pack.
@@ -91,7 +91,7 @@ later live 2.5D / 3D voxel lenses.
 
 Keep `isometry-core` pure: no `wgpu`, no `iroh`, no genet crates, no
 file I/O. Event log semantics live in core; transport lives in
-`isometry-net`.
+`isonetry`.
 
 ## General Guidelines
 
@@ -114,7 +114,7 @@ file I/O. Event log semantics live in core; transport lives in
   piece or the pattern.
 - **Guard the feature-gated code**: run
   `cargo check --workspace --all-features --all-targets` after touching a
-  sibling repo, and before committing anything in `isometry-net`. Every
+  sibling repo, and before committing anything in `isonetry`. Every
   campaign feature is `default = []`, so a plain `cargo test` compiles
   neither them nor their tests: `--all-features` runs 182 tests where the
   default runs 173. They rot silently whenever mere moves, and nothing else

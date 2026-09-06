@@ -75,7 +75,7 @@ impl App {
                                     applied_actions: Default::default(),
                                 },
                             ));
-                        }
+                        },
                         Err(e) => ui.status = format!("save failed: {e}"),
                     }
                 }
@@ -113,11 +113,11 @@ impl App {
                         (Ok(()), Ok(())) => format!("saved {}", path.display()),
                         (Err(error), Ok(())) => {
                             format!("checkpoint saved, map export failed: {error}")
-                        }
+                        },
                         (Err(error), Err(_)) => format!("map save failed: {error}"),
                         (Ok(()), Err(error)) => {
                             format!("map saved, private campaign save failed: {error}")
-                        }
+                        },
                     };
                 });
             }
@@ -165,18 +165,18 @@ impl App {
                                 (Ok(_), None) => format!("loaded {}", path.display()),
                                 (Err(error), _) => {
                                     format!("map loaded, private campaign state failed: {error}")
-                                }
+                                },
                                 (_, Some(error)) => format!(
                                     "loaded legacy map after checkpoint read failed: {error}"
                                 ),
                             };
                         });
                     }
-                }
+                },
                 Err(error) => {
                     let runner = &mut *ctx.runner;
                     runner.update(|ui| ui.status = format!("load failed: {error}"));
-                }
+                },
             }
         }
         self.pump_selection_rows(ctx);
@@ -253,7 +253,7 @@ impl App {
                             Ok(()) => format!("committed (request {})", outcome.request),
                             Err(error) => {
                                 format!("commit failed (request {}): {error}", outcome.request)
-                            }
+                            },
                         };
                     }
                     if let Some(error) = &failure {
@@ -281,6 +281,7 @@ impl App {
                     self.campaign = campaign;
                 }
                 runner.update(|ui| ui.apply_snapshot(snap));
+                self.capture_network_receipt(runner.state(), version);
                 // The host's door sweep: any token now standing on a transition
                 // point of the active map walks through it. Clients never ask in
                 // words; they walk, the move replicates, and this notices. The
@@ -312,7 +313,7 @@ impl App {
                                 continue;
                             }
                             self.own_requests += 1;
-                            match isometry_net::resolve_transition(
+                            match isonetry::resolve_transition(
                                 &state,
                                 *token,
                                 RequestId::host(self.own_requests),
@@ -338,7 +339,7 @@ impl App {
 
     /// Evaluate or commit a host-owned generator preview. The view asks for a
     /// one-shot action; this desktop layer loads the declared pack and owns the
-    /// entropy tape, while `isometry-net` remains scripting-agnostic.
+    /// entropy tape, while `isonetry` remains scripting-agnostic.
     /// Build a replicated snapshot from the view's current state, for a host
     /// operation that needs to prevalidate against a clone (storylet commit).
     pub(crate) fn snapshot_of(&self, ui: &UiState) -> GameSnapshot {

@@ -187,7 +187,7 @@ impl HostSession {
             // DM edits sheets (a joined player's UI never offers it, per
             // `can_edit_inventory`); damage reaches a sheet as an adjudicated
             // `ActionResolved` delta instead.
-            GameEvent::SheetSet { .. } => {
+            GameEvent::SheetSet { .. } | GameEvent::CharacterCreated { .. } => {
                 Some("sheets are edited by the DM; damage arrives as a resolution".to_owned())
             }
 

@@ -10,6 +10,40 @@
 use super::*;
 
 impl App {
+    /// `ISOMETRY_TURNS_SELFTEST=1`: collapse the Turns disclosure through the
+    /// same laid-out trigger and host pointer route as a person's click, then
+    /// leave the short panel standing for the headed capture.
+    pub(crate) fn maybe_turns_selftest(&mut self, ctx: &mut Ctx<'_>) {
+        if !self.turns_selftest || self.turns_fired {
+            return;
+        }
+        if !self
+            .started
+            .is_some_and(|started| started.elapsed() > Duration::from_secs(2))
+        {
+            return;
+        }
+
+        let trigger = {
+            let dom = ctx.runner.dom();
+            let dom = dom.borrow();
+            dom.all_with_class(dom.document(), "disclosure-trigger")
+                .into_iter()
+                .next()
+        };
+        let Some((x, y, width, height)) = trigger.and_then(|node| ctx.painted_rect(node)) else {
+            eprintln!("[isometry] turns selftest: disclosure trigger has no painted box");
+            self.turns_fired = true;
+            return;
+        };
+        let (x, y) = (x + width / 2.0, y + height / 2.0);
+        ctx.pointer.push(HostPointer::Moved(x, y));
+        ctx.pointer.push(HostPointer::Press(x, y));
+        ctx.pointer.push(HostPointer::Release(x, y));
+        self.turns_fired = true;
+        eprintln!("[isometry] turns selftest: clicked disclosure trigger at ({x:.1}, {y:.1})");
+    }
+
     /// `ISOMETRY_CMD_SELFTEST=1` (pair with `ISOMETRY_GEN_SEED` for a fixed
     /// NPC): drive the whole `>` command surface once, focus-free.
     pub(crate) fn maybe_cmd_selftest(&mut self, ctx: &mut Ctx<'_>) {

@@ -2,8 +2,8 @@
 //! ticket, join from another terminal (same machine or another), and
 //! watch the client converge on the host's log hash.
 //!
-//!   cargo run -p isometry-net --features iroh --example session_smoke -- host
-//!   cargo run -p isometry-net --features iroh --example session_smoke -- join <TICKET>
+//!   cargo run -p isonetry --features iroh --example session_smoke -- host
+//!   cargo run -p isonetry --features iroh --example session_smoke -- join <TICKET>
 //!
 //! The host advances the turn order every two seconds; the client prints
 //! its applied count and log hash, which must track the host's.
@@ -11,8 +11,8 @@
 use std::time::Duration;
 
 use isometry_core::{Facing, MapDocument, Token, TokenId, TurnList};
-use isometry_net::iroh_link::{ClientNet, HostNet};
-use isometry_net::{GameEvent, GameSnapshot};
+use isonetry::iroh_link::{ClientNet, HostNet};
+use isonetry::{GameEvent, GameSnapshot};
 
 fn demo_snapshot() -> GameSnapshot {
     let mut map = MapDocument::new("smoke skirmish", 8, 8);
@@ -45,7 +45,7 @@ fn demo_snapshot() -> GameSnapshot {
         world: Default::default(),
         clocks: Default::default(),
 
-        party_cap: isometry_net::default_party_cap(),
+        party_cap: isonetry::default_party_cap(),
         last_beats: Vec::new(),
         beat_seq: 0,
         applied_actions: Default::default(),

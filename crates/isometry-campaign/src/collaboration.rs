@@ -3,8 +3,7 @@
 use serde::{Deserialize, Serialize};
 
 /// How an accepted proposal relates to campaign history.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(tag = "type", rename_all = "snake_case")]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum CampaignProposalMode {
     /// Establish a new campaign root.
     Create { campaign_id: String },
@@ -12,6 +11,54 @@ pub enum CampaignProposalMode {
     Apply { base: [u8; 32] },
     /// Fork one known revision under a new branch name.
     Branch { base: [u8; 32], branch: String },
+}
+
+// Keep proposal files' tagged JSON stable while letting binary replication use
+// an enum representation postcard can decode.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(
+    remote = "CampaignProposalMode",
+    tag = "type",
+    rename_all = "snake_case"
+)]
+enum CampaignProposalModeJson {
+    Create { campaign_id: String },
+    Apply { base: [u8; 32] },
+    Branch { base: [u8; 32], branch: String },
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(remote = "CampaignProposalMode")]
+enum CampaignProposalModeWire {
+    Create { campaign_id: String },
+    Apply { base: [u8; 32] },
+    Branch { base: [u8; 32], branch: String },
+}
+
+impl Serialize for CampaignProposalMode {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        if serializer.is_human_readable() {
+            CampaignProposalModeJson::serialize(self, serializer)
+        } else {
+            CampaignProposalModeWire::serialize(self, serializer)
+        }
+    }
+}
+
+impl<'de> Deserialize<'de> for CampaignProposalMode {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        if deserializer.is_human_readable() {
+            CampaignProposalModeJson::deserialize(deserializer)
+        } else {
+            CampaignProposalModeWire::deserialize(deserializer)
+        }
+    }
 }
 
 /// An inspectable proposal envelope. The full draft or patch is immutable
@@ -85,6 +132,28 @@ mod tests {
             assert_eq!(
                 serde_json::from_str::<CampaignProposal>(&json).unwrap(),
                 proposal
+            );
+        }
+    }
+
+    #[test]
+    fn lifecycle_modes_round_trip_over_the_binary_carrier() {
+        let modes = [
+            CampaignProposalMode::Create {
+                campaign_id: "river-oath".into(),
+            },
+            CampaignProposalMode::Apply { base: [1; 32] },
+            CampaignProposalMode::Branch {
+                base: [2; 32],
+                branch: "ash-ending".into(),
+            },
+        ];
+        for mode in modes {
+            let bytes = postcard::to_allocvec(&mode).expect("encode proposal mode");
+            assert_eq!(
+                postcard::from_bytes::<CampaignProposalMode>(&bytes)
+                    .expect("decode proposal mode"),
+                mode
             );
         }
     }

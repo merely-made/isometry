@@ -14,7 +14,7 @@ impl UiState {
     /// A selected prefix survives appended events when it remains valid. Live
     /// stays live as the log advances. An absent source means the host did not
     /// retain a truthful origin, so the view exposes no historical control.
-    pub fn set_overmap_source_history(&mut self, source: Option<isometry_net::GameSourceHistory>) {
+    pub fn set_overmap_source_history(&mut self, source: Option<isonetry::GameSourceHistory>) {
         let selected = self.overmap_source_cursor;
         self.overmap_source = source;
         self.overmap_source_cursor = selected.filter(|cursor| {
@@ -133,7 +133,7 @@ mod tests {
             active_map: None,
             world: CampaignWorld::default(),
             clocks: Default::default(),
-            party_cap: isometry_net::default_party_cap(),
+            party_cap: isonetry::default_party_cap(),
             last_beats: Vec::new(),
             beat_seq: 0,
             applied_actions: Default::default(),
@@ -148,7 +148,7 @@ mod tests {
         let mut ui = UiState::new(origin.map.clone());
         let live_world = CampaignWorld::default();
         ui.world = live_world.clone();
-        ui.set_overmap_source_history(Some(isometry_net::GameSourceHistory::new(
+        ui.set_overmap_source_history(Some(isonetry::GameSourceHistory::new(
             origin.clone(),
             history.clone(),
         )));
@@ -165,7 +165,7 @@ mod tests {
             text: "The lantern came home.".to_owned(),
             tags: Vec::new(),
         }));
-        ui.set_overmap_source_history(Some(isometry_net::GameSourceHistory::new(origin, history)));
+        ui.set_overmap_source_history(Some(isonetry::GameSourceHistory::new(origin, history)));
         assert_eq!(
             ui.overmap_source_cursor,
             Some(0),

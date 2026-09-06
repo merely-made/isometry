@@ -8,7 +8,7 @@
 use std::path::Path;
 
 use isometry_campaign::CampaignStore;
-use isometry_net::GameSnapshot;
+use isonetry::GameSnapshot;
 use muniment::{Journal, JsonSlots, RedbBackend};
 use serde::{Deserialize, Serialize};
 
@@ -22,7 +22,7 @@ pub struct CampaignCheckpoint {
     pub format: u32,
     pub public: GameSnapshot,
     pub private: CampaignStore,
-    pub history: Journal<isometry_net::GameEvent>,
+    pub history: Journal<isonetry::GameEvent>,
     /// The public state immediately before `history` began. Checkpoints written
     /// before source time omit it and remain readable, but cannot fabricate a
     /// replayable past from their current snapshot.
@@ -36,7 +36,7 @@ impl CampaignCheckpoint {
     pub fn new(
         public: GameSnapshot,
         private: CampaignStore,
-        history: Journal<isometry_net::GameEvent>,
+        history: Journal<isonetry::GameEvent>,
         history_origin: Option<GameSnapshot>,
     ) -> Self {
         Self {
@@ -105,7 +105,7 @@ mod tests {
         ItemId, ItemInstance, ItemProposal, RevealCondition, SecretFact, WorldFact,
     };
     use isometry_core::{MapDocument, TokenId, TurnList};
-    use isometry_net::GameEvent;
+    use isonetry::GameEvent;
 
     #[test]
     fn campaign_checkpoint_survives_reopen() {
@@ -179,7 +179,7 @@ mod tests {
             world: Default::default(),
             clocks: Default::default(),
 
-            party_cap: isometry_net::default_party_cap(),
+            party_cap: isonetry::default_party_cap(),
             last_beats: Vec::new(),
             beat_seq: 0,
             applied_actions: Default::default(),

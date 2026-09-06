@@ -56,6 +56,12 @@ fn a_spawn_tile_stays_on_the_board_on_a_narrow_map() {
     // free_spawn_tile's outward scan could walk off a map narrower than its
     // stride, yielding an off-board tile that fails placement. It must clamp.
     let mut ui = UiState::new(MapDocument::new("slot", 3, 3));
+    let grass = ui.map.intern_tile_kind("grass");
+    for row in 0..3 {
+        for col in 0..3 {
+            ui.map.ground.set(col, row, grass);
+        }
+    }
     // Pack the whole 3x3 but one cell, forcing the scan to the survivor.
     for row in 0..3 {
         for col in 0..3 {

@@ -46,13 +46,19 @@ impl UiState {
     /// block outward from it. Bounds-checked, because placing a token off-map is
     /// rejected (and on a narrow map the block can walk off the edge).
     pub(crate) fn free_spawn_tile(&self) -> TileCoord {
-        let free =
-            |at: TileCoord| self.map.ground.in_bounds(at.0, at.1) && self.token_at(at).is_none();
+        self.available_spawn_tile().unwrap_or((0, 0))
+    }
+
+    /// Find a genuinely empty board tile. Callers that must not create a
+    /// partial record, such as first-character authoring, receive `None` when
+    /// the board is full instead of falling back to an occupied coordinate.
+    pub(crate) fn available_spawn_tile(&self) -> Option<TileCoord> {
+        let free = |at: TileCoord| self.character_spawn_tile_available(at);
         let start = self.selected.filter(|&s| free(s)).unwrap_or((2, 2));
         for d in 0..64 {
             let at = (start.0 + (d % 8), start.1 + (d / 8));
             if free(at) {
-                return at;
+                return Some(at);
             }
         }
         let (w, h) = (
@@ -62,11 +68,32 @@ impl UiState {
         for row in 0..h {
             for col in 0..w {
                 if free((col, row)) {
-                    return (col, row);
+                    return Some((col, row));
                 }
             }
         }
-        (0, 0)
+        None
+    }
+
+    /// Whether a character may stand at `at` under the current board movement
+    /// policy. The first character and the host's revalidation call this same
+    /// predicate: nonempty ground except water, in bounds, and unoccupied.
+    pub fn character_spawn_tile_available(&self, at: TileCoord) -> bool {
+        if !self.map.ground.in_bounds(at.0, at.1) || self.token_at(at).is_some() {
+            return false;
+        }
+        let kind = self
+            .map
+            .ground
+            .get(at.0 as u32, at.1 as u32)
+            .copied()
+            .unwrap_or_default();
+        kind.0 != 0
+            && self
+                .map
+                .tile_kinds
+                .get(kind.0 as usize)
+                .is_some_and(|name| name != "water")
     }
 
     /// Queue a field edit (a stepper on the open sheet); the host applies
@@ -215,7 +242,7 @@ impl UiState {
             generations: Vec::new(),
             maps: self.campaign_maps.clone(),
             active_map: self.active_map.clone(),
-            world: Default::default(),
+            world: self.world.clone(),
             // The clocks must cross too, or reconciliation runs against empty
             // time and wipes the ledger on copy-back.
             clocks: self.clocks.clone(),
@@ -227,8 +254,8 @@ impl UiState {
         // One crossing, one ruling. The nonce is this state's own, against the
         // reserved host identity: there is no connection to attribute it to.
         self.travel_requests += 1;
-        let request = isometry_net::RequestId::host(self.travel_requests);
-        let ruled = isometry_net::resolve_transition(&snap, token, request)
+        let request = isonetry::RequestId::host(self.travel_requests);
+        let ruled = isonetry::resolve_transition(&snap, token, request)
             .and_then(|res| apply_game(&mut snap, &GameEvent::TransitionResolved(res)));
         match ruled {
             Ok(()) => {

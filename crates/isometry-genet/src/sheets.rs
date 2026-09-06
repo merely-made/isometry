@@ -16,13 +16,31 @@ impl App {
     /// stats. Cheap-checks first so a normal frame does no work.
     pub(crate) fn pump_sheets(&mut self, ctx: &mut Ctx<'_>) {
         if self.system.is_none() {
+            let runner = &mut *ctx.runner;
+            if runner.state().character_create_request.is_some() {
+                runner.update(|ui| {
+                    ui.character_create_request = None;
+                    ui.status = "no game system loaded for character creation".to_owned();
+                });
+            }
             return;
         }
-        let (bind, edit, action, inventory_request, open, intent, spawn_sheet, clear_condition) = {
+        let (
+            bind,
+            character_create,
+            edit,
+            action,
+            inventory_request,
+            open,
+            intent,
+            spawn_sheet,
+            clear_condition,
+        ) = {
             let r = &*ctx.runner;
             let s = r.state();
             (
                 s.bind_sheet_request,
+                s.character_create_request.clone(),
                 s.sheet_edit.clone(),
                 s.sheet_action.clone(),
                 s.inventory_request.clone(),
@@ -36,6 +54,7 @@ impl App {
         let effective_missing = Some(&*ctx.runner)
             .is_some_and(|runner| open.is_some() && runner.state().sheet_effective.is_none());
         if bind.is_none()
+            && character_create.is_none()
             && edit.is_none()
             && action.is_none()
             && inventory_request.is_none()
@@ -63,6 +82,63 @@ impl App {
                         sheet: sheet.clone(),
                     });
                 }
+            });
+        }
+
+        // The UI supplies only map-visible identity. Mechanics remain in the
+        // installed system: this host mints its default sheet, then writes the
+        // chosen display name before the ordinary `SheetSet` event replicates.
+        if let Some(request) = character_create {
+            if !runner.state().can_edit_inventory {
+                runner.update(|ui| {
+                    ui.character_create_request = None;
+                    ui.status = "character creation requires the host".to_owned();
+                });
+                return;
+            }
+            let token = &request.token;
+            let placement_is_live = {
+                let ui = runner.state();
+                ui.character_spawn_tile_available(token.at)
+                    && !ui.map.tokens.iter().any(|existing| existing.id == token.id)
+            };
+            if !placement_is_live {
+                runner.update(|ui| {
+                    ui.character_create_request = None;
+                    ui.status = "character placement is no longer available".to_owned();
+                });
+                return;
+            }
+            let mut sheet = system.default_sheet();
+            sheet.set_text("name", request.name.clone());
+            runner.update(|ui| {
+                ui.character_create_request = None;
+                if ui.net_mode == NetMode::Remote {
+                    ui.net_outbox.push(GameEvent::CharacterCreated {
+                        token: request.token.clone(),
+                        sheet: sheet.clone(),
+                    });
+                } else {
+                    // Validation above ensures this cannot fail. Keep the
+                    // placement and its system-default sheet in one host turn,
+                    // so a system refusal never leaves a sheetless token.
+                    apply(
+                        &mut ui.map,
+                        &SessionEvent::TokenPlaced(request.token.clone()),
+                    )
+                    .expect("prevalidated character placement applies");
+                    ui.map.set_sheet(request.token.id, sheet.clone());
+                    ui.recompute_fog();
+                    ui.recompute_reach();
+                }
+                ui.selected_token = Some(request.token.id);
+                ui.mode = EditMode::Select;
+                if ui.net_mode != NetMode::Remote {
+                    ui.recompute_reach();
+                }
+                ui.open_sheet = Some(request.token.id);
+                ui.sheet_effective = None;
+                ui.status = format!("created {}", request.name);
             });
         }
 
@@ -135,7 +211,7 @@ impl App {
                             });
                             ui.status = format!("added {name}");
                         }
-                    }
+                    },
                     InventoryRequest::Equip { token, slot, item } => {
                         if let Some(inventory) = ui.inventories.get_mut(&token) {
                             if inventory.equip(slot, item).is_ok() {
@@ -146,7 +222,7 @@ impl App {
                                 ui.status = "equipped item".to_owned();
                             }
                         }
-                    }
+                    },
                     InventoryRequest::Unequip { token, slot } => {
                         if let Some(inventory) = ui.inventories.get_mut(&token) {
                             inventory.equipped.remove(&slot);
@@ -156,7 +232,7 @@ impl App {
                             });
                             ui.status = "unequipped item".to_owned();
                         }
-                    }
+                    },
                     InventoryRequest::Transfer { from, to, item } => {
                         let destination_has_item = ui
                             .inventories
@@ -174,7 +250,7 @@ impl App {
                                 }
                             }
                         }
-                    }
+                    },
                 }
                 ui.sheet_effective = None;
             });
@@ -250,7 +326,7 @@ impl App {
                 (Some(sheet), false) => {
                     let conditioned = sheet_with_conditions(sheet, remaining.iter());
                     system.mobility_for(&conditioned, true)
-                }
+                },
                 (None, false) => None,
             };
             runner.update(|ui| {
@@ -324,6 +400,7 @@ impl App {
         }
 
         // Recompute derived stats for the open sheet.
+        let open = ctx.runner.state().open_sheet;
         let Some(system) = self.system.as_mut() else {
             return;
         };
