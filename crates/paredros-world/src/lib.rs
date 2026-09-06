@@ -25,6 +25,7 @@
 //! player, camera, or observer entering the scheduling contract.
 
 mod bodies;
+mod contact;
 mod items;
 mod movement;
 mod navigation;
@@ -39,6 +40,11 @@ mod world;
 
 pub use bodies::{
     Bodies, Body, BodyError, BodyProfile, MAX_NEED, MOBILITY_WOUND, Name, Needs, SAFE_FALL,
+};
+pub use contact::{
+    BodyId, BodyKind, BodyProfile as ContactBodyProfile, BodyState, BoxCollider, ContactEffect,
+    ContactError, ContactSave, ContactWorld, FIXED_DT_SECONDS, HeldInput, Impairment, Input,
+    InputFrame, MAX_RECORDED_FRAMES, MovableBoard, Position, TriggeredInput,
 };
 pub use items::{Item, ItemError, ItemId, ItemKind, ItemLocation, Items};
 pub use movement::{Movement, MovementError, MovementEvent, MovementIntent, MovementSave};

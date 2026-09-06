@@ -838,7 +838,7 @@ later probes with the bounded targets stated in the founding proposal.
 
 #### First encounter: the damaged crossing
 
-**Design draft, 2026-09-05.** A concrete fixture for the embodied prototype,
+**Dry fixture implemented, 2026-09-05; player acceptance open and wider encounter remains a design draft.** A concrete fixture for the embodied prototype,
 with authored terrain, bodies, and two candidate world profiles. It tests
 whether ordinary actions can produce a situation worth remembering. The
 crossing, inhabitants, and outcomes below are scenario data, not production
@@ -1028,9 +1028,70 @@ runtime replay baseline before promising cross-device numerical equivalence.
 Meaningful automated checks cover interrupted actions, capability limits,
 finite resource use, evidence visibility, and save/replay continuity. Headed
 play must separately test camera, action readability, recovery, and whether a
-player can explain another creature's response. No acceptance results exist
-yet. If the dry movement pass is uninteresting, revise its controls and space
+player can explain another creature's response. The dry slice's implementation
+and verification are recorded below; wider encounter acceptance remains open.
+If the dry movement pass is uninteresting, revise its controls and space
 before expanding the social or procedural scope.
+
+##### Dry fixture implementation (2026-09-05)
+
+`cargo run -p paredros-room --bin crossing` opens the authored dry cut, loose
+board, overhead hold, broad exit stair, and stationary practice body. The
+crawler can carry the board; the climber can attach a tether. Both can use the
+channel and stairs. Keys 1/2 restart the entire fixture with a different body;
+they are development controls, not a body-switching rule for ordinary play.
+WASD is camera-relative, arrows/right-drag orbit, wheel adjusts distance,
+Shift braces, E handles the board, Q attaches/releases the tether, Space
+strikes, R restores an impaired capability, and F requests one explicit
+practice counterstrike. This last input is a training fixture, not NPC agency.
+
+The ownership review found `conatus::BodyWorld::move_character` already in
+the pinned Mere revision `d82afa17`. The initial local stepping solver was
+replaced before acceptance. Conatus now resolves 3D character movement,
+grounding, collision, and short steps; `contact/spatial.rs` lowers authored
+geometry to that API. For this small fixture the spatial query world is
+rebuilt per move. Retained bindings need profiling before this grows to a
+larger world. `paredros-world::ContactWorld` owns profile limits, action
+timing, carrying/placement, a bounded tether constraint, injury, recovery,
+and fixed-step input replay. The host and meshes remain derived.
+
+This contact record is a separate forcing probe, not yet joined to durable
+`GameState` subjects, body revisions, needs, death, or epistemic evidence.
+The board remains an axis-aligned, kinematically carried/placed collider;
+rotational rigid-body dynamics and destructible voxel anatomy are open.
+Capability recovery currently repairs impairment without replenishing
+integrity. A grounded brace halves strike damage and preserves capability.
+The trace limit is 72,000 ticks; the host stops simulation and offers a
+fixture restart when it fills. This is not a general long-lived save format.
+
+Before advancing to charge, playtest camera visibility, the usefulness of
+tethering, attack timing, and whether the differing routes are interesting.
+An overhead traversal solution is not established merely by a tether catch
+test. Charge, autonomous inhabitants, witnesses, communication, audio,
+generated anatomy, and the resonance profile remain deferred.
+
+Verification: `cargo test -p paredros-world --tests -p paredros-room --test
+crossing --bin crossing --lib --offline --locked` passes **53 tests**, with
+two existing opt-in physical GPU tests ignored. Coverage includes board
+support across the actual cut, both bodies escaping via the stair, full
+save/restore state equality, attack facing/obstruction/cooldown, grounded
+brace versus impairment, tether fall arrest, and invalid record admission.
+The room library also checks with `--no-default-features`.
+
+Headed smoke captures for crawler/climber show 2,839/3,454 distinct colours,
+movement, equal replayed state, one graph encoder/submission boundary, zero
+Renderling-internal submissions, and no scoped validation error. Local
+artifacts are `Code/testing/paredros/crossing/run-1788660172168` and
+`run-1788660180412`. These are render/replay receipts, not a complete playtest.
+The final host caps smoke at exactly 210 ticks (the earlier captures ended
+at 212/213 because a catch-up frame could overrun the stop).
+
+Live window checks verified readable geometry/text, pickup, and whole-fixture
+body restart. They exposed a dropped quick movement tap; the host now retains
+the released movement state for one simulation tick. The user subsequently
+traversed to the practice body during checking, so automated input stopped.
+Combat feel, tether-route usefulness, focus/resize behavior under sustained
+play, and subjective traversal acceptance remain unclaimed.
 
 ## 5. Stop rules
 
@@ -1063,6 +1124,12 @@ before expanding the social or procedural scope.
   symmetrically.
 
 ## 6. Findings
+
+- **2026-09-05 (dry contact ownership):** Mere's pinned Conatus supplies the
+  3D character controller; Seiche's inspected scene API is Rapier 2D and
+  Mesocosm's inspected `places::step` is integer Ground navigation. The dry
+  fixture consumes Conatus rather than promoting its experimental local
+  movement math. Authored fixtures and consequence rules remain Paredros-owned.
 
 - **2026-09-05 (player-experience design):** live `epistemic.rs` supplies
   observer-scoped evidence and exact report history; `relation.rs` still
@@ -1207,6 +1274,15 @@ before expanding the social or procedural scope.
   target.
 
 ## 7. Progress
+
+- **2026-09-05 (dry contact implementation):** added the `crossing` host,
+  authored scene/HUD, replayable contact rules, and Conatus movement adapter.
+  Automated room-route checks cover the carried board and recovery stairs
+  for both bodies; 53 tests pass. Headed render/replay and limited live-input
+  checks are recorded above. Replaced the initial local movement solver with
+  Conatus, corrected a live-input tap loss, and brightened fixture lighting
+  without changing the older room's torch policy. Player acceptance and
+  later encounter stages remain open.
 
 - **2026-09-05 (encounter draft):** specified the damaged crossing as the
   first playable design: a practical destination, two body configurations,

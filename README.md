@@ -61,6 +61,23 @@ those spatial laws can judge it.
 
 ## Use
 
+The dry damaged-crossing sandbox is interactive:
+
+```sh
+cargo run -p paredros-room --bin crossing
+```
+
+WASD moves, arrows or right-drag orbit, wheel zooms, Shift braces, E handles
+the board, Q attaches/releases a tether, Space strikes, R repairs capability,
+and F requests a practice counterstrike. Keys 1/2 restart as crawler/climber.
+This is authored contact testing, not the generated-world or NPC encounter yet.
+Set `PAREDROS_CROSSING_SMOKE=1` for a deterministic headed capture/replay
+check; each run writes a separate directory beneath `PAREDROS_CROSSING_OUTPUT`
+(default `Code/testing/paredros/crossing`). Set `PAREDROS_FONT` to a local
+TTF/OTF if the host cannot find one of its platform font fallbacks.
+`PAREDROS_CROSSING_AMBIENT` sets fixture ambient light from 0 to 1 (default
+0.72). The older room probes keep their original torch lighting.
+
 Scene receipts are runnable. Building requires the sibling repos (mesocosm,
 netrender, and a local renderling fork) checked out at their expected
 relative paths, since cross-repo deps are path deps.

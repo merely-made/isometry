@@ -123,7 +123,7 @@ working-principles section in that same session.
 
 ## Local addendum — Paredros
 
-Paredros is pre-implementation. Docs are flat in `design_docs/`; no area roots
+Paredros is in early implementation. Docs are flat in `design_docs/`; no area roots
 have been promoted yet.
 
 Games-wing material — shared architecture, the pipeline laws, the shared

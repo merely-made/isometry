@@ -27,7 +27,8 @@ use netrender::{
 };
 use renderling::camera::Camera;
 use renderling::context::{Context, RenderTarget};
-use renderling::geometry::Vertex;
+mod lighting;
+use lighting::shaded;
 use renderling::glam::{Mat4, Vec3};
 use renderling::primitive::Primitive;
 use renderling::stage::{Stage, StageEncodeReport};
@@ -433,35 +434,6 @@ impl JoinTenant {
 /// The colour already carries the mesher's face shading. The torch is the
 /// other half: greedy meshing merges a whole wall into one quad, and one
 /// quad of one colour is a flat plane until something varies across it.
-fn shaded(vertices: &[MeshVertex], eye: Vec3) -> Vec<Vertex> {
-    let mut out = Vec::with_capacity(vertices.len());
-    for triangle in vertices.chunks_exact(3) {
-        let [a, b, c] = [
-            triangle[0].position,
-            triangle[1].position,
-            triangle[2].position,
-        ];
-        let normal = (Vec3::from(b) - Vec3::from(a))
-            .cross(Vec3::from(c) - Vec3::from(a))
-            .normalize_or_zero()
-            .to_array();
-        for vertex in triangle {
-            let lit = crate::scene::torch(eye, vertex.position);
-            out.push(
-                Vertex::default()
-                    .with_position(vertex.position)
-                    .with_normal(normal)
-                    .with_color([
-                        vertex.color[0] * lit,
-                        vertex.color[1] * lit,
-                        vertex.color[2] * lit,
-                        1.0,
-                    ]),
-            );
-        }
-    }
-    out
-}
 
 /// The netrender half: chrome into the master, tenant texture composited in
 /// under it, and the master handed back.

@@ -28,6 +28,8 @@ v1b-proof = ["v1-proof"]
 # kinematics, netrender's frame, and the local renderling fork (which has no
 # published home). Revisit when the probe grows into a shipped target.
 [dependencies]
+paredros-world = { path = "../paredros-world" }
+netrender_text = { path = "../../../netrender/netrender_text" }
 modulus = { git = "https://github.com/merely-made/mere.git", rev = "d82afa17e2cca86da843f07a2d718d2e69eb9f10", optional = true }
 mesocosm-core = { version = "0.0.1", path = "../../../mesocosm/crates/mesocosm-core" }
 mesocosm-lens = { version = "0.0.1", path = "../../../mesocosm/crates/mesocosm-lens", optional = true }
@@ -46,6 +48,11 @@ pollster = "0.4"
 png = "0.17"
 serde = { version = "1", default-features = false, features = ["derive", "alloc"] }
 serde_json = { version = "1", optional = true }
+
+[[bin]]
+name = "crossing"
+path = "src/bin/crossing.rs"
+required-features = ["r1-proof"]
 
 [[bin]]
 name = "v1_residency"

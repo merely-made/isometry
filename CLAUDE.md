@@ -67,6 +67,14 @@ foundation receipts, while the 2026-08-13 fundamental-layer ledger now owns
 future ordering. The founding plan remains the charter with its phase section
 superseded.
 
+The `crossing` binary (2026-09-05) is the dry damaged-crossing contact
+fixture: two restartable body presets, board carrying, tethering, brace,
+timed strikes, impairment/recovery, and a readable shared-device HUD.
+`paredros-world::ContactWorld` is a separate fixed-step input/replay probe
+using Conatus character movement, not yet a join to `GameState` or F3 evidence.
+Its stationary practice body has no decision system. Full encounter and
+playtester acceptance remain open in the execution plan.
+
 See `design_docs/PROJECT_DESCRIPTION.md` for the product description,
 `design_docs/DOC_README.md` for the doc index, and the wing-level
 architecture in the sibling repo at

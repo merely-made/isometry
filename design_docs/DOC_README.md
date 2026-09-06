@@ -33,8 +33,10 @@ F3b1's evidence-to-answer join. Its
 [damaged crossing fixture](2026-08-07_paredros_execution_plan.md#first-encounter-the-damaged-crossing)
 specifies the player flow, two bodies, local world rules, partial witnesses,
 knowledge surfaces, and staged acceptance. Dry movement/contact is the first
-implementation slice. These proposals remain unimplemented and open to
-design discussion.
+implementation slice and now has an authored `crossing` executable consuming
+Conatus character movement, with local action/replay rules and a shared-device
+Renderling/Netrender host. Player acceptance remains open. The wider encounter
+and social/charge proposals remain unimplemented and open to design discussion.
 
 | Doc | What it is |
 | --- | ---------- |
