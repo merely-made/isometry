@@ -45,7 +45,9 @@
 //! from this crate to the `repos` ancestor rather than a fixed `../` count,
 //! so it survives the crate moving depth within the repo.
 
+use std::env;
 use std::fs;
+use std::thread;
 
 use mesocosm_core::Founding;
 use mesocosm_core::world::FOUNDERS;
@@ -54,7 +56,7 @@ mod measure;
 mod receipt;
 
 use measure::{RunResult, Verdict, run};
-use receipt::{receipt_path, render_json};
+use receipt::{explicit_receipt_path, receipt_path, render_json};
 
 /// `lifespan_for_mass(1000mg)` — the starter mass every `World::new` founds
 /// its played critter with — is 3,000 ticks after the 2026-08-29 retune
@@ -69,10 +71,9 @@ const SAMPLE_INTERVAL: u32 = 100;
 /// verdict holds across an uncherrypicked handful, not one lucky draw. Widened
 /// from five on 2026-08-29 for TD2, because a retune judged on five draws is
 /// judged on one bad founder composition either way.
-const BASELINE_SEEDS: [u64; 10] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+const DEFAULT_SEED_COUNT: u64 = 10;
 /// The first five of those seeds, reused for the control so a reader can see
 /// the same draws produce opposite verdicts under a different founding.
-const CONTROL_SEEDS: [u64; 5] = [1, 2, 3, 4, 5];
 
 /// Founders beyond the played critter: the world's own area-scaled cohort,
 /// read from `world::FOUNDERS` rather than typed here, so the instrument
@@ -108,53 +109,206 @@ const COLLAPSE_FRACTION: u64 = 50;
 /// every earlier round's receipt.
 const CROWD_CELL: i32 = 8;
 
+struct Config {
+    seed_count: u64,
+    jobs: usize,
+    output: Option<String>,
+    arms: Option<Vec<String>>,
+}
+
+impl Config {
+    fn from_args() -> Self {
+        let mut seed_count = DEFAULT_SEED_COUNT;
+        let mut jobs = 1usize;
+        let mut output = None;
+        let mut arms: Option<Vec<String>> = None;
+        let mut args = env::args().skip(1);
+        while let Some(arg) = args.next() {
+            match arg.as_str() {
+                "--seeds" => {
+                    seed_count = args
+                        .next()
+                        .expect("--seeds needs a positive count")
+                        .parse()
+                        .expect("--seeds must be a positive integer")
+                },
+                "--output" => output = Some(args.next().expect("--output needs a path")),
+                "--jobs" => {
+                    jobs = args
+                        .next()
+                        .expect("--jobs needs a positive count")
+                        .parse()
+                        .expect("--jobs must be a positive integer")
+                },
+                "--arms" => {
+                    arms = Some(
+                        args.next()
+                            .expect("--arms needs comma-separated names")
+                            .split(',')
+                            .map(str::to_ascii_lowercase)
+                            .collect(),
+                    )
+                },
+                "--help" | "-h" => {
+                    println!(
+                        "population_instrument [--seeds N] [--output PATH] [--arms drawn,roster]"
+                    );
+                    std::process::exit(0);
+                },
+                other => panic!("unknown argument {other}"),
+            }
+        }
+        assert!(seed_count > 0, "--seeds must be positive");
+        assert!(jobs > 0, "--jobs must be positive");
+        if let Some(selected) = &arms {
+            assert!(
+                !selected.is_empty()
+                    && selected
+                        .iter()
+                        .all(|arm| matches!(arm.as_str(), "drawn" | "roster")),
+                "--arms must contain one or both of: drawn,roster"
+            );
+            assert!(
+                selected
+                    .iter()
+                    .enumerate()
+                    .all(|(index, arm)| !selected[..index].contains(arm)),
+                "--arms entries must be unique"
+            );
+        }
+        Self {
+            seed_count,
+            jobs,
+            output,
+            arms,
+        }
+    }
+
+    fn enabled(&self, name: &str) -> bool {
+        self.arms
+            .as_ref()
+            .map_or(true, |arms| arms.iter().any(|arm| arm == name))
+    }
+}
+
+fn run_batch(seeds: &[u64], jobs: usize, founders: u32, founding: Founding) -> Vec<RunResult> {
+    let mut results = Vec::with_capacity(seeds.len());
+    for group in seeds.chunks(jobs) {
+        let group_results = thread::scope(|scope| {
+            group
+                .iter()
+                .map(|&seed| scope.spawn(move || run(seed, founders, founding)))
+                .collect::<Vec<_>>()
+                .into_iter()
+                .map(|handle| {
+                    handle
+                        .join()
+                        .expect("population instrument worker panicked")
+                })
+                .collect::<Vec<_>>()
+        });
+        for result in &group_results {
+            eprintln!(
+                "completed seed {}: {} at tick {} ({} ms)",
+                result.seed,
+                result.verdict.label(),
+                result.decided_tick,
+                result.elapsed_ms
+            );
+        }
+        results.extend(group_results);
+    }
+    results
+}
+
 fn main() {
-    println!("TD1 population instrument: {TICKS} ticks, sampling every {SAMPLE_INTERVAL}");
+    let config = Config::from_args();
+    let seeds: Vec<u64> = (1..=config.seed_count).collect();
+    println!(
+        "TD1 population instrument: {TICKS} ticks, sampling every {SAMPLE_INTERVAL}, jobs {}",
+        config.jobs
+    );
     println!(
         "verdict arithmetic: collapse when end < start and end <= start/{COLLAPSE_FRACTION}; boil >= {BOIL_MULTIPLE}x start and still rising; thins when the band held but a founded kingdom died out; else breathes\n"
     );
 
     println!("== baseline (current constants, {BASELINE_ORGANISM_COUNT} extra founders) ==");
-    let baseline: Vec<RunResult> = BASELINE_SEEDS
-        .iter()
-        .map(|&seed| run(seed, BASELINE_ORGANISM_COUNT, Founding::Drawn))
-        .inspect(report)
-        .collect();
+    let baseline = if config.enabled("drawn") {
+        run_batch(
+            &seeds,
+            config.jobs,
+            BASELINE_ORGANISM_COUNT,
+            Founding::Drawn,
+        )
+    } else {
+        Vec::new()
+    };
+    baseline.iter().for_each(report);
 
     println!("\n== archetype arm (the consumer tier founds the browsing hexapod) ==");
-    let archetype: Vec<RunResult> = BASELINE_SEEDS
-        .iter()
-        .map(|&seed| run(seed, BASELINE_ORGANISM_COUNT, Founding::BrowsingConsumer))
-        .inspect(report)
-        .collect();
+    let archetype = if config.arms.is_none() {
+        run_batch(
+            &seeds,
+            config.jobs,
+            BASELINE_ORGANISM_COUNT,
+            Founding::BrowsingConsumer,
+        )
+    } else {
+        Vec::new()
+    };
+    archetype.iter().for_each(report);
 
     println!("\n== roster (all eight archetypes, one lineage each) ==");
-    let roster: Vec<RunResult> = BASELINE_SEEDS
-        .iter()
-        .map(|&seed| run(seed, BASELINE_ORGANISM_COUNT, Founding::Roster))
-        .inspect(report)
-        .collect();
+    let roster = if config.enabled("roster") {
+        run_batch(
+            &seeds,
+            config.jobs,
+            BASELINE_ORGANISM_COUNT,
+            Founding::Roster,
+        )
+    } else {
+        Vec::new()
+    };
+    roster.iter().for_each(report);
 
     println!("\n== roster stand only (producers authored, fauna drawn) ==");
-    let stand: Vec<RunResult> = BASELINE_SEEDS
-        .iter()
-        .map(|&seed| run(seed, BASELINE_ORGANISM_COUNT, Founding::RosterStand))
-        .inspect(report)
-        .collect();
+    let stand = if config.arms.is_none() {
+        run_batch(
+            &seeds,
+            config.jobs,
+            BASELINE_ORGANISM_COUNT,
+            Founding::RosterStand,
+        )
+    } else {
+        Vec::new()
+    };
+    stand.iter().for_each(report);
 
     println!("\n== roster fauna only (consumers and decomposers authored, stand drawn) ==");
-    let fauna: Vec<RunResult> = BASELINE_SEEDS
-        .iter()
-        .map(|&seed| run(seed, BASELINE_ORGANISM_COUNT, Founding::RosterFauna))
-        .inspect(report)
-        .collect();
+    let fauna = if config.arms.is_none() {
+        run_batch(
+            &seeds,
+            config.jobs,
+            BASELINE_ORGANISM_COUNT,
+            Founding::RosterFauna,
+        )
+    } else {
+        Vec::new()
+    };
+    fauna.iter().for_each(report);
 
     println!("\n== control (single founder, no producer to feed it) ==");
-    let control: Vec<RunResult> = CONTROL_SEEDS
-        .iter()
-        .map(|&seed| run(seed, CONTROL_ORGANISM_COUNT, Founding::Drawn))
-        .inspect(report)
-        .collect();
+    let control = if config.arms.is_none() {
+        run_batch(
+            &seeds[..seeds.len().min(5)],
+            config.jobs,
+            CONTROL_ORGANISM_COUNT,
+            Founding::Drawn,
+        )
+    } else {
+        Vec::new()
+    };
+    control.iter().for_each(report);
 
     let tally =
         |runs: &[RunResult], verdict: Verdict| runs.iter().filter(|r| r.verdict == verdict).count();
@@ -195,15 +349,21 @@ fn main() {
         .unwrap_or(0);
     println!("max escapees observed across baseline (any sample, any seed): {max_outside}");
 
-    let path = receipt_path();
-    let json = render_json(&[
-        ("baseline", &baseline),
-        ("archetype", &archetype),
-        ("roster", &roster),
-        ("roster_stand_only", &stand),
-        ("roster_fauna_only", &fauna),
-        ("control", &control),
-    ]);
+    let path = config
+        .output
+        .as_deref()
+        .map(explicit_receipt_path)
+        .unwrap_or_else(receipt_path);
+    let mut batches = vec![
+        ("baseline", baseline.as_slice()),
+        ("archetype", archetype.as_slice()),
+        ("roster", roster.as_slice()),
+        ("roster_stand_only", stand.as_slice()),
+        ("roster_fauna_only", fauna.as_slice()),
+        ("control", control.as_slice()),
+    ];
+    batches.retain(|(_, runs)| !runs.is_empty());
+    let json = render_json(&batches);
     fs::create_dir_all(path.parent().expect("receipt path has a parent")).expect(
         "Code/testing/mesocosm already exists in this workspace; create_dir_all is just insurance",
     );
@@ -276,6 +436,10 @@ fn report(run: &RunResult) {
         } else {
             " (NOT CONSERVED)"
         },
+    );
+    println!(
+        "            feeding modes P/Grazer/Predator/Omnivore/Scavenger: {:?} -> {:?}",
+        start.feeding_modes, end.feeding_modes
     );
     println!("            {}", run.reason);
 }

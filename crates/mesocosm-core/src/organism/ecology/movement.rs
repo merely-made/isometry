@@ -10,24 +10,21 @@
 //! are an acceleration structure, never state: their only job is to avoid
 //! asking every embodied body about every other body before a sight query.
 
-use std::cmp::Reverse;
-
+use super::kinship::Kin;
+use super::{dispersal_for, is_hungry, travels};
 use crate::flow::Records;
 use crate::history::Event;
+use crate::organism::{
+    FaunaDecisionTrace, FaunaDrive, FaunaSenses, FaunaTraits, LastSeen, Organism, OrganismId,
+};
 use crate::organism::{Kingdom, Signal};
 use crate::places::{
     Ground, Places, Soil, Tier, WalkerShape, route_step_for, step_for as grounded_step,
     surface_stance_for,
 };
-use crate::process::FeedingMode;
+use crate::process::{FeedingMode, NisKind};
 use crate::rng::Rng;
-
-use crate::organism::{
-    FaunaDecisionTrace, FaunaDrive, FaunaSenses, FaunaTraits, LastSeen, Organism, OrganismId,
-};
-
-use super::kinship::Kin;
-use super::{dispersal_for, is_hungry, travels};
+use std::cmp::Reverse;
 
 mod perception;
 
@@ -55,7 +52,6 @@ pub(super) fn choose_living_target(
     ground: Option<&Ground>,
     kin: &Kin,
 ) -> Option<usize> {
-    let mode = organism.feeding_mode();
     let reach = GRAZE_RANGE + organism.body().reach();
     let sight = sight_range(organism, reach, ground);
     let observer_shape = organism.walker_shape();
@@ -66,10 +62,9 @@ pub(super) fn choose_living_target(
             continue;
         };
         if target.id == organism.id
-            || !matches!(mode, FeedingMode::Grazer | FeedingMode::Predator)
-            || (mode == FeedingMode::Grazer && target.kingdom != Kingdom::Producer)
+            || !organism.admits(target.kingdom.nis_kind(), false)
             || chebyshev(organism.position, target.position) > reach
-            || (target.signal != Signal::Plain && mode != FeedingMode::Grazer)
+            || (target.signal != Signal::Plain && target.kingdom != Kingdom::Producer)
         {
             continue;
         }
@@ -101,6 +96,9 @@ pub(super) fn choose_carrion_target(
     cells: &Cells,
     ground: Option<&Ground>,
 ) -> Option<usize> {
+    if !organism.admits(NisKind::Producer, true) {
+        return None;
+    }
     let observer_shape = organism.walker_shape();
     nearby_indexes(cells, organism.position, DECOMPOSE_RANGE)
         .filter_map(|order| carrion.get(order).map(|target| (order, target)))
@@ -149,9 +147,7 @@ fn preferred_living<'a>(
     let hungry = is_hungry(organism);
     let mut ranked: Vec<(i32, u64, usize, &'a LivingTarget)> = candidates
         .filter(|(_, target)| {
-            target.id != organism.id
-                && (organism.feeding_mode() == FeedingMode::Predator
-                    || target.kingdom == Kingdom::Producer)
+            target.id != organism.id && organism.admits(target.kingdom.nis_kind(), false)
         })
         .map(|(order, target)| {
             // The same remove the bite applies (TD10), against sight rather
@@ -186,9 +182,7 @@ fn policy_living<'a>(
     let hungry = is_hungry(organism);
     let candidate = candidates
         .filter(|(_, target)| {
-            target.id != organism.id
-                && (traits.feeding_mode == FeedingMode::Predator
-                    || target.kingdom == Kingdom::Producer)
+            target.id != organism.id && organism.admits(target.kingdom.nis_kind(), false)
         })
         .filter_map(|(order, target)| {
             // Kin read as further away here too (TD10), and it is the same one
@@ -255,6 +249,9 @@ fn preferred_carrion<'a>(
     ground: Option<&Ground>,
     sight: i32,
 ) -> Option<[i32; 3]> {
+    if !organism.admits(NisKind::Producer, true) {
+        return None;
+    }
     let observer_shape = organism.walker_shape();
     let mut ranked: Vec<(i32, usize, &'a CarrionTarget)> = candidates
         .map(|(order, target)| (chebyshev(organism.position, target.position), order, target))
@@ -284,10 +281,10 @@ fn preferred_target(
     kin: &Kin,
 ) -> Option<MovementTarget> {
     match organism.feeding_mode() {
-        FeedingMode::Grazer | FeedingMode::Predator => {
+        FeedingMode::Grazer | FeedingMode::Predator | FeedingMode::Omnivore => {
             let reach = GRAZE_RANGE + organism.body().reach();
             let sight = sight_range(organism, reach, ground);
-            if let (Tier::Near, Some(ground)) = (organism.tier, ground) {
+            let living = if let (Tier::Near, Some(ground)) = (organism.tier, ground) {
                 policy_living(
                     organism,
                     nearby_indexes(living_cells, organism.position, sight)
@@ -300,35 +297,39 @@ fn preferred_target(
                 organism.last_fauna_decision = None;
                 preferred_living(organism, living.iter().enumerate(), ground, sight, kin)
                     .map(|(id, at)| MovementTarget::Seen(id, at))
-            }
-        }
+            };
+            living.or_else(|| preferred_carrion_target(organism, carrion, carrion_cells, ground))
+        },
         FeedingMode::Scavenger => {
-            organism.last_fauna_decision = None;
-            // Mirrors the grazer/predator split just above: seeking reaches
-            // out to sight_range (TD2d — a decomposer used to be unable to
-            // sense carrion it could not already reach, so it stood still
-            // until starvation's own wander kicked in), while the bite stays
-            // capped at the flat DECOMPOSE_RANGE below.
-            let sight = sight_range(organism, DECOMPOSE_RANGE + organism.body().reach(), ground);
-            if organism.tier == Tier::Near && ground.is_some() {
-                preferred_carrion(
-                    organism,
-                    nearby_indexes(carrion_cells, organism.position, sight)
-                        .filter_map(|order| carrion.get(order).map(|target| (order, target))),
-                    ground,
-                    sight,
-                )
-                .map(MovementTarget::Other)
-            } else {
-                preferred_carrion(organism, carrion.iter().enumerate(), ground, sight)
-                    .map(MovementTarget::Other)
-            }
-        }
+            preferred_carrion_target(organism, carrion, carrion_cells, ground)
+        },
         FeedingMode::Producer => {
             organism.last_fauna_decision = None;
             None
-        }
+        },
     }
+}
+
+fn preferred_carrion_target(
+    organism: &mut Organism,
+    carrion: &[CarrionTarget],
+    carrion_cells: &Cells,
+    ground: Option<&Ground>,
+) -> Option<MovementTarget> {
+    organism.last_fauna_decision = None;
+    let sight = sight_range(organism, DECOMPOSE_RANGE + organism.body().reach(), ground);
+    let target = if organism.tier == Tier::Near && ground.is_some() {
+        preferred_carrion(
+            organism,
+            nearby_indexes(carrion_cells, organism.position, sight)
+                .filter_map(|order| carrion.get(order).map(|target| (order, target))),
+            ground,
+            sight,
+        )
+    } else {
+        preferred_carrion(organism, carrion.iter().enumerate(), ground, sight)
+    };
+    target.map(MovementTarget::Other)
 }
 
 fn remembered_target(
@@ -343,7 +344,11 @@ fn remembered_target(
         return None;
     }
     let memory = organism.last_seen?;
-    if memory.ticks_left == 0 || !living.iter().any(|target| target.id == memory.target) {
+    if memory.ticks_left == 0
+        || !living.iter().any(|target| {
+            target.id == memory.target && organism.admits(target.kingdom.nis_kind(), false)
+        })
+    {
         organism.last_seen = None;
         return None;
     }
@@ -387,7 +392,7 @@ pub(super) fn disperse(
                 ticks_left: MEMORY_TICKS,
             });
             (Some(at), false)
-        }
+        },
         Some(MovementTarget::Avoid(id, at)) => {
             organism.last_seen = Some(LastSeen {
                 target: id,
@@ -402,7 +407,7 @@ pub(super) fn disperse(
                 ]),
                 false,
             )
-        }
+        },
         Some(MovementTarget::Hold(id, at)) => {
             organism.last_seen = Some(LastSeen {
                 target: id,
@@ -410,7 +415,7 @@ pub(super) fn disperse(
                 ticks_left: MEMORY_TICKS,
             });
             (None, false)
-        }
+        },
         Some(MovementTarget::Other(at)) => (Some(at), false),
         None => (remembered_target(organism, living, ground), true),
     };
@@ -493,7 +498,7 @@ pub(super) fn disperse(
                             organism.position[2] + dz,
                         ],
                     )
-                }
+                },
             }
         } else {
             diffuse(places, organism.position, rng)

@@ -47,7 +47,15 @@ representation contract is agreed. VB1's live route is implemented and replay-ve
 locally; pressure silhouettes and headed lifecycle/fault acceptance remain open;
 VB2's first surface grammar is integrated locally with persisted voxel content
 and branching layouts plus jointed appendage chains and foot/canopy spacing: 538 passing joined tests and before/after GPU captures; further anatomy refinement and recognition remain open.
-One host integrator joins representation and GUI work. TG1 is independent;
+One host integrator joins representation and GUI work. TG1 is accepted as of
+2026-09-05: 956 passed, 0 failed, 2 ignored across eight packages, plus the
+final native host pass for inspector, four turns, ordinary burrow, and replay.
+Its 60-run verifier covered 5,252 samples with exact total matter, zero bodies outside the
+enclosure, and census agreement. Current drawn ends 0 breathes / 29 thins
+/ 0 boil / 1 collapse; roster ends 0 / 17 / 0 / 13. TG6 remains open because
+neither arm retains all three tiers at the end.
+The older CP1 grammar-revision-0 golden is refused by name; the retained current
+recordings use revision 1.
 TG2/TG3 block VB4's typed diet extension, not VB1-VB3 or the existing-mechanics
 graft/expression proof. TG6 measures trophic viability; VB5 adds visible and
 performance acceptance. Neither closes PE4's generated-world proof by itself.
@@ -55,8 +63,8 @@ performance acceptance. Neither closes PE4's generated-world proof by itself.
 **Integration checkpoint, 2026-09-05:** VB3 keyboard inspection and CP1's
 fixed clearing/burrow quarter turns are implemented (`377d774`). The bounded
 CP1 terrain-readability pass is now native-verified; actual canopy composition remains
-an anatomy task. TG1 is the next mechanics slice, followed by VB4a's visible
-body-change/descendant join. This sequence uses the habitat as a common
+an anatomy task. TG1 is accepted; VB4a is the next visible body-change/descendant
+join. This sequence uses the habitat as a common
 acceptance scene without making presentation a prerequisite for core TG1.
 Typed diet appearance still waits on TG2/TG3; camera work closes no scale gate.
 

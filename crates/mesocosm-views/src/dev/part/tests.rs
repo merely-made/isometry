@@ -1,4 +1,34 @@
 use super::*;
+
+#[test]
+fn intake_reading_follows_declared_ports_and_distinguishes_inactive_tissue() {
+    use mesocosm_core::{IntakePort, NisKind, Process, Registry, state_hash};
+    let (mut world, id, part) = fixture();
+    let registry = Registry::native();
+    let port = IntakePort::live(NisKind::Consumer)
+        .supported_by(registry.of_native(Process::Intake).reference());
+    let organism = world.organisms.iter_mut().find(|o| o.id == id).unwrap();
+    let geometry = organism.body().clone();
+    assert!(organism.phenotype.declare_port(part, port));
+    let before = state_hash(&world);
+    let reading = part_of(&world, id, part, &History::new()).reading.unwrap();
+    assert_eq!(reading.intake, "active: living consumers");
+    assert!(reading.feeding.contains("living consumers"));
+    assert_eq!(
+        state_hash(&world),
+        before,
+        "inspection changes no world facts"
+    );
+
+    let organism = world.organisms.iter_mut().find(|o| o.id == id).unwrap();
+    assert_eq!(organism.body(), &geometry);
+    assert!(organism.phenotype.declare_port(
+        part,
+        port.supported_by(registry.of_native(Process::Sense).reference()),
+    ));
+    let reading = part_of(&world, id, part, &History::new()).reading.unwrap();
+    assert_eq!(reading.intake, "inactive: living consumers");
+}
 use mesocosm_core::{Event, History, PartId, RecordedEvent, World};
 
 fn fixture() -> (World, OrganismId, PartId) {

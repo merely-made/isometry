@@ -16,7 +16,7 @@ use crate::organism::ecology::kinship::Kin;
 use crate::organism::ecology::sight_for_body;
 use crate::organism::{Kingdom, Organism, OrganismId, Signal};
 use crate::places::{Ground, Tier, WalkerShape, spot_for};
-use crate::process::FeedingMode;
+use crate::process::{FeedingMode, NisKind};
 
 /// An embodied mind's local visual horizon, for a body with no sense organ at
 /// all. **The reference and the floor** since TD11, not the flat cap it was:
@@ -175,36 +175,43 @@ pub(super) fn forage_gradient(
     let mode = organism.feeding_mode();
     let at = organism.position;
     match mode {
-        FeedingMode::Grazer | FeedingMode::Predator => {
+        FeedingMode::Grazer | FeedingMode::Predator | FeedingMode::Omnivore => {
             let horizon = super::GRAZE_RANGE + organism.body().reach();
-            densest_cell(at, living_cells, horizon, |index| match living.get(index) {
-                Some(target) => u32::from(edible(organism, mode, target, horizon, kin)),
-                None => 0,
-            })
-        }
-        FeedingMode::Scavenger => {
-            let horizon = super::DECOMPOSE_RANGE + organism.body().reach();
-            densest_cell(at, carrion_cells, horizon, |index| {
-                u32::from(carrion.get(index).is_some())
-            })
-        }
+            let edible_live = |target: &LivingTarget| edible(organism, target, horizon, kin);
+            if living.iter().any(edible_live) {
+                densest_cell(at, living_cells, horizon, |index| {
+                    living
+                        .get(index)
+                        .map_or(0, |target| u32::from(edible_live(target)))
+                })
+            } else {
+                carrion_gradient(organism, at, carrion, carrion_cells)
+            }
+        },
+        FeedingMode::Scavenger => carrion_gradient(organism, at, carrion, carrion_cells),
         // A producer has no edible set, so it keeps TD9's random creep.
         FeedingMode::Producer => None,
     }
 }
 
+fn carrion_gradient(
+    organism: &Organism,
+    at: [i32; 3],
+    carrion: &[CarrionTarget],
+    carrion_cells: &Cells,
+) -> Option<[i32; 3]> {
+    let horizon = super::DECOMPOSE_RANGE + organism.body().reach();
+    densest_cell(at, carrion_cells, horizon, |index| {
+        u32::from(carrion.get(index).is_some() && organism.admits(NisKind::Producer, true))
+    })
+}
+
 /// Whether a living target counts toward the gradient: the same edibility the
 /// bite asks, minus the geometry, plus TD10's kin test as a hard zero.
-fn edible(
-    organism: &Organism,
-    mode: FeedingMode,
-    target: &LivingTarget,
-    horizon: i32,
-    kin: &Kin,
-) -> bool {
+fn edible(organism: &Organism, target: &LivingTarget, horizon: i32, kin: &Kin) -> bool {
     target.id != organism.id
-        && (mode == FeedingMode::Predator || target.kingdom == Kingdom::Producer)
-        && (target.signal == Signal::Plain || mode == FeedingMode::Grazer)
+        && organism.admits(target.kingdom.nis_kind(), false)
+        && (target.signal == Signal::Plain || target.kingdom == Kingdom::Producer)
         // A gradient toward your own line is not a fix. `hungry` is true by
         // construction — this only runs inside the tick's hunger horizon — so
         // the remove is already the forgiving one the bite would apply.

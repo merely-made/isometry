@@ -55,6 +55,12 @@ impl World {
         if donor.is_alive() {
             return Outcome::Rejected(Rejection::StillLiving(organism));
         }
+        if !self
+            .controlled()
+            .is_some_and(|eater| eater.admits(donor.kingdom().nis_kind(), true))
+        {
+            return Outcome::Rejected(Rejection::Inedible(organism));
+        }
         let Some(found) = donor.body().part(part) else {
             return Outcome::Rejected(Rejection::NoSuchPart(part));
         };

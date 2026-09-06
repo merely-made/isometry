@@ -379,6 +379,7 @@ pub fn refusal_words(rejection: &Rejection) -> &'static str {
         Rejection::OutOfReach(_) => "out of reach",
         Rejection::Disembodied => "no body",
         Rejection::Itself => "that is you",
+        Rejection::Inedible(_) => "your intake organs cannot accept it",
         Rejection::NoRoom => "no room for it",
         Rejection::NoSuchOrganism(_) => "nothing there",
         Rejection::NoSuchParent(_) => "nowhere to attach",

@@ -356,24 +356,44 @@ mod tests {
 
         // Beside it, a death the ecology took: same shape, same words but for
         // the id, and nothing anywhere says a hand was involved.
-        let natural = host
+        let natural: Vec<_> = host
             .runtime
             .world()
             .living()
-            .find(|o| Some(o.id) != host.runtime.world().controlled_id())
-            .expect("somebody else is still alive")
-            .id;
+            .filter(|organism| Some(organism.id) != host.runtime.world().controlled_id())
+            .map(|organism| organism.id)
+            .collect();
         for _ in 0..4_000 {
             host.runtime.step(1);
-            if host.runtime.history().ending(natural).is_some() {
+            if natural.iter().any(|organism| {
+                matches!(
+                    host.runtime.history().ending(*organism),
+                    Some(mesocosm_core::Ending {
+                        how: mesocosm_core::Passing::Died,
+                        ..
+                    })
+                )
+            }) {
                 break;
             }
         }
+        let natural = natural
+            .into_iter()
+            .find(|organism| {
+                matches!(
+                    host.runtime.history().ending(*organism),
+                    Some(mesocosm_core::Ending {
+                        how: mesocosm_core::Passing::Died,
+                        ..
+                    })
+                )
+            })
+            .expect("an unplayed founder dies and leaves a corpse inside four thousand ticks");
         let natural_ending = host
             .runtime
             .history()
             .ending(natural)
-            .expect("a founder's life ends inside four thousand ticks");
+            .expect("the recorded natural death has an ending");
         let natural_lost =
             mesocosm_views::lost_of(natural, Some(natural_ending), host.runtime.world().tick);
         assert_eq!(

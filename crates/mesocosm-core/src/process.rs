@@ -152,7 +152,99 @@ pub enum FeedingMode {
     Producer,
     Grazer,
     Predator,
+    Omnivore,
     Scavenger,
+}
+
+/// The living provenance a port may admit. Dead stock is deliberately not a
+/// fourth kind: it is an intake-target condition. TG2 later decides how its
+/// retained provenance is accounted before it returns to soil.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+pub enum NisKind {
+    Producer,
+    Consumer,
+    Decomposer,
+}
+
+/// A compact, part-local declaration of what one intake organ can accept.
+///
+/// This is anatomy carried beside the part's allocation. Geometry supplies a
+/// founding default, but later declarations are retained through body changes.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct IntakePort {
+    kinds: u8,
+    deadstock: bool,
+    /// The exact allocation that keeps this declaration active. A declaration
+    /// survives rearrangement, while a port goes dormant when its tissue does.
+    #[serde(default)]
+    support: Option<ProcessRef>,
+}
+
+impl IntakePort {
+    const PRODUCER: u8 = 1;
+    const CONSUMER: u8 = 2;
+    const DECOMPOSER: u8 = 4;
+
+    pub const fn none() -> Self {
+        Self {
+            kinds: 0,
+            deadstock: false,
+            support: None,
+        }
+    }
+
+    pub const fn live(kind: NisKind) -> Self {
+        Self::none().with_live(kind)
+    }
+
+    pub const fn deadstock() -> Self {
+        Self {
+            kinds: 0,
+            deadstock: true,
+            support: None,
+        }
+    }
+
+    pub const fn with_live(mut self, kind: NisKind) -> Self {
+        self.kinds |= match kind {
+            NisKind::Producer => Self::PRODUCER,
+            NisKind::Consumer => Self::CONSUMER,
+            NisKind::Decomposer => Self::DECOMPOSER,
+        };
+        self
+    }
+
+    pub const fn with_deadstock(mut self) -> Self {
+        self.deadstock = true;
+        self
+    }
+
+    pub const fn supported_by(mut self, process: ProcessRef) -> Self {
+        self.support = Some(process);
+        self
+    }
+
+    pub const fn support(self) -> Option<ProcessRef> {
+        self.support
+    }
+
+    pub const fn admits_live(self, kind: NisKind) -> bool {
+        self.kinds
+            & match kind {
+                NisKind::Producer => Self::PRODUCER,
+                NisKind::Consumer => Self::CONSUMER,
+                NisKind::Decomposer => Self::DECOMPOSER,
+            }
+            != 0
+    }
+
+    pub const fn admits_deadstock(self) -> bool {
+        self.deadstock
+    }
+
+    pub const fn has_live(self) -> bool {
+        self.kinds != 0
+    }
 }
 
 /// Why a body cannot do something.

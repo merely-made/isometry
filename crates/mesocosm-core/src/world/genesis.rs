@@ -16,6 +16,8 @@ use crate::body::SpeciesId;
 use crate::development::{DevelopmentError, PartPalette};
 use crate::organism::ecology;
 use crate::organism::{Kingdom, Organism, OrganismId, Signal, Stage};
+use crate::plan::Role;
+use crate::process::{IntakePort, NisKind, Process, Registry};
 use crate::rng::Rng;
 use crate::species::Lineages;
 
@@ -331,6 +333,11 @@ impl World {
         // keep every part positive-mass, the world starts it at that exact
         // structural floor. Births below enforce the stricter filial rule and
         // wait for provisioning instead.
+        // The browser lineage carries a crop and a separate jaw port. This is
+        // an authored roster declaration, not a geometry inference: removing
+        // either port changes the reading while leaving the silhouette intact.
+        let omnivore_species = species_of[&Kingdom::Consumer][0];
+        let authored_consumers = !founding.tier(Kingdom::Consumer).is_empty();
         let mut organisms = Vec::with_capacity(founders.len());
         for founder in founders {
             let lineage = lineages
@@ -351,10 +358,27 @@ impl World {
             };
             let mass_mg = body.total_mass_mg();
             body.plan.symmetry = founder.kingdom.symmetry();
+            let mut phenotype = crate::phenotype::BodyPhenotype::seed(body);
+            lineage.apply_intake_ports(&mut phenotype);
+            if authored_consumers
+                && (founder.species == omnivore_species || founder.species == SpeciesId(1))
+            {
+                let jaw = phenotype
+                    .body()
+                    .living()
+                    .find(|part| crate::plan::classify(part.half_extent) == Role::Limb)
+                    .map(|part| part.id);
+                if let Some(jaw) = jaw {
+                    let port = IntakePort::live(NisKind::Consumer)
+                        .supported_by(Registry::native().of_native(Process::Contract).reference());
+                    phenotype.declare_port(jaw, port);
+                    lineages.declare_intake_port(founder.species, jaw, port);
+                }
+            }
             organisms.push(Organism {
                 id: founder.id,
                 species: founder.species,
-                phenotype: crate::phenotype::BodyPhenotype::seed(body),
+                phenotype,
                 development_seed: founder.development_seed,
                 life_history_mass_mg: mass_mg,
                 position: founder.position,

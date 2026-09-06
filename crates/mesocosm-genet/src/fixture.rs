@@ -90,12 +90,23 @@ pub fn metabolize(
 /// nothing left or it is already in reach.
 pub fn toward_prey(world: &World) -> Option<[i32; 3]> {
     let here = world.position()?;
+    let eater = world.controlled()?;
     let at = world
         .organisms
         .iter()
-        .filter(|m| Some(m.id) != world.controlled_id() && m.is_alive())
-        .map(|m| m.position)
-        .min_by_key(|at: &[i32; 3]| (0..3).map(|a| (at[a] - here[a]).abs()).max().unwrap_or(0))?;
+        .filter(|m| Some(m.id) != world.controlled_id() && m.biomass_mg() > 0)
+        .filter(|m| eater.admits(m.kingdom().nis_kind(), !m.is_alive()))
+        .min_by_key(|m| {
+            (
+                !m.is_alive(),
+                (0..3)
+                    .map(|a| (m.position[a] - here[a]).abs())
+                    .max()
+                    .unwrap_or(0),
+                m.id,
+            )
+        })?
+        .position;
 
     let step = [0, 1, 2].map(|a| (at[a] - here[a]).signum());
     if step == [0, 0, 0] { None } else { Some(step) }
@@ -144,24 +155,92 @@ pub fn crossing_for(world: &World, donor: OrganismId) -> Crossing {
 }
 
 pub fn reachable(world: &World) -> Option<OrganismId> {
+    let eater = world.controlled()?;
     world
         .organisms
         .iter()
         // Never offer the critter itself. Since P1 the played organism is in
         // this vector like everything else, so it is a candidate unless it is
         // filtered out.
-        .filter(|m| Some(m.id) != world.controlled_id() && m.is_alive())
+        .filter(|m| Some(m.id) != world.controlled_id() && m.biomass_mg() > 0)
+        .filter(|m| eater.admits(m.kingdom().nis_kind(), !m.is_alive()))
         // Anatomy decides how far this critter can touch, not a constant. A
         // stubby one reaches about three voxels; a limbed one reaches further.
         .filter(|m| world.in_reach(m.position))
+        .min_by_key(|m| (!m.is_alive(), m.id))
         .map(|m| m.id)
-        .min()
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use mesocosm_mesh::{VolumeSource, flatten};
+
+    #[test]
+    fn food_controls_skip_targets_the_controlled_ports_do_not_admit() {
+        use mesocosm_core::{IntakePort, Kingdom, NisKind, Process, Registry};
+        let mut world = World::new(7, 80);
+        let me = world.controlled_id().unwrap();
+        let plant = world
+            .organisms
+            .iter()
+            .find(|o| o.id != me && o.kingdom() == Kingdom::Producer)
+            .unwrap()
+            .id;
+        let prey = world
+            .organisms
+            .iter()
+            .find(|o| o.id != me && o.kingdom() == Kingdom::Consumer)
+            .unwrap()
+            .id;
+        world
+            .organisms
+            .retain(|o| [me, plant, prey].contains(&o.id));
+        let eater = world.organisms.iter_mut().find(|o| o.id == me).unwrap();
+        let parts: Vec<_> = eater.body().living().map(|p| p.id).collect();
+        for part in parts {
+            eater.phenotype.declare_port(part, IntakePort::none());
+        }
+        let root = eater.body().root;
+        eater.phenotype.declare_port(
+            root,
+            IntakePort::live(NisKind::Consumer)
+                .supported_by(Registry::native().of_native(Process::Intake).reference()),
+        );
+        let at = eater.position;
+        world
+            .organisms
+            .iter_mut()
+            .find(|o| o.id == plant)
+            .unwrap()
+            .position = [at[0] + 1, at[1], at[2]];
+        world
+            .organisms
+            .iter_mut()
+            .find(|o| o.id == prey)
+            .unwrap()
+            .position = [at[0], at[1], at[2] + 2];
+        let hash = mesocosm_core::state_hash(&world);
+        assert_eq!(reachable(&world), Some(prey));
+        assert_eq!(toward_prey(&world), Some([0, 0, 1]));
+        assert_eq!(mesocosm_core::state_hash(&world), hash);
+
+        world
+            .organisms
+            .iter_mut()
+            .find(|o| o.id == prey)
+            .unwrap()
+            .stage = mesocosm_core::Stage::Carrion;
+        assert_eq!(reachable(&world), None);
+        let eater = world.organisms.iter_mut().find(|o| o.id == me).unwrap();
+        eater.phenotype.declare_port(
+            root,
+            IntakePort::deadstock()
+                .supported_by(Registry::native().of_native(Process::Intake).reference()),
+        );
+        assert_eq!(reachable(&world), Some(prey));
+        assert_eq!(toward_prey(&world), Some([0, 0, 1]));
+    }
 
     #[test]
     fn the_fixture_resolves_every_volume_a_world_mints() {
@@ -203,6 +282,19 @@ mod tests {
                     1_500,
                 )
             };
+            // Placement is the claim here. Give this compact test body a
+            // declared live-food port instead of relying on decomposers
+            // historically being able to metabolize every living target.
+            let port = mesocosm_core::IntakePort::live(mesocosm_core::NisKind::Producer)
+                .with_live(mesocosm_core::NisKind::Consumer)
+                .with_live(mesocosm_core::NisKind::Decomposer)
+                .supported_by(
+                    mesocosm_core::Registry::native()
+                        .of_native(mesocosm_core::Process::Intake)
+                        .reference(),
+                );
+            let root = organism.body().root;
+            assert!(organism.phenotype.declare_port(root, port));
         }
 
         // Walk to prey rather than assuming it is adjacent: reach is anatomy

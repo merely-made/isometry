@@ -12,6 +12,7 @@ use std::path::PathBuf;
 
 use super::measure::RunResult;
 use super::{BOIL_MULTIPLE, COLLAPSE_FRACTION, SAMPLE_INTERVAL, TICKS};
+use mesocosm_core::TROPHIC_GRAMMAR_REVISION;
 
 /// Finds `Code/testing/mesocosm/dc4_roster.json` by walking up from
 /// this crate to the `repos` ancestor documented in `Code/CLAUDE.md`'s layout
@@ -35,6 +36,10 @@ pub fn receipt_path() -> PathBuf {
     workspace_root.join("testing/mesocosm/dc4_roster.json")
 }
 
+pub fn explicit_receipt_path(path: &str) -> PathBuf {
+    PathBuf::from(path)
+}
+
 /// The receipt's shape: one array per batch, in the order they ran.
 pub fn render_json(batches: &[(&str, &[RunResult])]) -> String {
     let mut out = String::new();
@@ -43,6 +48,10 @@ pub fn render_json(batches: &[(&str, &[RunResult])]) -> String {
     out.push_str(&format!("  \"sample_interval\": {SAMPLE_INTERVAL},\n"));
     out.push_str(&format!("  \"boil_multiple\": {BOIL_MULTIPLE},\n"));
     out.push_str(&format!("  \"collapse_fraction\": {COLLAPSE_FRACTION},\n"));
+    out.push_str(&format!(
+        "  \"trophic_grammar\": {TROPHIC_GRAMMAR_REVISION},\n"
+    ));
+    out.push_str("  \"feeding_mode_order\": [\"producer\", \"grazer\", \"predator\", \"omnivore\", \"scavenger\"],\n");
     for (index, (name, runs)) in batches.iter().enumerate() {
         out.push_str(&format!("  \"{name}\": "));
         render_batch(&mut out, runs, 2);
@@ -93,7 +102,7 @@ fn render_run(out: &mut String, run: &RunResult, indent: usize) {
     for (index, sample) in run.samples.iter().enumerate() {
         out.push_str(&sample_indent);
         out.push_str(&format!(
-            "{{\"tick\": {}, \"producer\": {}, \"consumer\": {}, \"decomposer\": {}, \"total_biomass_mg\": {}, \"cum_born\": {}, \"cum_died\": {}, \"max_cell\": {}, \"span\": {}, \"outside\": {}, \"soil_mg\": {}, \"total_matter_mg\": {}}}",
+            "{{\"tick\": {}, \"producer\": {}, \"consumer\": {}, \"decomposer\": {}, \"total_biomass_mg\": {}, \"cum_born\": {}, \"cum_died\": {}, \"max_cell\": {}, \"span\": {}, \"outside\": {}, \"soil_mg\": {}, \"total_matter_mg\": {}, \"feeding_modes\": {{\"producer\": {}, \"grazer\": {}, \"predator\": {}, \"omnivore\": {}, \"scavenger\": {}}}}}",
             sample.tick,
             sample.alive[0],
             sample.alive[1],
@@ -106,6 +115,11 @@ fn render_run(out: &mut String, run: &RunResult, indent: usize) {
             sample.outside,
             sample.soil_mg,
             sample.total_matter_mg,
+            sample.feeding_modes[0],
+            sample.feeding_modes[1],
+            sample.feeding_modes[2],
+            sample.feeding_modes[3],
+            sample.feeding_modes[4],
         ));
         if index + 1 < run.samples.len() {
             out.push(',');

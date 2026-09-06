@@ -145,6 +145,8 @@ pub fn bear(
             position
         };
         let walker_shape = crate::places::WalkerShape::from_aabb(body.aabb());
+        let mut phenotype = crate::phenotype::BodyPhenotype::seed(body);
+        lineage.apply_intake_ports(&mut phenotype);
         let child = Organism {
             id: child_id,
             species: parent.species,
@@ -153,7 +155,7 @@ pub fn bear(
             // graph contains exactly what the parent paid. Its allocation is
             // seeded against those actual parts in the same unpublished
             // candidate, so a newborn is never a body without a phenotype.
-            phenotype: crate::phenotype::BodyPhenotype::seed(body),
+            phenotype,
             development_seed,
             life_history_mass_mg: cost,
             energy_mg: endowment,

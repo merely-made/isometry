@@ -25,7 +25,7 @@ use std::collections::BTreeSet;
 use mesocosm_core::discovery::Input;
 use mesocosm_core::{
     Appendage, Intent, Organism, OrganismId, Origin, Outcome, PartId, Placement, Rejection, Stage,
-    World,
+    VolumeRef, World,
 };
 
 use super::bulk_world;
@@ -105,19 +105,22 @@ fn a_meal_no_longer_teaches_the_donors_whole_recipe() {
         .find(|(_, words)| !words.is_empty())
         .expect("a founded enclosure holds vocabulary the played line lacks");
 
-    let here = world.position().expect("embodied");
-    let donor = world
-        .organisms
-        .iter()
-        .find(|o| o.species == rich && o.is_alive())
-        .expect("that line has a body")
-        .clone();
     let id = OrganismId(9_500);
+    let here = world.position().expect("embodied");
+    // Give the selected line a fresh producer body. This keeps its authored
+    // recipe, guarantees a live producer meal for the played crop, and avoids
+    // depending on whether worldgen happened to leave that line alive.
     world.organisms.push(Organism {
-        id,
-        position: [here[0] + 1, here[1], here[2]],
         stage: Stage::Mature,
-        ..donor
+        ..Organism::founding(
+            id,
+            rich,
+            mesocosm_core::Kingdom::Producer,
+            VolumeRef::from_tag(18),
+            [1, 1, 1],
+            [here[0] + 1, here[1], here[2]],
+            300,
+        )
     });
 
     let outcome = world.apply(Intent::Metabolize {

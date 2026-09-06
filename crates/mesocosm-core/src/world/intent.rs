@@ -298,6 +298,8 @@ pub enum Rejection {
     /// Only expressible since the played critter joined the organism
     /// vector: before that it was not a thing anyone could target.
     Itself,
+    /// The controlled body's declared ports do not admit this meal.
+    Inedible(OrganismId),
     /// Nobody is being played, so there is nothing to act with. A world
     /// running with no one in it is a legitimate state.
     Disembodied,

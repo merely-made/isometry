@@ -27,7 +27,7 @@ use crate::history::{Event, MealKind};
 // the point: TD5 makes it one rule rather than two that agree.
 use crate::world::STARVED_UPKEEP_TICKS;
 
-use super::{Organism, OrganismId, Stage, Tally};
+use super::{Kingdom, Organism, OrganismId, Stage, Tally};
 
 mod breeding;
 mod flows;
@@ -194,7 +194,7 @@ fn step_inner(
             match (previous, organism.tier) {
                 (Tier::Far, Tier::Near) => tally.promoted += 1,
                 (Tier::Near, Tier::Far) => tally.demoted += 1,
-                _ => {}
+                _ => {},
             }
         }
         let far = cohort::from_organisms(organisms, places);
@@ -306,30 +306,34 @@ fn step_inner(
             // the richest column in it — wide reach at the speed of growth,
             // never the radius' worth of columns at once.
             FeedingMode::Producer => {
-                let crowd = density
-                    .get(&cell_of(organism.position))
-                    .copied()
-                    .unwrap_or(1)
-                    .max(1);
-                let income = producer_income_for_mass(organism.biomass_mg());
-                // Floored at rent, as it has been since TD2. A shaded-out
-                // producer stagnates rather than starving, because otherwise
-                // a whole stand of identical plants crosses the starvation
-                // line on the same tick and the patch goes extinct instead of
-                // thinning. The floor is not a hand-out any more: it is a
-                // *request*, and the column answers it or does not. (TD6)
-                let want = (income * u64::from(CROWD_COMFORT) / u64::from(crowd))
-                    .clamp(UPKEEP_BASE_MG, income)
-                    .min(room);
-                let drawn = soil.draw_richest_within(column, FORAGE_RADIUS, want);
-                let landed = earn(organism, drawn);
-                soil.deposit(column, landed.spilled_mg);
-                record_intake(records, at, None, subject, &landed);
-            }
+                // An inactive or severed intake declaration also reads as
+                // `Producer`; only a living Fix allocation may draw soil.
+                if organism.phenotype.canopy() {
+                    let crowd = density
+                        .get(&cell_of(organism.position))
+                        .copied()
+                        .unwrap_or(1)
+                        .max(1);
+                    let income = producer_income_for_mass(organism.biomass_mg());
+                    // Floored at rent, as it has been since TD2. A shaded-out
+                    // producer stagnates rather than starving, because otherwise
+                    // a whole stand of identical plants crosses the starvation
+                    // line on the same tick and the patch goes extinct instead of
+                    // thinning. The floor is not a hand-out any more: it is a
+                    // *request*, and the column answers it or does not. (TD6)
+                    let want = (income * u64::from(CROWD_COMFORT) / u64::from(crowd))
+                        .clamp(UPKEEP_BASE_MG, income)
+                        .min(room);
+                    let drawn = soil.draw_richest_within(column, FORAGE_RADIUS, want);
+                    let landed = earn(organism, drawn);
+                    soil.deposit(column, landed.spilled_mg);
+                    record_intake(records, at, None, subject, &landed);
+                }
+            },
             // **The bite scales with build** (TD9): the mouthful reads the same
             // three body-plan numbers the rent above reads, so the body that
             // pays for its machinery is the body that gets to use it.
-            FeedingMode::Grazer | FeedingMode::Predator => {
+            FeedingMode::Grazer | FeedingMode::Predator | FeedingMode::Omnivore => {
                 let amount = feeding_rate_for_body(
                     organism.biomass_mg(),
                     organism.actuator_span(),
@@ -340,10 +344,14 @@ fn step_inner(
                     && let Some(prey) =
                         choose_living_target(organism, &living, &living_cells, ground, &kin)
                 {
-                    let kind = if organism.feeding_mode() == FeedingMode::Predator {
-                        MealKind::Predation
-                    } else {
+                    let kind = if living
+                        .iter()
+                        .find(|target| target.organism_index == prey)
+                        .is_some_and(|target| target.kingdom == Kingdom::Producer)
+                    {
                         MealKind::Grazing
+                    } else {
+                        MealKind::Predation
                     };
                     meals.push(Meal {
                         eater: index,
@@ -351,8 +359,23 @@ fn step_inner(
                         mass_mg: amount,
                         kind,
                     });
+                } else if amount > 0
+                    && let Some(source) =
+                        choose_carrion_target(organism, &carrion, &carrion_cells, ground)
+                {
+                    meals.push(Meal {
+                        eater: index,
+                        prey: source,
+                        mass_mg: decay_rate_for_body(
+                            organism.biomass_mg(),
+                            organism.actuator_span(),
+                            organism.mass_ceiling_mg(),
+                        )
+                        .min(room),
+                        kind: MealKind::Scavenging,
+                    });
                 }
-            }
+            },
             // Decomposers only earn where something has died.
             FeedingMode::Scavenger => {
                 let amount = decay_rate_for_body(
@@ -372,7 +395,7 @@ fn step_inner(
                         kind: MealKind::Scavenging,
                     });
                 }
-            }
+            },
         }
     }
 
@@ -505,7 +528,7 @@ fn step_inner(
                     flows::perish(organism, soil, records);
                     tally.died += 1;
                 }
-            }
+            },
 
             Stage::Carrion => {
                 // The dead return whether or not a decomposer is present, just
@@ -543,9 +566,9 @@ fn step_inner(
                     );
                     tally.returned += 1;
                 }
-            }
+            },
 
-            Stage::Spent => {}
+            Stage::Spent => {},
         }
     }
 

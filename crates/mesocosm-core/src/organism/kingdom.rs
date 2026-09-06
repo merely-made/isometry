@@ -25,12 +25,14 @@
 //! | [`Kingdom::Consumer`] | no fixing part, and the head bears a mouth |
 //! | [`Kingdom::Decomposer`] | neither: it absorbs across its surface |
 //!
-//! and the consumer's mouth is read the same way, by shape:
+//! and the intake mode is read from active, declared part ports. Geometry
+//! supplies the founding declaration only:
 //!
 //! | reading | anatomy |
 //! | --- | --- |
-//! | [`FeedingMode::Predator`] | the mouth is `Limb`-classified — a jaw, which swings |
-//! | [`FeedingMode::Grazer`] | the mouth is bulk — a crop, which does not |
+//! | [`FeedingMode::Predator`] | an active port admits consumer or decomposer nis |
+//! | [`FeedingMode::Grazer`] | an active port admits producer nis |
+//! | [`FeedingMode::Omnivore`] | active ports admit both live sides |
 //!
 //! # Three things this reading deliberately does
 //!
@@ -61,7 +63,7 @@ use serde::{Deserialize, Serialize};
 use crate::body::{BodyDocument, PartId};
 use crate::phenotype::BodyPhenotype;
 use crate::plan::{Role, Symmetry, classify};
-use crate::process::{FeedingMode, Process, Registry};
+use crate::process::{FeedingMode, NisKind, Process, Registry};
 
 /// Trophic role. Not a character class: these are the three ways of making a
 /// living, and a lineage may combine them.
@@ -76,6 +78,13 @@ pub enum Kingdom {
 }
 
 impl Kingdom {
+    pub const fn nis_kind(self) -> NisKind {
+        match self {
+            Self::Producer => NisKind::Producer,
+            Self::Consumer => NisKind::Consumer,
+            Self::Decomposer => NisKind::Decomposer,
+        }
+    }
     /// The silhouette a founding body of this tier is given.
     ///
     /// **A founding default, not a reading.** Until DC1.5 this was one half of
@@ -115,17 +124,17 @@ impl Kingdom {
 }
 
 impl FeedingMode {
-    /// What a body does with matter, read off the same anatomy.
+    /// What a body does with matter, read from active declared ports.
     pub fn of(phenotype: &BodyPhenotype) -> Self {
-        match Kingdom::of(phenotype) {
-            Kingdom::Producer => Self::Producer,
-            Kingdom::Decomposer => Self::Scavenger,
-            // A jaw swings, so it takes something that runs; a crop does not,
-            // so it takes something that stands still.
-            Kingdom::Consumer => match phenotype.body().mouth() {
-                Some(Role::Limb) => Self::Predator,
-                _ => Self::Grazer,
-            },
+        let ports = phenotype.intake_ports();
+        let flora = ports.admits_live(NisKind::Producer);
+        let fauna = ports.admits_live(NisKind::Consumer) || ports.admits_live(NisKind::Decomposer);
+        match (flora, fauna, ports.admits_deadstock()) {
+            (true, true, _) => Self::Omnivore,
+            (true, false, _) => Self::Grazer,
+            (false, true, _) => Self::Predator,
+            (false, false, true) => Self::Scavenger,
+            (false, false, false) => Self::Producer,
         }
     }
 }
@@ -222,7 +231,7 @@ impl BodyDocument {
     ///
     /// `Limb` wins a body that grew more than one, because a jaw is the organ
     /// that decides what the body can take.
-    pub fn mouth(&self) -> Option<Role> {
+    pub fn mouth_part(&self) -> Option<PartId> {
         let mut found = None;
         for part in self.living() {
             let borne_under_the_head = part
@@ -232,14 +241,20 @@ impl BodyDocument {
                 continue;
             }
             match classify(part.half_extent) {
-                Role::Limb => return Some(Role::Limb),
-                Role::Mass => found = Some(Role::Mass),
+                Role::Limb => return Some(part.id),
+                Role::Mass => found = Some(part.id),
                 // A sensor under the head is a feeler and a plate is a frond;
                 // neither takes a meal in.
-                Role::Plate | Role::Sensor => {}
+                Role::Plate | Role::Sensor => {},
             }
         }
         found
+    }
+
+    pub fn mouth(&self) -> Option<Role> {
+        self.mouth_part()
+            .and_then(|part| self.part(part))
+            .map(|part| classify(part.half_extent))
     }
 }
 
@@ -309,6 +324,27 @@ mod tests {
         bear(&mut predator, [3, 1, 1], [0, -3, 0]);
         assert_eq!(Kingdom::of(&grown(&predator)), Kingdom::Consumer);
         assert_eq!(FeedingMode::of(&grown(&predator)), FeedingMode::Predator);
+    }
+
+    #[test]
+    fn the_same_geometry_reads_differently_under_its_declared_port() {
+        let mut body = body();
+        let mouth = bear(&mut body, [2, 1, 1], [0, -3, 0]);
+        let mut grazer = grown(&body);
+        let mut predator = grown(&body);
+        let intake = Registry::native().of_native(Process::Intake).reference();
+        assert!(predator.declare_port(
+            mouth,
+            crate::process::IntakePort::live(NisKind::Consumer).supported_by(intake),
+        ));
+
+        assert_eq!(
+            grazer.body(),
+            predator.body(),
+            "only the declaration differs"
+        );
+        assert_eq!(FeedingMode::of(&grazer), FeedingMode::Grazer);
+        assert_eq!(FeedingMode::of(&predator), FeedingMode::Predator);
     }
 
     #[test]

@@ -31,6 +31,9 @@ fn runtime(
 pub(super) fn start(
     config: &HostConfig,
 ) -> Result<(Runtime, Option<ContentPack>, VolumeMap), String> {
+    if let Some(trace) = &config.replay {
+        trace.validate_rules()?;
+    }
     let founding = config.effective_body_layout().founding();
     let pack = match &config.replay {
         Some(trace) => trace.content.clone(),

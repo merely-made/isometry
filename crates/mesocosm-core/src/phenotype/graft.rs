@@ -41,7 +41,7 @@
 use super::mosaic::{CellId, Mosaic};
 use super::{AllocationProposal, Arrangement, BodyPhenotype, ProposedSite, Refusal};
 use crate::body::{Attachment, Origin, PartId, Provenance, SpeciesId};
-use crate::process::ProcessRef;
+use crate::process::{IntakePort, ProcessRef};
 
 /// One part, lifted out of the body it grew in.
 ///
@@ -64,6 +64,9 @@ pub struct Cutting {
     pub joint: Option<Attachment>,
     /// What the donor had allocated here, in site order.
     pub sites: Vec<(ProcessRef, Vec<CellId>)>,
+    /// The donor's declared intake admission, carried even if its current
+    /// allocation is later adapted or temporarily inactive.
+    pub port: IntakePort,
 }
 
 /// A living subtree, harvested. Parents before children.
@@ -123,7 +126,7 @@ impl Branch {
                         ],
                         parent_yaw.compose(joint.yaw),
                     )
-                }
+                },
             };
             placed.push((cutting.source, at, yaw));
             for axis in 0..3 {
@@ -220,6 +223,7 @@ impl BodyPhenotype {
                         .iter()
                         .map(|site| (site.process, site.cells.clone()))
                         .collect(),
+                    port: mosaic.port(),
                 })
             })
             .collect::<Vec<_>>();
@@ -270,7 +274,7 @@ impl BodyPhenotype {
                         // panicking keeps a hand-built branch honest.
                         .ok_or(Refusal::NoSuchPart(cutting.source))?;
                     Attachment { parent, ..joint }
-                }
+                },
             };
             let id = self
                 .attach(
@@ -292,6 +296,7 @@ impl BodyPhenotype {
                 .map_err(|_| Refusal::NoSuchPart(attachment.parent))?;
             mapped.push((cutting.source, id));
             parts.push(id);
+            self.declare_port(id, cutting.port);
         }
 
         let sites = self.arriving_sites(branch, &parts, lowering);
@@ -336,7 +341,7 @@ impl BodyPhenotype {
             match lowering {
                 // Nothing proposed for a part that is still claimed is how the
                 // validator is told to clear it.
-                Lowering::Adapted => {}
+                Lowering::Adapted => {},
                 Lowering::Carried => {
                     for (process, cells) in &cutting.sites {
                         sites.push(ProposedSite {
@@ -345,7 +350,7 @@ impl BodyPhenotype {
                             cells: cells.clone(),
                         });
                     }
-                }
+                },
                 Lowering::Regrown => {
                     // The seeding rule, asked rather than reimplemented — the
                     // same call automatic arrangement makes, so a regrown
@@ -360,7 +365,7 @@ impl BodyPhenotype {
                             cells: site.cells.clone(),
                         });
                     }
-                }
+                },
             }
         }
         sites

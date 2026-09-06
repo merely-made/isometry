@@ -141,6 +141,9 @@ pub struct Script {
 /// A recorded run, complete enough to reproduce and to judge.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct PlayedTrace {
+    /// Native eating semantics. Unversioned traces predate typed intake.
+    #[serde(default)]
+    pub trophic_grammar: u32,
     #[serde(default, skip_serializing_if = "SceneMode::is_ecology")]
     pub scene: SceneMode,
     #[serde(
@@ -192,6 +195,7 @@ pub struct FrameGraphReceipt {
 /// What a run says about itself on the way out.
 #[derive(Clone, Debug, Serialize)]
 pub struct PlayedReceipt {
+    pub trophic_grammar: u32,
     pub scene: &'static str,
     pub habitat_bounds: Option<[[i32; 3]; 2]>,
     pub terrarium_pitch: Option<f32>,
@@ -350,7 +354,23 @@ pub fn write_json<T: Serialize>(path: &Path, value: &T) -> Result<(), String> {
 
 pub fn read_trace(path: &Path) -> Result<PlayedTrace, String> {
     let bytes = std::fs::read(path).map_err(|error| format!("{}: {error}", path.display()))?;
-    serde_json::from_slice(&bytes).map_err(|error| format!("{}: {error}", path.display()))
+    let trace: PlayedTrace =
+        serde_json::from_slice(&bytes).map_err(|error| format!("{}: {error}", path.display()))?;
+    trace.validate_rules()?;
+    Ok(trace)
+}
+
+impl PlayedTrace {
+    pub fn validate_rules(&self) -> Result<(), String> {
+        let current = mesocosm_core::TROPHIC_GRAMMAR_REVISION;
+        if self.trophic_grammar != current {
+            return Err(format!(
+                "recording uses trophic grammar revision {}, this build uses {current}; replay it with its original build or record a new run",
+                self.trophic_grammar
+            ));
+        }
+        Ok(())
+    }
 }
 
 pub fn write_png(path: &Path, width: u32, height: u32, pixels: &[u8]) -> Result<(), String> {
@@ -405,6 +425,7 @@ pub fn record_demo(seed: u64, organisms: u32, ticks_per_second: u32, steps: u64)
         demo_step(&mut runtime, &volumes, step, &mut script);
     }
     PlayedTrace {
+        trophic_grammar: mesocosm_core::TROPHIC_GRAMMAR_REVISION,
         scene: SceneMode::Ecology,
         body_layout: BodyLayout::Axial,
         seed,

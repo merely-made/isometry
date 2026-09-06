@@ -141,21 +141,24 @@ fn busy_is_scripted_work_in_flight_and_a_checkpoint_is_not_it() {
 #[test]
 fn a_checkpoint_with_nothing_queued_is_quiet_so_the_script_can_answer_it() {
     let mut host = Host::new(HostConfig {
-        seed: played::DEMO_SEED,
-        organisms: mesocosm_core::world::FOUNDERS,
+        organisms: 12,
+        dev: true,
         ..HostConfig::default()
     });
-    // Play the recorded demo until it reaches a question.
-    assert!(host.run_action("demo 4000"));
-    while host.pump.is_some() && host.runtime.checkpoint().is_none() {
-        host.pump_frame();
-    }
+    // An accepted loss opens a real checkpoint immediately. The assertion is
+    // about the held runtime state a script observes, not a long demo search.
+    let controlled = host
+        .runtime
+        .world()
+        .controlled_id()
+        .expect("a founder is controlled");
+    host.runtime.queue(Intent::Kill {
+        organism: controlled,
+    });
+    host.runtime.step(1);
     let Some(_) = host.runtime.checkpoint() else {
-        // The recording reaches one; if a retune ever moved it, say so rather
-        // than passing on an untested claim.
-        panic!("the demo never reached a checkpoint");
+        panic!("an accepted loss opens a checkpoint");
     };
-    host.pump = None;
     assert_eq!(host.runtime.queued_len(), 0);
     assert_eq!(
         host.busy(),

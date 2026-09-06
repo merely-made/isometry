@@ -96,6 +96,7 @@ impl Host {
             return;
         };
         let recorded = PlayedTrace {
+            trophic_grammar: mesocosm_core::TROPHIC_GRAMMAR_REVISION,
             scene: self.config.effective_scene(),
             body_layout: self.config.effective_body_layout(),
             seed: self.config.seed,
@@ -187,6 +188,7 @@ impl Host {
             .map(|trace| trace.state_hash);
         let world = self.runtime.world();
         PlayedReceipt {
+            trophic_grammar: mesocosm_core::TROPHIC_GRAMMAR_REVISION,
             scene: self.config.effective_scene().name(),
             habitat_bounds: self.habitat.as_ref().map(|h| [h.bounds.min, h.bounds.max]),
             terrarium_pitch: self.habitat.as_ref().map(|_| self.config.terrarium_pitch),

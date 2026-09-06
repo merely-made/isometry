@@ -43,9 +43,10 @@ use std::collections::{BTreeMap, BTreeSet};
 use serde::{Deserialize, Serialize};
 
 use crate::axis::Soma;
-use crate::body::{BodyDocument, SpeciesId};
+use crate::body::{BodyDocument, PartId, SpeciesId};
 use crate::development::{DevelopmentError, PartPalette, develop_body};
 use crate::plan::Symmetry;
+use crate::process::IntakePort;
 
 /// One lineage.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -92,6 +93,11 @@ pub struct Species {
     /// every birth in this world does until a line commits.
     #[serde(default)]
     program: crate::program::Program,
+    /// Explicit intake declarations inherited by every realization of this
+    /// line. Geometry still seeds the ordinary defaults; this retains authored
+    /// departures such as the roster omnivore through filial construction.
+    #[serde(default)]
+    intake_ports: Vec<(PartId, IntakePort)>,
 }
 
 impl Species {
@@ -147,6 +153,21 @@ impl Species {
         body.plan.symmetry = self.symmetry;
         Ok(body)
     }
+
+    pub fn apply_intake_ports(&self, phenotype: &mut crate::phenotype::BodyPhenotype) {
+        for (part, port) in &self.intake_ports {
+            phenotype.declare_port(*part, *port);
+        }
+    }
+
+    pub(crate) fn declare_intake_port(&mut self, part: PartId, port: IntakePort) {
+        if let Some(existing) = self.intake_ports.iter_mut().find(|(held, _)| *held == part) {
+            existing.1 = port;
+        } else {
+            self.intake_ports.push((part, port));
+            self.intake_ports.sort_by_key(|(part, _)| *part);
+        }
+    }
 }
 
 /// Every lineage a world has had, including extinct ones.
@@ -177,6 +198,7 @@ impl Lineages {
             founded: 0,
             domain: crate::graft::Domain::default(),
             program: crate::program::Program::default(),
+            intake_ports: Vec::new(),
         })
     }
 
@@ -202,6 +224,7 @@ impl Lineages {
         // carries across and the two lines diverge by committing rather than
         // by one of them forgetting.
         let program = self.species[&parent].program.clone();
+        let intake_ports = self.species[&parent].intake_ports.clone();
         self.species.insert(
             id,
             Species {
@@ -213,6 +236,7 @@ impl Lineages {
                 founded: at,
                 domain,
                 program,
+                intake_ports,
             },
         );
         Some(id)
@@ -230,6 +254,12 @@ impl Lineages {
     pub fn set_recipe(&mut self, id: SpeciesId, recipe: crate::axis::Recipe) {
         if let Some(species) = self.species.get_mut(&id) {
             species.recipe = recipe;
+        }
+    }
+
+    pub(crate) fn declare_intake_port(&mut self, id: SpeciesId, part: PartId, port: IntakePort) {
+        if let Some(species) = self.species.get_mut(&id) {
+            species.declare_intake_port(part, port);
         }
     }
 

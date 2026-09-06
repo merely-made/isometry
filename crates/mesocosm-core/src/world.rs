@@ -3,7 +3,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 // SPDX-License-Identifier: MPL-2.0
-
 //! The world: an enclosure holding one critter and the loose matter it can
 //! metabolize. A world is a pure function of its seed and the ordered intents applied to
 //! it. There are no clock reads, no unordered iteration that reaches the
@@ -597,3 +596,5 @@ impl World {
 mod behavior_tests;
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod tg1_tests;

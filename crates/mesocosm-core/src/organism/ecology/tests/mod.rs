@@ -12,10 +12,12 @@ pub use super::*;
 use crate::body::{SpeciesId, VolumeRef};
 use crate::history::Event;
 use crate::organism::{Kingdom, Signal};
+use crate::process::{IntakePort, NisKind, Process, Registry};
 
 mod carrion;
 mod fixture;
 mod signals;
+mod trophic;
 
 // The shared bodies, soils and drivers, split out on 2026-09-01 when PE0's
 // record sink took this file past the six-hundred-line ceiling. Re-exported
@@ -109,6 +111,55 @@ fn a_contractile_consumer_can_take_live_consumer_prey() {
 }
 
 #[test]
+fn a_live_port_that_admits_deadstock_falls_back_to_carrion() {
+    let mut eater = Organism::founding(
+        OrganismId(0),
+        SpeciesId(2),
+        Kingdom::Consumer,
+        VolumeRef::from_tag(16),
+        [8, 2, 2],
+        [0, 0, 0],
+        300,
+    );
+    let jaw = eater.body().mouth_part().expect("the fixture has a jaw");
+    eater.phenotype.declare_port(
+        jaw,
+        IntakePort::live(NisKind::Consumer)
+            .with_deadstock()
+            .supported_by(Registry::native().of_native(Process::Contract).reference()),
+    );
+    let corpse = Organism {
+        id: OrganismId(1),
+        position: [2, 0, 0],
+        stage: Stage::Carrion,
+        ..organism(Kingdom::Consumer, 300)
+    };
+    let mut world = vec![eater, corpse];
+    let mut sink = Sink::default();
+    let mut rng = Rng::from_seed(4);
+    let mut next = 2;
+    let lines = registry(&world);
+    step(
+        &mut world,
+        &mut next,
+        &mut rng,
+        &mut sink.stream(),
+        &lines,
+        PartPalette::primitive(),
+        &mut soil(),
+    );
+    assert!(sink.events().iter().any(|event| matches!(
+        event,
+        Event::Fed {
+            eater: OrganismId(0),
+            from: OrganismId(1),
+            kind: crate::history::MealKind::Scavenging,
+            ..
+        }
+    )));
+}
+
+#[test]
 fn an_exhausted_body_disperses_through_the_place_graph() {
     let mut place_rng = Rng::from_seed(99);
     let places = Places::scatter(&mut place_rng, 3, 16);
@@ -160,7 +211,9 @@ fn drive_selection_makes_fast_and_slow_bodies_different() {
     let prey = Organism::founding(
         OrganismId(9),
         SpeciesId(3),
-        Kingdom::Producer,
+        // This receipt compares two predator bodies' movement budgets. Its
+        // target must be admitted by their consumer-only jaw ports.
+        Kingdom::Consumer,
         VolumeRef::from_tag(18),
         [1, 1, 1],
         [25, 0, 0],

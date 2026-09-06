@@ -225,6 +225,15 @@ impl Automatable for Host {
             .map(|trace| trace.state_hash);
         let hash = self.runtime.state_hash();
         let dev_intents = self.runtime.dev_intents();
+        let selected_reading = self.inspection.selected.and_then(|selected| {
+            mesocosm_views::part_of(
+                world,
+                selected.organism,
+                selected.part,
+                self.runtime.history(),
+            )
+            .reading
+        });
         ProbeSnapshot {
             focused: self.followed().map(|id| format!("critter {}", id.0)),
             fields: [
@@ -328,6 +337,18 @@ impl Automatable for Host {
                 ("boundary", yes_no(world.at_boundary())),
                 ("paused", yes_no(self.dev_paused)),
                 ("inspecting", yes_no(self.inspection.open)),
+                (
+                    "selected-intake",
+                    selected_reading
+                        .as_ref()
+                        .map_or("none".into(), |r| r.intake.clone()),
+                ),
+                (
+                    "selected-diet",
+                    selected_reading
+                        .as_ref()
+                        .map_or("none".into(), |r| r.feeding.clone()),
+                ),
                 (
                     "selected-part",
                     self.inspection

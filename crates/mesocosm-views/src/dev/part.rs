@@ -4,6 +4,7 @@
 //! The selected-part reading for the host dev inspector.
 
 use mesocosm_core::history::{Event, History};
+use mesocosm_core::{FeedingMode, IntakePort, NisKind};
 use mesocosm_core::{OrganismId, Origin, PartId, Role, World, classify};
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
@@ -12,6 +13,8 @@ pub struct PartReading {
     pub id: String,
     pub role: String,
     pub process: String,
+    pub intake: String,
+    pub feeding: String,
     pub condition: String,
     pub discovery_condition: String,
     pub history_event: String,
@@ -87,6 +90,8 @@ pub fn part_of(
             id: part.0.to_string(),
             role: role_word(role).into(),
             process,
+            intake: intake_words(organism, part),
+            feeding: feeding_words(organism),
             condition: format!(
                 "{}; {} mg",
                 if found.severed {
@@ -105,6 +110,74 @@ pub fn part_of(
         }),
         notice: None,
     }
+}
+
+/// Display labels only; the core owns the reading and admission relation.
+pub fn feeding_word(mode: FeedingMode) -> &'static str {
+    match mode {
+        FeedingMode::Producer => "producer",
+        FeedingMode::Grazer => "grazer",
+        FeedingMode::Predator => "predator",
+        FeedingMode::Omnivore => "omnivore",
+        FeedingMode::Scavenger => "scavenger",
+    }
+}
+
+fn feeding_words(organism: &mesocosm_core::Organism) -> String {
+    if !organism.is_alive() {
+        return "carcass; inactive".into();
+    }
+    let mode = organism.feeding_mode();
+    if mode == FeedingMode::Producer {
+        return if organism.phenotype.canopy() {
+            "producer; active fixation".into()
+        } else {
+            "no active intake or fixation".into()
+        };
+    }
+    format!(
+        "{}; {}",
+        feeding_word(mode),
+        port_words(organism.phenotype.intake_ports())
+    )
+}
+
+fn port_words(port: IntakePort) -> String {
+    let mut kinds = Vec::new();
+    for (kind, label) in [
+        (NisKind::Producer, "living producers"),
+        (NisKind::Consumer, "living consumers"),
+        (NisKind::Decomposer, "living decomposers"),
+    ] {
+        if port.admits_live(kind) {
+            kinds.push(label);
+        }
+    }
+    if port.admits_deadstock() {
+        kinds.push("dead stock");
+    }
+    if kinds.is_empty() {
+        "none".into()
+    } else {
+        kinds.join(", ")
+    }
+}
+
+fn intake_words(organism: &mesocosm_core::Organism, part: PartId) -> String {
+    let declared = organism
+        .phenotype
+        .mosaic(part)
+        .map(|m| m.port())
+        .unwrap_or_default();
+    if !declared.has_live() && !declared.admits_deadstock() {
+        return "none declared".into();
+    }
+    let active = organism.is_alive() && organism.phenotype.part_port(part).is_some();
+    format!(
+        "{}: {}",
+        if active { "active" } else { "inactive" },
+        port_words(declared)
+    )
 }
 
 fn cause_words(cause: mesocosm_core::phenotype::Expressed) -> String {

@@ -143,6 +143,29 @@ mod tests {
     }
 
     #[test]
+    fn an_omnivores_two_ports_survive_save_and_restore() {
+        let world = World::new(31, 60);
+        let before = world
+            .organisms
+            .iter()
+            .find(|organism| organism.feeding_mode() == crate::process::FeedingMode::Omnivore)
+            .expect("the roster has one")
+            .id;
+        let restored = restore(&snapshot(&world).unwrap()).unwrap();
+        let omnivore = restored
+            .organisms
+            .iter()
+            .find(|organism| organism.id == before)
+            .unwrap();
+        assert_eq!(
+            omnivore.feeding_mode(),
+            crate::process::FeedingMode::Omnivore
+        );
+        assert!(omnivore.admits(crate::process::NisKind::Producer, false));
+        assert!(omnivore.admits(crate::process::NisKind::Consumer, false));
+    }
+
+    #[test]
     fn a_snapshot_names_the_ruleset_the_world_ran_under() {
         // PD3: `WorldRules` is world state, so it survives the round trip and
         // is inside the hash — two worlds under different biologies cannot

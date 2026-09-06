@@ -12,6 +12,7 @@
 use std::collections::BTreeMap;
 use std::time::Instant;
 
+use mesocosm_core::process::FeedingMode;
 use mesocosm_core::world::ENCLOSURE;
 use mesocosm_core::{Founding, Intent, Kingdom, World};
 
@@ -41,6 +42,10 @@ pub struct Sample {
     /// Soil plus every body's substance and reserve — the conserved total.
     /// Flat across a whole run is the closed cycle's own receipt.
     pub total_matter_mg: u64,
+    /// Living feeding-mode readings at this sample, in the stable order
+    /// producer/grazer/predator/omnivore/scavenger. The omnivore slot is
+    /// retained by name while the core API grows into TG1.
+    pub feeding_modes: [u32; 5],
 }
 
 impl Sample {
@@ -101,8 +106,17 @@ pub fn sample_of(world: &World, tick: u32, cum_born: u64, cum_died: u64) -> Samp
     let mut density: BTreeMap<(i32, i32), u32> = BTreeMap::new();
     let mut span = 0i32;
     let mut outside = 0u32;
+    let mut feeding_modes = [0u32; 5];
     for organism in world.organisms.iter().filter(|o| o.is_alive()) {
         alive[kingdom_index(organism.kingdom())] += 1;
+        let mode_index = match organism.feeding_mode() {
+            FeedingMode::Producer => 0,
+            FeedingMode::Grazer => 1,
+            FeedingMode::Predator => 2,
+            FeedingMode::Omnivore => 3,
+            FeedingMode::Scavenger => 4,
+        };
+        feeding_modes[mode_index] += 1;
         total_biomass_mg += organism.biomass_mg();
         *density
             .entry((
@@ -128,6 +142,7 @@ pub fn sample_of(world: &World, tick: u32, cum_born: u64, cum_died: u64) -> Samp
         outside,
         soil_mg: world.soil().total_mg(),
         total_matter_mg: world.total_matter_mg(),
+        feeding_modes,
     }
 }
 
@@ -189,7 +204,7 @@ pub fn run(seed: u64, organism_count: u32, founding: Founding) -> RunResult {
             }
             let (verdict, reason) = verdict_for(&samples);
             (verdict, reason, TICKS)
-        }
+        },
     };
 
     RunResult {

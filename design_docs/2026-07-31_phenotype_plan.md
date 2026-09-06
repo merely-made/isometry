@@ -2011,9 +2011,19 @@ is [CP1](2026-08-30_default_creatures_plan.md#cp1-clearing-and-burrow-camera-pro
 CP1 now reuses addressed selection across all four turns (`377d774`,
 2026-09-05); it does not replace VB4's biological join. The terrain-readability
 follow-through is now native-verified. Canopy form must grow from the developed
-body and retained part addresses. After TG1's intake seam, VB4a connects
-existing intake/body change to a visible descendant before the typed-diet
-extension; pointer picking and sensory food cues remain open VB3 work.
+body and retained part addresses. After TG1 acceptance, VB4a connects existing
+intake/body change to a visible descendant before the typed-diet extension;
+pointer picking and sensory food cues remain open VB3 work. Typed appearance
+still waits on TG2/TG3.
+
+**TG1 status, 2026-09-05:** its latest targeted receipts are green (956 passed,
+0 failed, 2 ignored across eight packages), including the final native host
+rerun of inspector, four turns, ordinary burrow, and replay. TG1 is accepted:
+its 60-run verifier covers 5,252 samples with exact total matter, zero bodies outside the
+enclosure, and census agreement. TG6 remains open because current drawn and roster
+arms do not retain all three tiers at the end. Its superseded CP1
+grammar-revision-0 golden is refused by name; the retained current recordings
+are grammar revision 1. The VB4a host seam below is the next slice.
 
 Compose organism and part selection with the existing dev inspector, views and
 host input route. Preserve identity through the render list; resolve a hit to
@@ -2076,6 +2086,16 @@ recorded graft or expressed discovery, show the local consequence, then use the
 ordinary lineage revision and reproduction paths. Distinguish the inherited
 program from the parent's acquired part. This first proof need not wait for
 typed chemistry or add partial-voxel wounds.
+
+**Next host seam, reviewed 2026-09-05:** retain the root returned by an accepted
+`Outcome::Grafted`, as the driver already retains `Outcome::Bore`'s child, so
+inspection selects the allocated address rather than guessing a part ordinal.
+One bounded scenario fixture can then queue genuine graft, expression and
+lineage-revision intents and record their outcomes. Label the fixture and any
+dev-assisted birth explicitly; those receipts demonstrate the body/program
+join, while natural encounter and reproduction timing remain separate evidence.
+The relative control receives no intervention; compare its treatment against
+the same elapsed ecology rather than expecting ordinary upkeep to stop.
 
 **VB4b, typed extension.** Add diet-driven tissue appearance only after TG2/TG3 supply reconciled typed
 accounts and actual scruple. A visual mix is a deterministic projection of

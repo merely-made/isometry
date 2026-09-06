@@ -6,6 +6,25 @@ use crate::{Host, played::PlayedTrace};
 use mesocosm_core::{Intent, state_hash};
 use mesocosm_mesh::mesh_body;
 
+#[test]
+fn incompatible_recording_is_refused_before_founding_or_content_resolution() {
+    let legacy: PlayedTrace =
+        serde_json::from_str(r#"{"seed":7,"organisms":3,"steps":0,"state_hash":0,"intents":[]}"#)
+            .unwrap();
+    assert_eq!(legacy.trophic_grammar, 0);
+    for revision in [0, mesocosm_core::TROPHIC_GRAMMAR_REVISION + 1] {
+        let trace = PlayedTrace {
+            trophic_grammar: revision,
+            ..legacy.clone()
+        };
+        let result = start(&HostConfig {
+            replay: Some(trace),
+            ..HostConfig::default()
+        });
+        assert!(matches!(result, Err(why) if why.contains("trophic grammar revision")));
+    }
+}
+
 fn same_mesh(a: mesocosm_mesh::BodyMesh, b: mesocosm_mesh::BodyMesh) {
     assert_eq!(a.placements, b.placements);
     assert_eq!(a.mesh_count(), b.mesh_count());
@@ -48,6 +67,7 @@ fn recorded_content_replays_without_the_current_generation_setting() {
         live.advance(100_000);
     }
     let trace = PlayedTrace {
+        trophic_grammar: mesocosm_core::TROPHIC_GRAMMAR_REVISION,
         scene: crate::played::SceneMode::Ecology,
         body_layout: config.body_layout,
         seed: config.seed,

@@ -1,6 +1,6 @@
 # Trophic Grammar Plan (2026-09-04)
 
-**Status: accepted by Mark 2026-09-04; TG1 next.** The three rulings in section 4 are given. This is PE4's first
+**Status: accepted by Mark 2026-09-04; TG1 complete 2026-09-05. TG2-TG7 remain open.** The three rulings in section 4 are given. This is PE4's first
 build: the material scheme ruled 2026-09-02 turned into a trophic grammar. It
 owns typed intake, typed accounts, part composition, defenses, and selective
 edibility. It does not own fields, generated worlds, or the second form of
@@ -50,6 +50,17 @@ landed. TG6 is acceptance for this first trophic build, not all of PE4's
 ordinary/impossible-world and generated-vocabulary requirements.
 
 ### TG1: typed intake
+
+**Implementation scope, 2026-09-05:** declarations live beside part allocation
+and survive graft, expression, save and filial development. Geometry seeds
+founding defaults, but never reinterprets an existing declaration. Active
+ports derive the current feeding reading. The existing addressed inspector
+shows the selected part's declaration and the body's aggregate reading; it
+does not infer food from appearance. Native rules and played traces carry a
+trophic grammar revision, so pre-TG1 recordings fail with a named incompatibility
+instead of pretending their old intents still mean the same thing. The
+thirty-seed instrument uses explicit output paths and both drawn/roster arms;
+TG1 records the outcome without claiming TG6's corridor is already achieved.
 
 A mouth becomes a port with a declared nis kind, read off the body the way
 `plan::classify` already reads a role. `FeedingMode` stops being a shape
@@ -185,6 +196,11 @@ All three answered with "the three recommendations are reasonable".
    the grazer and predator filters go.
 2. **Omnivore is a reading**, a body carrying both port kinds, not a fourth
    `FeedingMode` variant.
+   **Implementation clarification (2026-09-05):** `FeedingMode::Omnivore`
+   names the computed result of that union. It is never stored on an organism
+   or assigned as a character class; the retained part declarations remain
+   authoritative. This changes the enum wording of the ruling while keeping
+   its separation between anatomy and reading.
 3. **Three nis kinds in the first world**, one per kingdom. Dead is a state of
    the body, not a kind of matter; a scavenger port reads that state.
 
@@ -196,6 +212,54 @@ beginning body types; start investigating a beginning set of traits.
 ---
 
 ## Findings
+
+- **2026-09-05, TG1 acceptance:** 956 tests pass across eight packages, with
+  zero failures and two existing ignored tests, using the latest result for
+  each target. The native inspector, four-turn habitat, ordinary burrow walk
+  and revision-1 replays pass. All owned Rust files pass scoped formatting and
+  stay at or below 600 lines. The thirty-seed, two-arm instrument is complete:
+
+  | Arm | Breathes | Thins | Boils | Collapses | Historical Q10 collapses |
+  | --- | ---: | ---: | ---: | ---: | ---: |
+  | Drawn | 0 | 29 | 0 | 1/30 | 1/30 |
+  | Authored roster | 0 | 17 | 0 | 13/30 | 17/30 |
+
+  Both arms use seeds 1-30, 916 ecology founders plus the played founder,
+  10,000 ticks with the existing early-stop rule, and 100-tick samples. All
+  5,252 samples conserve total matter exactly, have zero bodies outside the
+  enclosure, and reconcile feeding-mode counts with the living census. The
+  authored roster starts with Grazer, Predator and Omnivore readings. No
+  ecological constants moved. **TG6 is not achieved:** every run either
+  collapses or loses a founded tier. The roster's lower collapse count is an
+  observed change from Q10, not proof of a viable food web. Elapsed times were
+  collected with eight seed workers and overlapping builds/tests, so they
+  are not a serial tick-budget receipt. The full output is
+  `Code/testing/mesocosm/tg1_intake/corridor.json`; `verification.json` records
+  test sources, sample checks, source and executable hashes. The next integrated
+  visible-body slice is VB4a; typed stock and scruple remain TG2/TG3.
+- **2026-09-05, TG1 integration:** typed declarations are retained beside each
+  part's allocation. One `Organism::admits` answer serves NPC intake, food
+  search, played meals and the inspector. A port requires living tissue at its
+  declared supporting process; losing that support suspends admission while
+  retaining the declaration. The authored browser carries producer and
+  consumer intake; the drawn arm retains geometry-seeded defaults. The
+  no-port fallback reading does not grant soil uptake without active fixation.
+  The initial three-kind target tag lowers the body's current kingdom; it is
+  not yet a typed substance account or a part's provenance-bearing scruple.
+  Existing signal avoidance and fauna Avoid/Hold policy remain behavioral
+  choices layered over port admission; TG4 still owns their defense integration.
+- **2026-09-05, native TG1 receipt:** the selected crop reads `active: living
+  producers`, and its body reads `omnivore; living producers, living consumers`.
+  Four paused views retain world hash `8c655e425264e795` and selected structural
+  revision `3c08feca18d1fcee`. Four ordinary moves enter the burrow and produce
+  `2fc1d29e8ce0e4b0`; both new traces replay to their recorded hash. Captures
+  show the full inspector with zero missing volumes or projection fallbacks.
+  Revision-0 JSON recordings are refused before opening the host. Raw historical
+  postcard snapshots have no migration receipt and may fail decoding before
+  the rules gate; current-format snapshots round-trip the ports and reject
+  incompatible world rules. Local evidence:
+  `Code/testing/mesocosm/tg1_intake/verification.json`, scenarios, captures and
+  replay receipts. Historical CP1 captures below describe their original build.
 
 - **2026-09-05, CP1 review:** camera and addressed-body inspection now have a
   native four-view habitat receipt (`377d774`). Core still derives feeding
@@ -217,6 +281,13 @@ beginning body types; start investigating a beginning set of traits.
 
 - **2026-09-04.** Drafted, awaiting Mark. No code touched.
 - **2026-09-04, later.** Accepted; the three rulings given as recommended. TG1 dispatches next.
+- **2026-09-05.** TG1 implemented, measured and accepted against its done
+  conditions. Shared intake, support dormancy, graft/lineage retention, the
+  inspector and replay-version refusal are verified. The historical demo's
+  graft window no longer guarantees an encounter; its replacement test names
+  a fixed carcass fixture and proves transfer/provenance replay from that
+  initial state. Natural graft encounters and their visible descendant join
+  remain VB4a evidence, separate from this core transaction receipt.
 
 ---
 

@@ -1,7 +1,7 @@
 # Default Creatures Plan (2026-08-30)
 
 **Status: implementation through DC4 landed; visual acceptance remains open
-(refreshed 2026-09-04).** DC4's roster ships as the default founding, but Mark
+(refreshed 2026-09-05).** DC4's roster ships as the default founding, but Mark
 still sees capsules rather than readable voxel critters. The
 [phenotype plan section 8](2026-07-31_phenotype_plan.md#8-visible-voxel-bodies-integration-2026-09-04)
 now coordinates procedural content, the live voxel-body path and presentation
@@ -700,7 +700,18 @@ recipe depends on which anatomy makes it what it is.
     corridor** — the best halves the failure rate to 9/30. Two candidates are
     proposed and neither is applied; the choice between their costs (D
     deletes predation, F is the only arm that ever breathes) is Mark's, and
-    so is whether the prey-set rule itself should move.
+    so is whether the prey-set rule itself should move. **TG1 is accepted:**
+    its 60-run verifier covers 5,252 samples with exact total matter, zero bodies outside
+    the enclosure, and census agreement. Keep this Q10 pre-TG1 baseline
+    intact: drawn 1/30 collapse and roster 17/30 collapse. The current TG1
+    measure is distinct: drawn 1/30 collapse and roster 13/30 collapse, with
+    outcomes 0 breathes / 29 thins / 0 boil / 1 collapse and 0 breathes / 17
+    thins / 0 boil / 13 collapse respectively. All 30 roster seeds start 76
+    grazers, 76 predators, and 78 omnivores. TG6 remains open because neither
+    arm retains all three tiers at the end. The result belongs in the
+    [trophic grammar plan](2026-09-04_trophic_grammar_plan.md) Findings. The
+    older CP1 grammar-revision-0 golden is now refused by name; retained
+    current recordings use revision 1.
 
 ---
 

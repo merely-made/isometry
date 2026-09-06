@@ -13,7 +13,7 @@
 use super::*;
 use crate::body::{Attachment, Provenance, SpeciesId, VolumeRef, Yaw};
 use crate::plan::Role;
-use crate::process::{Process, Registry};
+use crate::process::{IntakePort, NisKind, Process, Registry};
 
 /// A bulk root `[2, 2, 2]`, a long limb `[7, 1, 1]`, and a frond `[4, 4, 1]`
 /// held above: one part of three different roles, so every seeded process in
@@ -71,6 +71,56 @@ fn geometry_seeds_the_allocation_it_used_to_only_answer() {
             "and its shape is why"
         );
     }
+}
+
+#[test]
+fn a_declared_port_waits_for_its_supporting_process_to_be_expressed() {
+    let (mut phenotype, [_, _, frond]) = critter();
+    phenotype.declare_port(
+        frond,
+        IntakePort::live(NisKind::Producer).supported_by(reference(Process::Fix)),
+    );
+    assert!(
+        phenotype.part_port(frond).is_some(),
+        "the fixing frond is active"
+    );
+
+    let cells = phenotype.mosaic(frond).unwrap().sites()[0].cells.clone();
+    let secrete = AllocationProposal {
+        expect: phenotype.digest(),
+        source: Arrangement::Direct,
+        parts: vec![frond],
+        sites: vec![ProposedSite {
+            part: frond,
+            process: reference(Process::Secrete),
+            cells: cells.clone(),
+        }],
+    };
+    phenotype
+        .develop(Registry::native(), &secrete)
+        .expect("a gland is admitted on a plate");
+    assert!(
+        phenotype.part_port(frond).is_none(),
+        "a gland does not keep a fixing port active"
+    );
+
+    let restore = AllocationProposal {
+        expect: phenotype.digest(),
+        source: Arrangement::Direct,
+        parts: vec![frond],
+        sites: vec![ProposedSite {
+            part: frond,
+            process: reference(Process::Fix),
+            cells,
+        }],
+    };
+    phenotype
+        .develop(Registry::native(), &restore)
+        .expect("the frond can be expressed again");
+    assert!(
+        phenotype.part_port(frond).is_some(),
+        "the declaration survived re-expression"
+    );
 }
 
 #[test]

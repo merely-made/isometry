@@ -13,7 +13,10 @@
 use std::sync::LazyLock;
 
 use super::*;
-use mesocosm_core::{INSTINCT_IDLE_TICKS, OrganismId, SpeciesId};
+use mesocosm_core::{
+    Attachment, Crossing, INSTINCT_IDLE_TICKS, Intent, Kingdom, Organism, OrganismId, Origin,
+    PartId, Provenance, SpeciesId, Stage, VolumeRef, World, Yaw,
+};
 use mesocosm_runtime::{Birth, Loss};
 
 /// Steps and founders the assertions below record with.
@@ -213,29 +216,102 @@ fn a_recorded_meal_is_observed_and_unlocks_nothing() {
     );
 }
 
-/// P3's receipt, in the recorded loop rather than only in a fixture: the
-/// demo takes one branch off a carcass, and the world remembers the terms.
-///
-/// **Its own recording, at the shipping density.** Whether a carcass
-/// carrying a branch is ever within reach is the enclosure's business, and
-/// the 60-founder world the tests above share is fifteen times sparser than
-/// the one the demo ships in — it offers none inside the window. So this
-/// records the cohort the claim is actually about, and stops as soon as the
-/// window has closed.
-#[test]
-fn the_demo_takes_one_branch_off_a_carcass() {
-    let trace = record_demo(DEMO_SEED, mesocosm_core::world::FOUNDERS, 10, 360);
-    let grafts = trace
-        .intents
-        .iter()
-        .filter(|intent| matches!(intent, Intent::Graft { .. }))
-        .count();
-    assert_eq!(grafts, 1, "one branch, taken once");
+/// A fixed carcass branch, made with the same founding and attachment routes
+/// as play. The enclosure does not promise that its moving population leaves
+/// one at the controlled body's feet at a particular tick, so that is not a
+/// sound premise for this host receipt.
+fn graft_fixture() -> (World, OrganismId, PartId) {
+    let mut world = World::new(DEMO_SEED, mesocosm_core::world::FOUNDERS);
+    let recipient = world.controlled_id().expect("embodied");
+    let (species, position) = {
+        let body = world
+            .organisms
+            .iter()
+            .find(|organism| organism.id == recipient)
+            .expect("controlled body");
+        (body.species, body.position)
+    };
+    *world
+        .organisms
+        .iter_mut()
+        .find(|organism| organism.id == recipient)
+        .expect("controlled body") = Organism {
+        stage: Stage::Mature,
+        ..Organism::founding(
+            recipient,
+            species,
+            Kingdom::Consumer,
+            VolumeRef::from_tag(1),
+            [2, 2, 2],
+            position,
+            1_500,
+        )
+    };
 
-    let (world, _) = Runtime::replay(trace.seed, trace.organisms, &trace.intents);
-    let graft = world
-        .last_graft()
-        .expect("the transfer landed, or the intent above was a refusal");
+    let donor = OrganismId(9_700);
+    let mut carcass = Organism {
+        stage: Stage::Carrion,
+        ..Organism::founding(
+            donor,
+            SpeciesId(9_700),
+            Kingdom::Producer,
+            VolumeRef::from_tag(1),
+            [2, 2, 2],
+            [position[0] + 1, position[1], position[2]],
+            1_200,
+        )
+    };
+    let root = carcass.body().root;
+    let branch = carcass
+        .phenotype
+        .attach(
+            VolumeRef::from_tag(7),
+            400,
+            [6, 4, 1],
+            Attachment {
+                parent: root,
+                offset: [0, 7, 0],
+                yaw: Yaw::Zero,
+            },
+            Provenance::founding(),
+        )
+        .expect("a branch attaches to the carcass");
+    carcass
+        .phenotype
+        .attach(
+            VolumeRef::from_tag(9),
+            150,
+            [7, 1, 1],
+            Attachment {
+                parent: branch,
+                offset: [13, 0, 0],
+                yaw: Yaw::Zero,
+            },
+            Provenance::founding(),
+        )
+        .expect("a tip hangs off the branch");
+    world.organisms.push(carcass);
+    (world, donor, branch)
+}
+
+/// P3's host receipt: a fixed, accepted branch transfer keeps its source
+/// provenance and replays from the same fixture.
+#[test]
+fn a_carcass_branch_graft_replays_and_keeps_its_provenance() {
+    let (mut world, donor, branch) = graft_fixture();
+    let intents = [
+        Intent::Graft {
+            organism: donor,
+            part: branch,
+            crossing: Crossing::Regrow,
+        },
+        Intent::Idle,
+    ];
+    let mut replay = world.clone();
+    for intent in &intents {
+        world.apply(intent.clone());
+    }
+    let graft = world.last_graft().expect("the fixed transfer lands");
     assert!(graft.parts.len() >= 2, "a branch, not an organ: {graft:?}");
     assert!(graft.mass_mg > 0);
     // Every part of it names the part it came off, which is the whole of
@@ -245,11 +321,19 @@ fn the_demo_takes_one_branch_off_a_carcass() {
         assert!(
             matches!(
                 body.part(*part).map(|found| &found.provenance.origin),
-                Some(mesocosm_core::Origin::Incorporated { .. })
+                Some(Origin::Incorporated { .. })
             ),
             "part {part:?} lost its provenance"
         );
     }
+    for intent in &intents {
+        replay.apply(intent.clone());
+    }
+    assert_eq!(
+        mesocosm_core::state_hash(&replay),
+        mesocosm_core::state_hash(&world),
+        "the same accepted transfer replays from the fixed fixture"
+    );
 }
 
 /// A carve that removed nothing would leave the section with no dirty

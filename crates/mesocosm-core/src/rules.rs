@@ -52,6 +52,12 @@ use crate::process::Registry;
 /// longer, and a body lives and dies without its line ever taking a turn.
 pub const DEFAULT_EPOCH_TICKS: u64 = 1_000;
 
+/// Version of the trophic semantics embodied in a world and its trace.
+/// Zero names the pre-port grammar, so a decoded historical world can be
+/// distinguished at the `WorldRules` admission gate rather than replayed as
+/// TG1.
+pub const TROPHIC_GRAMMAR_REVISION: u32 = 1;
+
 /// How long a candidate is grown before its flow record is read. (P4b)
 ///
 /// **One brood interval at the ecology's reference body** —
@@ -153,7 +159,7 @@ impl EpochRule {
                 let mut bytes = vec![0u8];
                 bytes.extend_from_slice(&ticks.to_le_bytes());
                 bytes
-            }
+            },
             Self::Gated => vec![1],
             Self::PlayerTriggered => vec![2],
         }
@@ -192,6 +198,9 @@ pub struct WorldRules {
     /// line commits is the world.
     #[serde(default = "default_score_ticks")]
     pub score_ticks: u64,
+    /// The trophic grammar that decides which body can admit which food.
+    #[serde(default)]
+    pub trophic_grammar: u32,
 }
 
 fn default_score_ticks() -> u64 {
@@ -208,6 +217,7 @@ impl Default for WorldRules {
             processes: RulesetDigest::default(),
             epoch: EpochRule::default(),
             score_ticks: DEFAULT_SCORE_TICKS,
+            trophic_grammar: 0,
         }
     }
 }
@@ -225,6 +235,7 @@ impl WorldRules {
             processes: registry.digest(),
             epoch: EpochRule::default(),
             score_ticks: DEFAULT_SCORE_TICKS,
+            trophic_grammar: TROPHIC_GRAMMAR_REVISION,
         }
     }
 
@@ -251,6 +262,7 @@ impl WorldRules {
         let mut bytes = self.processes.0.to_le_bytes().to_vec();
         bytes.extend_from_slice(&self.epoch.bytes());
         bytes.extend_from_slice(&self.score_ticks.to_le_bytes());
+        bytes.extend_from_slice(&self.trophic_grammar.to_le_bytes());
         crate::snapshot::hash_bytes(&bytes)
     }
 }
@@ -297,6 +309,17 @@ mod tests {
 
         let quick = native.scoring_over(10);
         assert_ne!(quick.digest(), native.digest(), "so is the score window");
+    }
+
+    #[test]
+    fn the_trophic_grammar_is_digested() {
+        let native = WorldRules::native();
+        assert_eq!(native.trophic_grammar, TROPHIC_GRAMMAR_REVISION);
+        let pre_ports = WorldRules {
+            trophic_grammar: 0,
+            ..native
+        };
+        assert_ne!(pre_ports.digest(), native.digest());
     }
 
     /// Only Timed ends an epoch on the clock; Gated is still named-only data.

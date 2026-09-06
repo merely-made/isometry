@@ -54,7 +54,9 @@ fn bounded_fauna_policy_names_its_decision_and_replays() {
     let prey = Organism::founding(
         prey_id,
         SpeciesId(3),
-        Kingdom::Producer,
+        // The policy receipt measures pursuit, not the former predicate that
+        // let every predator graze. Give the jaw a live consumer target.
+        Kingdom::Consumer,
         VolumeRef::from_tag(18),
         [1, 1, 1],
         prey_at,

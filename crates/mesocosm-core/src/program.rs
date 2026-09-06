@@ -177,7 +177,7 @@ impl Revision {
             Some(parent) => {
                 bytes.push(1);
                 bytes.extend_from_slice(&parent.0.to_le_bytes());
-            }
+            },
             None => bytes.push(0),
         }
         bytes.extend_from_slice(&cites.condition.0.to_le_bytes());
@@ -354,12 +354,12 @@ impl Unexpressed {
         match *self {
             Unexpressed::NoSite { role } => {
                 format!("nowhere on this body is a {}", role_word(role))
-            }
+            },
             Unexpressed::Nothing => "the revision declares nothing".to_owned(),
             Unexpressed::Refused(refusal) => format!("the validator refused it: {refusal:?}"),
             Unexpressed::Unaffordable { needed_mg, held_mg } => {
                 format!("it costs {needed_mg} mg and this body has {held_mg}")
-            }
+            },
         }
     }
 }
@@ -403,7 +403,8 @@ pub fn preview(
     seed: u64,
 ) -> Result<Preview, DevelopmentError> {
     let body = species.realize(seed, founder.mass_mg, founder.palette)?;
-    let grown = BodyPhenotype::seed(body);
+    let mut grown = BodyPhenotype::seed(body);
+    species.apply_intake_ports(&mut grown);
     let program = species.program().digest();
     let Some(revision) = species.program().current() else {
         return Ok(Preview {

@@ -10,6 +10,9 @@
 use super::*;
 use crate::body::VolumeRef;
 
+#[path = "tg1.rs"]
+mod tg1;
+
 // Before the kingdom floor (2026-08-29, TD2b), 2 of these 10 seeds
 // founded zero producer species -- guaranteed collapse under any
 // constants. Every seed must now found all three kingdoms among the
@@ -69,12 +72,13 @@ fn intended_kingdoms(seed: u64, organism_count: u32) -> Vec<Kingdom> {
     std::iter::once(Kingdom::Consumer).chain(kingdoms).collect()
 }
 
-// Both readings of a consumer must be reachable at founding. Under the
+// All three readings of a consumer must be reachable at founding. Under the
 // symmetry bijection they were not: every founding consumer drew a limbed
 // recipe and read Predator, and Grazer was only a state a line fell into by
-// losing its limbs. Mouth geometry is what makes them two bodies.
+// losing its limbs. Geometry seeds the initial declarations; the roster also
+// declares its explicit two-port omnivore.
 #[test]
-fn founding_reaches_both_a_jaw_and_a_crop() {
+fn founding_reaches_a_jaw_a_crop_and_two_declared_ports() {
     let mut modes: std::collections::BTreeSet<crate::process::FeedingMode> = Default::default();
     for seed in 1u64..=10 {
         let world = World::new(seed, FOUNDERS);
@@ -86,8 +90,8 @@ fn founding_reaches_both_a_jaw_and_a_crop() {
     }
     assert_eq!(
         modes.len(),
-        2,
-        "ten seeds founded only {modes:?} of the two consumer readings"
+        3,
+        "ten seeds founded only {modes:?} of the three consumer readings"
     );
 }
 
@@ -311,6 +315,10 @@ fn the_roster_founds_a_predator_beside_the_grazers_and_an_armoured_body() {
     }
     assert!(modes[&FeedingMode::Predator] > 0, "no pursuit form founded");
     assert!(modes[&FeedingMode::Grazer] > 0);
+    assert!(
+        modes[&FeedingMode::Omnivore] > 0,
+        "no two-port body founded"
+    );
     assert!(modes[&FeedingMode::Scavenger] > 0);
     assert!(modes[&FeedingMode::Producer] > 0);
     // 77 armoured consumers and 39 crusts wearing skirts, less the handful a
@@ -324,11 +332,10 @@ fn the_roster_founds_a_predator_beside_the_grazers_and_an_armoured_body() {
 // as.
 
 #[test]
-fn the_authored_tier_founds_mobile_grazers() {
-    // The body this world has never had: a consumer that crops *and* walks.
-    // Before DC1.5 grazing and sessility were one reading, so this founding is
-    // new ecology rather than new geometry, which is why the instrument runs
-    // both arms.
+fn the_authored_tier_founds_mobile_omnivores() {
+    // The browser carries crop and jaw declarations while it walks. TG1 makes
+    // that two-port body an omnivore; mobility is still the claim this receipt
+    // measures.
     for seed in 1u64..=10 {
         let world = World::founded(seed, FOUNDERS, Founding::BrowsingConsumer)
             .expect("the archetype palette is admissible");
@@ -340,8 +347,8 @@ fn the_authored_tier_founds_mobile_grazers() {
             consumers += 1;
             assert_eq!(
                 organism.feeding_mode(),
-                crate::process::FeedingMode::Grazer,
-                "seed {seed}: founder {:?} is not a grazer",
+                crate::process::FeedingMode::Omnivore,
+                "seed {seed}: founder {:?} is not an omnivore",
                 organism.id
             );
             assert!(

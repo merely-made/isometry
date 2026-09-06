@@ -23,7 +23,7 @@ use crate::body::{Attachment, BodyDocument, Provenance, Yaw};
 use crate::phenotype::BodyPhenotype;
 use crate::places::{Tier, WalkerShape};
 use crate::plan::{Role, classify};
-use crate::process::{FeedingMode, Process};
+use crate::process::{FeedingMode, NisKind, Process};
 
 mod behavior;
 pub mod ecology;
@@ -322,10 +322,23 @@ impl Organism {
         Kingdom::of(&self.phenotype)
     }
 
-    /// What this body does with matter: the same anatomy, read one level
-    /// finer. A jaw at the head makes a predator; a crop makes a grazer.
+    /// What this body does with matter, read from its active declared intake
+    /// ports. Geometry seeds a founding declaration but does not remain the
+    /// prey-set rule.
     pub fn feeding_mode(&self) -> FeedingMode {
         FeedingMode::of(&self.phenotype)
+    }
+
+    /// The one trophic admission question. Both NPC targeting and played
+    /// consumption ask it, so a port declaration cannot make one route accept
+    /// food the other refuses.
+    pub fn admits(&self, kind: NisKind, deadstock: bool) -> bool {
+        let ports = self.phenotype.intake_ports();
+        if deadstock {
+            ports.admits_deadstock()
+        } else {
+            ports.admits_live(kind)
+        }
     }
 
     /// How far this body's actuators swing, in voxels: each living

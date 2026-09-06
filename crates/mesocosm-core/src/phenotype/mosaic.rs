@@ -38,7 +38,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::body::Part;
 use crate::plan::classify;
-use crate::process::{ProcessRef, Registry};
+use crate::process::{IntakePort, ProcessRef, Registry};
 
 /// A cell's address inside one part's mosaic. Stable, never reused.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
@@ -111,6 +111,10 @@ pub struct Mosaic {
     sites: Vec<Site>,
     /// The next site ordinal. Ids are never reused within a part.
     next_site: u16,
+    /// The part's declared intake admission. Kept beside allocation so a
+    /// graft, loss and snapshot carry it with the named anatomy.
+    #[serde(default)]
+    port: IntakePort,
 }
 
 impl Mosaic {
@@ -169,6 +173,7 @@ impl Mosaic {
             lost: Vec::new(),
             sites,
             next_site,
+            port: IntakePort::none(),
         }
     }
 
@@ -220,6 +225,14 @@ impl Mosaic {
 
     pub fn sites(&self) -> &[Site] {
         &self.sites
+    }
+
+    pub fn port(&self) -> IntakePort {
+        self.port
+    }
+
+    pub(super) fn declare_port(&mut self, port: IntakePort) {
+        self.port = port;
     }
 
     /// The site occupying a cell, if any.

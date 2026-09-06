@@ -14,6 +14,7 @@ use super::perception::NEAR_SIGHT_RANGE;
 use super::*;
 use crate::body::{SpeciesId, VolumeRef};
 use crate::organism::{Kingdom, Signal};
+use crate::process::{IntakePort, Process, Registry};
 use crate::species::Lineages;
 
 fn target(id: u32, species: u32, at: [i32; 3], mass_mg: u64) -> LivingTarget {
@@ -92,6 +93,25 @@ fn an_unrelated_line_is_eaten_exactly_as_it_was_before_kinship() {
         choose_living_target(&hunter, &living, &living_cells(&living), None, &kin),
         Some(2),
         "the nearer stranger, undiscounted"
+    );
+}
+
+#[test]
+fn a_predator_without_a_producer_port_cannot_graze_the_stand() {
+    let mut lineages = Lineages::new();
+    lineages.found(SpeciesId(2));
+    lineages.found(SpeciesId(9));
+    let kin = Kin::new(&lineages);
+    let hunter = predator(2, 300);
+    assert!(!hunter.admits(crate::process::NisKind::Producer, false));
+
+    let mut stand = target(1, 9, [1, 0, 0], 500);
+    stand.kingdom = Kingdom::Producer;
+    let living = vec![stand];
+    assert_eq!(
+        choose_living_target(&hunter, &living, &living_cells(&living), None, &kin),
+        None,
+        "a jaw's consumer declaration does not graze a producer"
     );
 }
 
@@ -216,7 +236,7 @@ fn lost_sight_memory_expires_and_cannot_cross_the_tier_line() {
         id: target,
         position: [4, 1, 0],
         organism_index: 0,
-        kingdom: Kingdom::Producer,
+        kingdom: Kingdom::Consumer,
         species: SpeciesId(7),
         mass_mg: 300,
         signal: Signal::Plain,
@@ -245,4 +265,28 @@ fn lost_sight_memory_expires_and_cannot_cross_the_tier_line() {
     hunter.tier = Tier::Far;
     assert_eq!(remembered_target(&mut hunter, &living, Some(&ground)), None);
     assert_eq!(hunter.last_seen, None);
+}
+
+#[test]
+fn remembered_prey_is_dropped_when_its_port_stops_admitting_it() {
+    let mut hunter = predator(2, 300);
+    let target_id = OrganismId(900);
+    let living = vec![target(900, 7, [4, 0, 0], 300)];
+    hunter.last_seen = Some(LastSeen {
+        target: target_id,
+        position: [4, 0, 0],
+        ticks_left: MEMORY_TICKS,
+    });
+    let jaw = hunter.body().mouth_part().expect("the fixture has a jaw");
+    hunter.phenotype.declare_port(
+        jaw,
+        IntakePort::deadstock()
+            .supported_by(Registry::native().of_native(Process::Contract).reference()),
+    );
+
+    assert_eq!(
+        remembered_target(&mut hunter, &living, Some(&Ground::default())),
+        None
+    );
+    assert_eq!(hunter.last_seen, None, "the stale prey memory was cleared");
 }

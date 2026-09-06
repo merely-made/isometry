@@ -17,8 +17,8 @@
 //! because there is no capability number to edit.
 
 use mesocosm_core::{
-    Attachment, Capability, Intent, OrganismId, Outcome, Placement, Process, ProcessRef,
-    Provenance, Registry, Rejection, Unmet, VolumeRef, World, Yaw,
+    Attachment, Capability, IntakePort, Intent, NisKind, OrganismId, Outcome, Placement, Process,
+    ProcessRef, Provenance, Registry, Rejection, Unmet, VolumeRef, World, Yaw,
 };
 
 // An integration test's crate root resolves `mod` against `tests/`, and a
@@ -112,6 +112,21 @@ fn bulk_world(seed: u64, founders: u32) -> World {
             1_500,
         )
     };
+    let mouth = organism.body().mouth_part().expect("bulk body has a mouth");
+    let support = organism
+        .phenotype
+        .part_port(mouth)
+        .expect("bulk mouth port is active")
+        .support()
+        .expect("bulk mouth port has support");
+    assert!(
+        organism.phenotype.declare_port(
+            mouth,
+            IntakePort::live(NisKind::Producer)
+                .with_deadstock()
+                .supported_by(support),
+        )
+    );
     world
 }
 

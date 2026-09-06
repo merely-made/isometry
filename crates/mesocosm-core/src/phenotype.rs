@@ -50,7 +50,7 @@ use serde::{Deserialize, Serialize};
 use crate::body::{
     AttachError, Attachment, BodyDocument, PartId, Provenance, SpeciesId, VolumeRef,
 };
-use crate::process::{ProcessRef, Registry};
+use crate::process::{IntakePort, NisKind, Process, ProcessRef, Registry};
 
 pub mod develop;
 pub mod graft;
@@ -84,11 +84,12 @@ impl BodyPhenotype {
     /// with no allocation.
     pub fn seed(body: BodyDocument) -> Self {
         let mosaics = body.parts.iter().map(Mosaic::seed).collect();
-        let phenotype = Self {
+        let mut phenotype = Self {
             body,
             mosaics,
             revision: 0,
         };
+        phenotype.seed_intake_ports();
         debug_assert!(phenotype.conserves(), "a seeded mosaic must conserve");
         phenotype
     }
@@ -115,6 +116,97 @@ impl BodyPhenotype {
     /// to be explainable.
     pub fn mosaic(&self, part: PartId) -> Option<&Mosaic> {
         self.mosaics.get(part.0 as usize)
+    }
+
+    /// The declaration on one living part. A declared port is inactive when
+    /// that part has no living allocation, without discarding its declaration.
+    pub fn part_port(&self, part: PartId) -> Option<IntakePort> {
+        if !self.body.is_living(part) {
+            return None;
+        }
+        let mosaic = self.mosaic(part)?;
+        let port = mosaic.port();
+        port.support()
+            .is_some_and(|support| {
+                mosaic.sites().iter().any(|site| {
+                    site.process == support && site.cells.iter().any(|cell| mosaic.is_living(*cell))
+                })
+            })
+            .then_some(port)
+    }
+
+    /// The union of all active intake declarations, in deterministic part
+    /// order. Views may inspect this directly; rules ask `admits` below.
+    pub fn intake_ports(&self) -> IntakePort {
+        self.allocations()
+            .fold(IntakePort::none(), |all, (part, _)| {
+                let Some(port) = self.part_port(part) else {
+                    return all;
+                };
+                let mut merged = all;
+                for kind in [NisKind::Producer, NisKind::Consumer, NisKind::Decomposer] {
+                    if port.admits_live(kind) {
+                        merged = merged.with_live(kind);
+                    }
+                }
+                if port.admits_deadstock() {
+                    merged = merged.with_deadstock();
+                }
+                merged
+            })
+    }
+
+    /// Declares one part's intake admission. This is the explicit anatomy
+    /// authoring seam used by roster construction and retained by snapshots.
+    pub fn declare_port(&mut self, part: PartId, port: IntakePort) -> bool {
+        if !self.body.is_living(part) {
+            return false;
+        }
+        let Some(mosaic) = self.mosaics.get_mut(part.0 as usize) else {
+            return false;
+        };
+        mosaic.declare_port(port);
+        true
+    }
+
+    fn seed_intake_ports(&mut self) {
+        let registry = Registry::native();
+        // Existing mixotroph precedence remains: a canopy is a producer even
+        // if its geometry also happens to carry a head-borne feeding shape.
+        if self.canopy() {
+            return;
+        }
+        let mouths: Vec<_> = self
+            .body
+            .living()
+            .filter_map(|part| {
+                part.attachment
+                    .is_some_and(|at| at.parent == self.body.root && at.offset[1] < 0)
+                    .then_some((part.id, crate::plan::classify(part.half_extent)))
+            })
+            .filter(|(_, role)| matches!(role, crate::plan::Role::Mass | crate::plan::Role::Limb))
+            .collect();
+        if mouths.is_empty() {
+            self.declare_port(
+                self.body.root,
+                IntakePort::deadstock()
+                    .supported_by(registry.of_native(Process::Intake).reference()),
+            );
+        } else {
+            for (part, role) in mouths {
+                let port = match role {
+                    crate::plan::Role::Mass => IntakePort::live(NisKind::Producer)
+                        .supported_by(registry.of_native(Process::Intake).reference()),
+                    crate::plan::Role::Limb => IntakePort::live(NisKind::Consumer)
+                        // Initial jaw ports admit consumer nis only. A jaw that
+                        // also admits decomposer nis is an authored declaration,
+                        // not a hidden consequence of being predatory.
+                        .supported_by(registry.of_native(Process::Contract).reference()),
+                    crate::plan::Role::Plate | crate::plan::Role::Sensor => continue,
+                };
+                self.declare_port(part, port);
+            }
+        }
     }
 
     /// How many developments this phenotype has committed.
@@ -361,7 +453,7 @@ impl BodyPhenotype {
             Some(part) => {
                 part.mass_mg = part.mass_mg.saturating_add(mg);
                 true
-            }
+            },
             None => false,
         }
     }

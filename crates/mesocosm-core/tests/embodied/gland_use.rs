@@ -42,7 +42,9 @@ fn armed_neighbour(world: &mut World, cells: u32) -> OrganismId {
         ..Organism::founding(
             id,
             world.controlled().unwrap().species,
-            mesocosm_core::Kingdom::Consumer,
+            // The played fronded body admits producer meals; this neighbour
+            // is the producer carrying the charged gland.
+            mesocosm_core::Kingdom::Producer,
             VolumeRef::from_tag(1),
             [2, 2, 2],
             at,

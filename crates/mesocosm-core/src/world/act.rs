@@ -83,7 +83,7 @@ impl World {
                 }
                 let removed = self.ground.carve(at, radius);
                 Outcome::Carved { at, removed }
-            }
+            },
 
             Intent::Move { delta } => {
                 let Some((from, energy_mg, shape)) = self.controlled().map(|organism| {
@@ -131,7 +131,7 @@ impl World {
                     ),
                 );
                 Outcome::Moved
-            }
+            },
 
             Intent::Speciate { ref name } => {
                 let Some(me) = self.controlled().map(|o| (o.id, o.species)) else {
@@ -155,7 +155,7 @@ impl World {
                     from,
                     founder: id,
                 }
-            }
+            },
 
             Intent::TakeControl { organism } => {
                 if let Err(why) = self.eligibility(organism) {
@@ -174,7 +174,7 @@ impl World {
                 }
                 self.controlled = Some(organism);
                 Outcome::Inhabited { organism }
-            }
+            },
 
             Intent::Metabolize {
                 organism,
@@ -218,7 +218,7 @@ impl World {
                     },
                     Err(why) => Outcome::Rejected(Rejection::Unrevised(why)),
                 }
-            }
+            },
 
             // **Enriching the ground**, since TD6. It used to spawn a carcass
             // — a scrap of loose matter waiting for a decomposer — which was
@@ -254,7 +254,7 @@ impl World {
                     ),
                 );
                 Outcome::Deposited { organism: id }
-            }
+            },
 
             // DT3's four. Each is a validator in front of a transaction that
             // already existed; `world::dev` holds them together so the claim
@@ -285,7 +285,7 @@ impl World {
     /// known to succeed.
     ///
     /// [`STARVED_UPKEEP_TICKS`]: super::STARVED_UPKEEP_TICKS
-    fn metabolize(&mut self, organism: OrganismId, placement: Placement) -> Outcome {
+    pub(super) fn metabolize(&mut self, organism: OrganismId, placement: Placement) -> Outcome {
         let route = if self.is_starved() {
             Route::Burn
         } else {
@@ -322,9 +322,21 @@ impl World {
                     Some(growth) => Some(growth),
                     None => return Outcome::Rejected(Rejection::NoRoom),
                 }
-            }
+            },
             _ => None,
         };
+
+        // The same typed intake contract governs both whole-body meals and
+        // part meals. Keep the structural checks above first, then refuse
+        // before removing the donor so an inadmissible meal is unchanged.
+        let Some(eater) = self.controlled() else {
+            return Outcome::Rejected(Rejection::Disembodied);
+        };
+        let donor = &self.organisms[index];
+        if !eater.admits(donor.kingdom().nis_kind(), !donor.is_alive()) {
+            return Outcome::Rejected(Rejection::Inedible(organism));
+        }
+
         // The rollback point is the whole **phenotype**, not the anatomy: a
         // restore that put back the parts and left the mosaics grown would be
         // exactly the split account the wrapper exists to prevent.
@@ -480,7 +492,7 @@ impl World {
                         Landed::default(),
                     ),
                 }
-            }
+            },
             Route::Incorporate {
                 placement: Placement::Planned,
             } => {
@@ -524,7 +536,7 @@ impl World {
                         body_mg,
                     },
                 )
-            }
+            },
         }
     }
 

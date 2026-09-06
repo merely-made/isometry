@@ -1,7 +1,8 @@
 # Playable Ecology Architecture Plan (2026-08-31)
 
 **Status: active integration plan, refreshed 2026-09-05. PE0-PE3 are landed
-(see §9); PE4-PE7 remain open. TG1 is the next mechanics slice.**
+(see §9); PE4-PE7 remain open. TG1 is accepted; TG6 remains open because its
+current drawn and roster arms do not retain all three tiers at the end.**
 Mark ruled reproduction as an individual-scale micro-checkpoint and named
 trophic visibility as the primary design challenge. He reaffirmed the other
 load-bearing directions: body composition determines what a critter can do;
@@ -598,12 +599,22 @@ TG6 corridor supplement, rather than replace, PE4's generated-world criteria.
 **CP1 integration finding (2026-09-05):** the fixed clearing/burrow now has
 four hash-neutral views, addressed inspection and ordinary grounded traversal
 (`377d774`). This provides a small acceptance habitat, not a generated-world
-or trophic-viability result. Terrain readability is now native-verified there;
-next join TG1's shared pursuit/bite admission answer to the existing inspector.
-Follow with VB4a's visible intake, body change and descendant proof using
-existing mechanics. Canopy form remains real developed anatomy; diet-derived
-tissue waits for TG2/TG3. PE5's controller and PE6's scale work retain their
-own gates. CP1's ground-truth cutaway is not an organism's sensory knowledge.
+or trophic-viability result. Terrain readability is now native-verified there.
+TG1's shared pursuit/bite admission answer, inspector, legacy integration
+fixtures, and replay receipts are accepted: the combined latest target receipt
+is 956 passed, 0 failed, 2 ignored across eight packages, and the final native
+host pass reran CP1 inspection, four turns, ordinary burrow, and replays. Its
+60-run verifier covers 5,252 samples with exact total matter, zero bodies outside the
+enclosure, and census agreement. Current drawn ends 0 breathes / 29 thins / 0 boil
+/ 1 collapse; roster ends 0 breathes / 17 thins / 0 boil / 13 collapse. TG6 is
+open: neither arm retains all three tiers at the end. Historical replay receipts
+remain historical. The former CP1 golden trace under grammar revision 0 now
+fails by name; current revision-1 recordings are retained and replayed under
+the changed eating semantics. VB4a follows with visible
+intake, body change and descendant proof using existing mechanics. Canopy form
+remains real developed anatomy; diet-derived tissue waits for TG2/TG3. PE5's
+controller and PE6's scale work retain their own gates. CP1's ground-truth
+cutaway is not an organism's sensory knowledge.
 
 The material scheme is ruled in section 6 item 4. Generate an immutable
 world-law record first, then admitted material

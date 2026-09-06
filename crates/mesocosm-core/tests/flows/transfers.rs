@@ -16,7 +16,7 @@
 //! two different ways is how they would come to disagree.
 
 use mesocosm_core::flow::{Account, Process};
-use mesocosm_core::{Intent, OrganismId, World};
+use mesocosm_core::{FeedingMode, Intent, OrganismId, World};
 
 use super::stepped;
 
@@ -27,6 +27,16 @@ fn a_consumed_part_moves_exactly_its_own_milligrams_and_says_so() {
     // matter" is the reconciliation passing on that tick rather than a claim
     // in a comment.
     let mut world = World::new(11, 40);
+    let scavenger = world
+        .organisms
+        .iter()
+        .find(|organism| organism.is_alive() && organism.feeding_mode() == FeedingMode::Scavenger)
+        .map(|organism| organism.id)
+        .expect("the founding roster has a live scavenger");
+    assert!(matches!(
+        world.apply(Intent::TakeControl { organism: scavenger }),
+        mesocosm_core::Outcome::Inhabited { organism } if organism == scavenger
+    ));
     world.apply(Intent::Idle);
     let here = world.position().expect("a played critter");
     let id = OrganismId(9_600);
@@ -74,7 +84,10 @@ fn a_consumed_part_moves_exactly_its_own_milligrams_and_says_so() {
         .iter()
         .map(|recorded| recorded.record)
         .filter(|flow| {
-            flow.process == Process::Feeding && flow.from.map(|from| from.organism) == Some(id)
+            flow.process == Process::Feeding
+                && flow.from.map(|from| from.organism) == Some(id)
+                && flow.source == Account::Substance
+                && flow.destination == Account::Substance
         })
         .collect();
     assert_eq!(taken.len(), 1, "one organ, one transfer: {taken:?}");
