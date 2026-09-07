@@ -126,7 +126,7 @@ fn main() {
                 let named = args.next().unwrap_or_default();
                 config.scene =
                     mesocosm_genet::played::SceneMode::parse(&named).unwrap_or_else(|| {
-                        eprintln!("--scene wants ecology, terrarium or graft-practice");
+                        eprintln!("--scene wants ecology, terrarium, graft-practice or expression-practice");
                         std::process::exit(1);
                     });
             },
@@ -288,7 +288,7 @@ mesocosm-genet: run Mesocosm in a window
   --replay PATH   drive the run from a recorded trace and assert its hash
   --scenario PATH drive the run from a text scenario and exit 1 if it fails
   --seed N        world seed
-  --scene MODE    ecology (default), terrarium, or authored graft-practice
+  --scene MODE    ecology (default), terrarium, or authored graft-practice/expression-practice
   --terrarium-pitch DEG  shallow camera pitch, 0..45 degrees (default 12)
   --cutaway MODE  occupied (default), always (expose interior), or never
   --terrain-style MODE  auto (habitat in terrarium, classic in ecology),
@@ -311,6 +311,7 @@ headed-verify home: <Code>/testing/mesocosm/scratch_played.png, .trace.json and
 when one of those flags names it.
 
 controls: Z/V turn the terrarium left/right; WASD move along world axes, E/Space eat, Q deposit, C dig, arrows pan, Esc quit
+O opens Express discovery (world paused): arrows or J/L select; Enter expresses; Esc cancels
 H opens Graft tissue beside a carcass (world paused):
   arrows or J/L select a branch; Tab switches keep/regrow; Enter confirms
   Esc cancels the menu; Z/V rotates the preview. Only confirmation enters the trace.

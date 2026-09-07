@@ -56,7 +56,7 @@ impl Host {
                 || (self.config.cutaway == section::Cutaway::Occupied
                     && section::terrarium_occupied(habitat, played_at));
             window.set_title(&format!(
-                "Mesocosm | clearing and burrow | {} | cutaway {} ({}) | Z/V turn | H graft tissue",
+                "Mesocosm | clearing and burrow | {} | cutaway {} ({}) | Z/V turn | H graft tissue | O express discovery",
                 self.config.camera.name(),
                 self.config.cutaway.name(),
                 if exposed { "open" } else { "closed" }

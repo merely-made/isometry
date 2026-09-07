@@ -259,14 +259,29 @@ impl Host {
                 self.config.body_mode.name()
             },
             inspecting: self.inspection.open,
-            graft_menu: self.grafting.open,
+            graft_menu: self.grafting.open
+                && self.grafting.operation == super::grafting::BodyOperation::Graft,
+            expression_tissue_mg: self.expression_tissue(false),
+            expression_candidate_tissue_mg: self.expression_tissue(true),
+            expression_menu: self.grafting.open
+                && self.grafting.operation == super::grafting::BodyOperation::Express,
+            expression_preview: self.grafting.operation == super::grafting::BodyOperation::Express
+                && self.grafting.preview.is_some(),
+            expression_part: (self.grafting.operation == super::grafting::BodyOperation::Express)
+                .then_some(self.grafting.root)
+                .flatten()
+                .map(|p| p.0),
             body_view: if self.grafting.open {
                 "isolated"
             } else {
                 "scene"
             },
-            graft_preview: self.grafting.preview.is_some(),
-            graft_root: self.grafting.root.map(|part| part.0),
+            graft_preview: self.grafting.operation == super::grafting::BodyOperation::Graft
+                && self.grafting.preview.is_some(),
+            graft_root: (self.grafting.operation == super::grafting::BodyOperation::Graft)
+                .then_some(self.grafting.root)
+                .flatten()
+                .map(|part| part.0),
             selected_part: self
                 .inspection
                 .selected

@@ -4,7 +4,7 @@
 // file, You can obtain one at https://www.mozilla.org/MPL/2.0/.
 // SPDX-License-Identifier: MPL-2.0
 
-//! The contextual graft menu chrome, rendered on the shared device.
+//! The shared body-menu chrome for grafting and expression.
 
 use crate::chrome::{Chrome, Raster};
 use cambium::GenetAppRunner;
@@ -13,42 +13,47 @@ use genet_livery::{
     emit_paint_list_with_text_system_scrolled_with_images, layout_with_text_system, resolve_styles,
 };
 use genet_scripted_dom::ScriptedDom;
-use mesocosm_views::{GRAFT_HEIGHT, GRAFT_WIDTH, GraftChild, GraftMenu};
+use mesocosm_views::{BODY_MENU_HEIGHT, BODY_MENU_WIDTH, BodyMenu, BodyMenuChild};
 use paint_list_api::{DeviceIntSize, PaintList as _};
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
-type Runner = GenetAppRunner<GraftMenu, fn(&GraftMenu) -> GraftChild, GraftChild>;
+type Runner = GenetAppRunner<BodyMenu, fn(&BodyMenu) -> BodyMenuChild, BodyMenuChild>;
 
-pub struct GraftChrome {
+pub struct BodyMenuChrome {
     runner: Runner,
     raster: Raster,
     text: TextSystem,
     style_set: StyleSet,
     device: Device,
     generation: u64,
-    shown: Option<GraftMenu>,
+    shown: Option<BodyMenu>,
 }
 
-impl GraftChrome {
+impl BodyMenuChrome {
     pub fn new(chrome: &Chrome) -> Self {
         let dom = Rc::new(RefCell::new(ScriptedDom::new()));
         let runner = Runner::new(
             dom,
-            mesocosm_views::grafting_root as fn(&GraftMenu) -> GraftChild,
-            GraftMenu::default(),
+            mesocosm_views::body_menu_root as fn(&BodyMenu) -> BodyMenuChild,
+            BodyMenu::default(),
         );
         Self {
             runner,
-            raster: Raster::new(chrome.device(), "grafting", GRAFT_WIDTH, GRAFT_HEIGHT),
+            raster: Raster::new(
+                chrome.device(),
+                "body-menu",
+                BODY_MENU_WIDTH,
+                BODY_MENU_HEIGHT,
+            ),
             text: TextSystem::new(),
-            style_set: StyleSet::cambium(&[mesocosm_views::grafting_css()]),
-            device: Device::screen(GRAFT_WIDTH as f32, GRAFT_HEIGHT as f32),
+            style_set: StyleSet::cambium(&[mesocosm_views::body_menu_css()]),
+            device: Device::screen(BODY_MENU_WIDTH as f32, BODY_MENU_HEIGHT as f32),
             generation: 0,
             shown: None,
         }
     }
 
-    pub fn update(&mut self, chrome: &Chrome, menu: Option<&GraftMenu>) {
+    pub fn update(&mut self, chrome: &Chrome, menu: Option<&BodyMenu>) {
         if self.shown.as_ref() == menu {
             return;
         }
@@ -67,7 +72,7 @@ impl GraftChrome {
         (
             self.runner.dom(),
             Self::placement(frame),
-            mesocosm_views::grafting_css(),
+            mesocosm_views::body_menu_css(),
         )
     }
 
@@ -84,9 +89,9 @@ impl GraftChrome {
         let Ok((styles, fragments)) = layout_with_text_system(
             &*dom,
             &styles,
-            GRAFT_WIDTH as f32,
-            GRAFT_HEIGHT as f32,
-            ViewportSizes::uniform(GRAFT_WIDTH as f32, GRAFT_HEIGHT as f32),
+            BODY_MENU_WIDTH as f32,
+            BODY_MENU_HEIGHT as f32,
+            ViewportSizes::uniform(BODY_MENU_WIDTH as f32, BODY_MENU_HEIGHT as f32),
             &mut self.text,
             &HashMap::new(),
         ) else {
@@ -96,7 +101,7 @@ impl GraftChrome {
             &*dom,
             &styles,
             &fragments,
-            DeviceIntSize::new(GRAFT_WIDTH as i32, GRAFT_HEIGHT as i32),
+            DeviceIntSize::new(BODY_MENU_WIDTH as i32, BODY_MENU_HEIGHT as i32),
             self.generation,
             &mut self.text,
             &HashMap::new(),
@@ -134,13 +139,13 @@ impl GraftChrome {
     /// to its left. The raster is fixed-size; clamping is the honest narrow
     /// window behavior until the host supplies a resized surface.
     fn placement(frame: (u32, u32)) -> [f32; 4] {
-        let x = frame.0 as f32 - GRAFT_WIDTH as f32 - 12.0;
-        let y = (frame.1 as f32 - GRAFT_HEIGHT as f32) / 2.0;
+        let x = frame.0 as f32 - BODY_MENU_WIDTH as f32 - 12.0;
+        let y = (frame.1 as f32 - BODY_MENU_HEIGHT as f32) / 2.0;
         [
             x.max(0.0),
             y.max(0.0),
-            GRAFT_WIDTH as f32,
-            GRAFT_HEIGHT as f32,
+            BODY_MENU_WIDTH as f32,
+            BODY_MENU_HEIGHT as f32,
         ]
     }
 }

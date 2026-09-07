@@ -250,14 +250,53 @@ impl Automatable for Host {
             focused: self.followed().map(|id| format!("critter {}", id.0)),
             fields: [
                 (
+                    "expression-menu",
+                    if self.grafting.open
+                        && self.grafting.operation == super::grafting::BodyOperation::Express
+                    {
+                        "open"
+                    } else {
+                        "closed"
+                    }
+                    .to_string(),
+                ),
+                (
+                    "expression-available",
+                    self.grafting.conditions.len().to_string(),
+                ),
+                (
+                    "expression-preview",
+                    yes_no(
+                        self.grafting.operation == super::grafting::BodyOperation::Express
+                            && self.grafting.preview.is_some(),
+                    ),
+                ),
+                (
+                    "expression-part",
+                    (self.grafting.operation == super::grafting::BodyOperation::Express)
+                        .then_some(self.grafting.root)
+                        .flatten()
+                        .map_or(String::new(), |p| p.0.to_string()),
+                ),
+                ("expression-status", self.grafting.reading.status.clone()),
+                (
                     "graft-menu",
-                    if self.grafting.open { "open" } else { "closed" }.to_string(),
+                    if self.grafting.open
+                        && self.grafting.operation == super::grafting::BodyOperation::Graft
+                    {
+                        "open"
+                    } else {
+                        "closed"
+                    }
+                    .to_string(),
                 ),
                 ("graft-available", self.grafting.sources.len().to_string()),
                 ("graft-selected", self.grafting.selected.to_string()),
                 (
                     "graft-preview",
-                    if self.grafting.preview.is_some() {
+                    if self.grafting.operation == super::grafting::BodyOperation::Graft
+                        && self.grafting.preview.is_some()
+                    {
                         "yes"
                     } else {
                         "no"

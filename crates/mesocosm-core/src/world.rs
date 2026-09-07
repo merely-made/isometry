@@ -3,11 +3,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 // SPDX-License-Identifier: MPL-2.0
-//! The world: an enclosure holding one critter and the loose matter it can
-//! metabolize. A world is a pure function of its seed and the ordered intents applied to
-//! it. There are no clock reads, no unordered iteration that reaches the
-//! simulation, and no randomness outside the seeded stream, so replaying the
-//! same trace against the same seed reproduces the same world exactly.
+//! The world: an enclosure holding one critter and the loose matter it can metabolize.
+//! Integer state and seeded randomness make the same seed and trace replay exactly.
 use std::collections::{BTreeMap, BTreeSet};
 
 use serde::{Deserialize, Serialize};
@@ -23,6 +20,7 @@ mod consume;
 mod dev;
 mod discover;
 mod express;
+mod expression_practice;
 mod filial;
 mod genesis;
 mod graft;
@@ -35,6 +33,7 @@ mod terrarium;
 
 pub use adapt::{Round, Score, Turn};
 pub use dev::PLACE_MATTER_MAX_MG;
+pub use express::ExpressionPreview;
 pub use genesis::Founding;
 pub use graft::{Graft, GraftPreview};
 pub use intent::{Ineligible, Intent, Outcome, Placement, Rejection, Route};

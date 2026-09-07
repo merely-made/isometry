@@ -2116,6 +2116,31 @@ tests, and native verification are complete for this bounded slice. Receipts:
 `Code/testing/mesocosm/graft_menu/verification.json` and
 `Code/testing/mesocosm/graft_menu/README.md`.
 
+**Expression menu, locally verified 2026-09-06.** This bounded join makes
+`Intent::Express` reachable from ordinary play through `O`. It shares the body
+menu, pause, checked candidate projection, and shared-device renderer with
+grafting. Core prepares both preview and commit; the host selects a discovered
+condition and never authors allocations. The menu reports evidence, cost,
+affected part, and before/after process tissue. Somatic expression leaves the
+lineage program unchanged. The mesh projector currently excludes allocation
+state, so this slice reports that change in the panel and highlights its part;
+it does not claim a new silhouette or allocation-driven material rendering.
+
+The authored `expression-practice` scene uses real hunger observation during
+explicit reserve-assisted prehistory, then supplies an admitted plate and a
+starting reserve. This is a deterministic practice origin, not a natural
+starvation receipt. Eleven native runs passed: 1920x1080 and 960x540 previews,
+four turns, cancel/confirm, empty discovery state, expression replay, graft
+preview and exact historical graft/TG1 replays. Preview state remains
+`2e5236bc44fa408f`; one accepted expression and replay end at
+`e92a6157f4003d1f`, assigning 105 mg on part 2. Native artifacts and source
+hashes are in `testing/mesocosm/expression_menu/` at workspace root. The joined
+checks cover 857 passing tests and two ignored cases. The parallel host test
+process stalled and was stopped; its serial retry passed 90 tests with one
+ignored in 20 seconds. The other package targets passed in the joined run.
+This is a successful combined receipt, not a clean parallel-suite run. Descendant realization, the unchanged-relative control,
+and the remaining VB4a join stay open.
+
 **VB4a, existing mechanics.** First join existing graft, whole-part consumption/loss, expression and filial
 realization. Compare two relatives: retain one unchanged, give the other a
 recorded graft or expressed discovery, show the local consequence, then use the

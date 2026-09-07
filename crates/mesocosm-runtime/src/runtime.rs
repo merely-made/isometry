@@ -23,6 +23,7 @@ use crate::readings::FlowWindows;
 use crate::review::{Authored, Review};
 use crate::succession::{Checkpoint, Occasion};
 
+mod expression_practice;
 mod terrarium;
 
 /// Default ceiling on steps authorised by one `advance` call. A stalled host

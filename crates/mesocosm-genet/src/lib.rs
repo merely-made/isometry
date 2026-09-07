@@ -36,10 +36,10 @@
 //! scenario actions now.
 
 pub mod app;
+pub mod body_menu;
 pub mod chrome;
 pub mod dev;
 pub mod fixture;
-pub mod grafting;
 pub mod hud;
 pub mod input;
 pub mod played;
@@ -49,5 +49,5 @@ pub mod succession;
 pub mod vitals;
 
 pub use app::{Host, HostConfig};
-pub use grafting::GraftChrome;
+pub use body_menu::BodyMenuChrome;
 pub use played::{PlayedReceipt, PlayedTrace};

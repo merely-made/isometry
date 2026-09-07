@@ -366,7 +366,7 @@ fn key_named(name: &str) -> Option<Key> {
         // Play: WASD, E, Q, C; T at a checkpoint; R at the board.
         // Dev (live only under `--dev`): P . , [ ] N B M X F K G.
         "w" | "a" | "s" | "d" | "e" | "q" | "c" | "t" | "r" | "p" | "." | "," | "[" | "]" | "n"
-        | "b" | "m" | "x" | "f" | "k" | "g" | "h" | "i" | "j" | "l" | "u" | "z" | "v" => {
+        | "b" | "m" | "x" | "f" | "k" | "g" | "h" | "o" | "i" | "j" | "l" | "u" | "z" | "v" => {
             Some(Key::Character(name.into()))
         },
         _ => None,

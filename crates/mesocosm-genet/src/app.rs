@@ -29,6 +29,7 @@ mod content;
 mod devtime;
 mod devworld;
 pub mod drive;
+mod expression;
 mod follow;
 mod frame;
 mod grafting;
@@ -190,7 +191,7 @@ pub(crate) struct Lanes {
     vitals: crate::vitals::VitalsChrome,
     checkpoint: crate::succession::SuccessionChrome,
     board: crate::review::BoardChrome,
-    grafting: crate::grafting::GraftChrome,
+    grafting: crate::body_menu::BodyMenuChrome,
     dev: crate::dev::DevChrome,
 }
 

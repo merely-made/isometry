@@ -45,6 +45,8 @@ pub enum SceneMode {
     Terrarium,
     /// Authored practice fixture, recorded distinctly from a natural encounter.
     GraftPractice,
+    /// Authored discovery prehistory and a body ready for somatic expression.
+    ExpressionPractice,
 }
 
 impl SceneMode {
@@ -53,6 +55,7 @@ impl SceneMode {
             Self::Ecology => "ecology",
             Self::Terrarium => "terrarium",
             Self::GraftPractice => "graft-practice",
+            Self::ExpressionPractice => "expression-practice",
         }
     }
 
@@ -61,6 +64,7 @@ impl SceneMode {
             "ecology" => Some(Self::Ecology),
             "terrarium" => Some(Self::Terrarium),
             "graft-practice" => Some(Self::GraftPractice),
+            "expression-practice" => Some(Self::ExpressionPractice),
             _ => None,
         }
     }
@@ -208,6 +212,11 @@ pub struct PlayedReceipt {
     pub body_content: &'static str,
     pub inspecting: bool,
     pub graft_menu: bool,
+    pub expression_menu: bool,
+    pub expression_preview: bool,
+    pub expression_part: Option<u32>,
+    pub expression_tissue_mg: Option<u64>,
+    pub expression_candidate_tissue_mg: Option<u64>,
     pub body_view: &'static str,
     /// Body projection may show a disposable candidate; world/hash stay actual.
     pub graft_preview: bool,

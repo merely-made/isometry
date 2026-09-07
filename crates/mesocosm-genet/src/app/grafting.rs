@@ -4,31 +4,42 @@
 //! Host-owned menu focus and a disposable projection of core's graft candidate.
 
 use mesocosm_core::{Crossing, Intent, OrganismId, Outcome, PartId, World};
-use mesocosm_views::{GraftMenu, GraftRow, MAX_GRAFT_ROWS};
+use mesocosm_views::{BodyMenu, BodyMenuRow, MAX_BODY_MENU_ROWS};
 use winit::keyboard::{Key, NamedKey};
 
 use super::Host;
 
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub(super) enum BodyOperation {
+    #[default]
+    Graft,
+    Express,
+}
+
 pub(super) struct Grafting {
+    pub operation: BodyOperation,
+    pub conditions: Vec<mesocosm_core::ConditionId>,
     pub open: bool,
     pub selected: usize,
     pub sources: Vec<(OrganismId, PartId)>,
     pub crossing: Crossing,
-    pub reading: GraftMenu,
+    pub reading: BodyMenu,
     pub preview: Option<Box<World>>,
     pub root: Option<PartId>,
     pub admissible: bool,
-    hash: u64,
+    pub(super) hash: u64,
 }
 
 impl Default for Grafting {
     fn default() -> Self {
         Self {
+            operation: BodyOperation::Graft,
+            conditions: Vec::new(),
             open: false,
             selected: 0,
             sources: Vec::new(),
             crossing: Crossing::Carry,
-            reading: GraftMenu::default(),
+            reading: BodyMenu::default(),
             preview: None,
             root: None,
             admissible: false,
@@ -44,7 +55,7 @@ impl Host {
             _ => String::new(),
         };
         if !self.grafting.open {
-            if letter != "h" || self.inspection.open {
+            if !matches!(letter.as_str(), "h" | "o") || self.inspection.open {
                 return false;
             }
             if self.config.replay.is_some()
@@ -55,6 +66,11 @@ impl Host {
                 return true;
             }
             self.grafting.open = true;
+            self.grafting.operation = if letter == "o" {
+                BodyOperation::Express
+            } else {
+                BodyOperation::Graft
+            };
             self.grafting.selected = 0;
             self.grafting.crossing = Crossing::Carry;
             self.last = None;
@@ -68,7 +84,7 @@ impl Host {
             },
             Key::Named(NamedKey::ArrowUp | NamedKey::ArrowLeft) => self.move_graft(true),
             Key::Named(NamedKey::ArrowDown | NamedKey::ArrowRight) => self.move_graft(false),
-            Key::Named(NamedKey::Tab) => {
+            Key::Named(NamedKey::Tab) if self.grafting.operation == BodyOperation::Graft => {
                 self.grafting.crossing = match self.grafting.crossing {
                     Crossing::Carry => Crossing::Regrow,
                     Crossing::Regrow => Crossing::Carry,
@@ -86,7 +102,11 @@ impl Host {
     }
 
     fn move_graft(&mut self, backwards: bool) {
-        let count = self.grafting.sources.len();
+        let count = if self.grafting.operation == BodyOperation::Express {
+            self.grafting.conditions.len()
+        } else {
+            self.grafting.sources.len()
+        };
         if count > 0 {
             self.grafting.selected =
                 (self.grafting.selected + if backwards { count - 1 } else { 1 }) % count;
@@ -95,6 +115,10 @@ impl Host {
     }
 
     fn refresh_graft(&mut self, notice: &str) {
+        if self.grafting.operation == BodyOperation::Express {
+            self.refresh_expression(notice);
+            return;
+        }
         let world = self.runtime.world();
         let state = &mut self.grafting;
         state.hash = self.runtime.state_hash();
@@ -103,9 +127,9 @@ impl Host {
         state.preview = None;
         state.root = None;
         state.admissible = false;
-        let page = state.selected / MAX_GRAFT_ROWS * MAX_GRAFT_ROWS;
+        let page = state.selected / MAX_BODY_MENU_ROWS * MAX_BODY_MENU_ROWS;
         let mut rows = Vec::new();
-        for &(donor, part) in state.sources.iter().skip(page).take(MAX_GRAFT_ROWS) {
+        for &(donor, part) in state.sources.iter().skip(page).take(MAX_BODY_MENU_ROWS) {
             let organism = world
                 .organisms
                 .iter()
@@ -115,11 +139,11 @@ impl Host {
                 .phenotype
                 .harvest(part)
                 .expect("source holds tissue");
-            rows.push(GraftRow {
-                donor: format!("carcass {} (line {})", donor.0, organism.species.0),
-                tissue: format!("part {} + branch ({} parts)", part.0, branch.len()),
+            rows.push(BodyMenuRow {
+                source: format!("carcass {} (line {})", donor.0, organism.species.0),
+                offer: format!("part {} + branch ({} parts)", part.0, branch.len()),
                 mass: format!("{} mg", branch.mass_mg()),
-                ..GraftRow::default()
+                ..BodyMenuRow::default()
             });
         }
         let mut detail =
@@ -178,14 +202,14 @@ impl Host {
             Crossing::Carry => "Carry donor tissue (compatibility shown above)",
             Crossing::Regrow => "Regrow arrangement under your world's rules",
         };
-        state.reading = GraftMenu::new(
+        state.reading = BodyMenu::new(
             vec![
                 (
                     "available".into(),
                     format!(
                         "{} branches; page {}",
                         state.sources.len(),
-                        page / MAX_GRAFT_ROWS + 1
+                        page / MAX_BODY_MENU_ROWS + 1
                     ),
                 ),
                 (
@@ -204,6 +228,10 @@ impl Host {
     }
 
     fn confirm_graft(&mut self) {
+        if self.grafting.operation == BodyOperation::Express {
+            self.confirm_expression();
+            return;
+        }
         if self.runtime.state_hash() != self.grafting.hash || self.runtime.queued_len() != 0 {
             self.refresh_graft(
                 "The world changed. Review the refreshed preview before confirming.",
@@ -273,7 +301,7 @@ pub(super) fn framing(
     let [right, up, _] = crate::section::camera_basis(mode, pitch);
     let size: [f32; 3] = [0, 1, 2].map(|i| (bounds.max[i] - bounds.min[i]) as f32 * scale);
     let span = |axis: [f32; 3]| (0..3).map(|i| size[i] * axis[i].abs()).sum::<f32>();
-    let available = (frame.0 as f32 - mesocosm_views::GRAFT_WIDTH as f32 - 24.0).max(80.0);
+    let available = (frame.0 as f32 - mesocosm_views::BODY_MENU_WIDTH as f32 - 24.0).max(80.0);
     let half = (span(up).max(span(right) * frame.1 as f32 / available) * 0.75).max(2.0);
     let mut centre = [0, 1, 2].map(|i| {
         organism.position[i] as f32 + (bounds.min[i] + bounds.max[i]) as f32 * 0.5 * scale

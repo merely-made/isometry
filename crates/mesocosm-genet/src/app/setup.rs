@@ -29,7 +29,7 @@ impl Host {
         }
 
         let attributes = Window::default_attributes()
-            .with_title("Mesocosm | H graft tissue")
+            .with_title("Mesocosm | H graft tissue | O express discovery")
             .with_inner_size(winit::dpi::LogicalSize::new(
                 self.config.width,
                 self.config.height,
@@ -126,7 +126,7 @@ impl Host {
             vitals: crate::vitals::VitalsChrome::new(&device),
             checkpoint: crate::succession::SuccessionChrome::new(&device),
             board: crate::review::BoardChrome::new(&device),
-            grafting: crate::grafting::GraftChrome::new(&device),
+            grafting: crate::body_menu::BodyMenuChrome::new(&device),
             dev: crate::dev::DevChrome::new(&device),
             device,
         });

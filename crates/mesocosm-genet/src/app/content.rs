@@ -27,6 +27,9 @@ fn runtime(
         crate::played::SceneMode::GraftPractice => {
             Runtime::graft_practice(config.seed, config.ticks_per_second, founding, palette)
         },
+        crate::played::SceneMode::ExpressionPractice => {
+            Runtime::expression_practice(config.seed, config.ticks_per_second, founding, palette)
+        },
     };
     result.map_err(|why| format!("founding refused: {why:?}"))
 }
