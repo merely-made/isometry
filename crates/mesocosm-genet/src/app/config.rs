@@ -15,6 +15,7 @@ use crate::section::{self, CameraMode};
 
 #[derive(Clone, Debug)]
 pub struct HostConfig {
+    pub start: Option<mesocosm_core::world::generation::Selection>,
     pub seed: u64,
     pub organisms: u32,
     pub ticks_per_second: u32,
@@ -87,6 +88,12 @@ pub struct HostConfig {
 }
 
 impl HostConfig {
+    pub fn effective_start(&self) -> Option<&mesocosm_core::world::generation::Selection> {
+        match &self.replay {
+            Some(trace) => trace.start.as_ref(),
+            None => self.start.as_ref(),
+        }
+    }
     pub fn effective_body_layout(&self) -> crate::played::BodyLayout {
         self.replay
             .as_ref()
@@ -101,6 +108,7 @@ impl HostConfig {
 impl Default for HostConfig {
     fn default() -> Self {
         Self {
+            start: None,
             seed: 0x00A7_7AC4,
             // The world's own area-scaled cohort, not a literal: S1 tied the
             // founding population to the enclosure's floor area so a wider

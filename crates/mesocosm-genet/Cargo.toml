@@ -1,5 +1,6 @@
 [package]
 name = "mesocosm-genet"
+default-run = "mesocosm-genet"
 version = "0.0.1"
 edition = "2024"
 license = "MPL-2.0"

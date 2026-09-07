@@ -101,6 +101,7 @@ impl Host {
             return;
         };
         let recorded = PlayedTrace {
+            start: self.config.effective_start().cloned(),
             trophic_grammar: mesocosm_core::TROPHIC_GRAMMAR_REVISION,
             scene: self.config.effective_scene(),
             body_layout: self.config.effective_body_layout(),
@@ -202,7 +203,11 @@ impl Host {
                     .position()
                     .map(|at| crate::section::terrarium_occupied(h, at))
             }),
-            body_layout: self.config.effective_body_layout().name(),
+            body_layout: if self.config.effective_start().is_some() {
+                "generated"
+            } else {
+                self.config.effective_body_layout().name()
+            },
             body_content: if self.content.is_some() {
                 "generated-v1"
             } else {

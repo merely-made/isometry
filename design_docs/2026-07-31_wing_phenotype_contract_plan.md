@@ -1,14 +1,18 @@
-# Wing phenotype contract: one body, sovereign readings
+# Wing bodies and character creation: one body, sovereign readings
 
-**Status: cross-vessel decisions and proof plan, revised 2026-08-01. No v1 wire schema
-is implemented.** This plan specifies what body identity means across
+**Status: cross-vessel contract and creator lanes; first joint Mesocosm
+habitat/body slice implemented and locally verified 2026-09-07.
+Body/chronicle wire schemas remain v0.** Existing local body editors and sheets are
+foundations, not a completed shared creator. Section 11 scopes C0-C5; W0-W6
+remain the portable-body gates. This plan specifies what body identity means across
 Mesocosm, Paredros, and Isometry. It does not give the games one capability
 system, runtime, renderer, or biological simulation.
 
 The [games wing founding record](2026-07-30_games_wing_founding.md) remains
 authority for settled laws. Mesocosm's local body rules live in the
 [phenotype plan](2026-07-31_phenotype_plan.md). The
-[execution waves plan](2026-07-31_execution_waves_plan.md) owns scheduling.
+[dependency ledger](2026-08-07_dependency_ledger.md) owns current ordering;
+the execution waves plan is historical.
 
 ---
 
@@ -334,6 +338,34 @@ ancestry; neither operation is implemented as a flat star rebuild.
 
 ## Findings
 
+- **2026-09-07, source review, not a new runtime receipt:** reviewed Mesocosm
+  `3a6fec6`, Paredros `47361ae` plus working-tree anatomy/equipment changes,
+  Isometry `243c0dd` plus working-tree watchtower changes, and Mere `0a8198ba`
+  plus unrelated active work. Existing test counts in their plans were not
+  rerun in this planning pass. Mesocosm's checkout was clean at inspection.
+- **2026-09-07:** `mesocosm-core/src/body.rs` still gives `BodyDocument`
+  species/root/plan/parts, and incorporated provenance still names species
+  and part. `organism.rs::OrganismId` supplies local individual identity;
+  `program::RevisionId` names a lineage program, not a current body revision.
+  These are ingredients for W1, not proof that W1 has landed.
+- **2026-09-07:** `mesocosm-mesh/src/profile.rs::PROFILE_VERSION` and
+  `mesocosm-core/src/chronicle.rs::CHRONICLE_VERSION` remain 0.
+  `isometry/crates/isometry-voxel/src/body.rs` still mirrors the v0 body.
+  The existing projection round trip cannot identify a portable body revision.
+- **2026-09-07:** `paredros/crates/paredros-identity/src/lib.rs` has subject
+  and body-revision ids. Its `paredros-world/src/technique.rs` offers one
+  concrete `ArrestFall` query, with grip and adhesion readings;
+  `subject_sheet.rs` projects those answers. The working-tree `anatomy.rs`
+  admits bounded revision-addressed snapshots and reconciles severed parts,
+  but directly carries Mesocosm `BodyDocument`. This is useful second-reader
+  evidence, not a portable v1 decoder or a general technique language.
+- **2026-09-07:** Mesocosm's shared body menu now includes ordinary-play
+  expression as well as graft previews (HEAD `3a6fec6`; local acceptance is
+  recorded in the phenotype plan). Isometry's `isometry-views/src/state/character.rs`
+  stages a host-only creation request; `isometry-genet/src/sheets.rs` supplies
+  the loaded system's default sheet and the `CharacterCreated` event path.
+  Neither flow should be replaced by a creator-owned mutation path.
+
 - **2026-07-31:** the v0 body profile is an appearance projection with flat
   provenance, and the v0 chronicle separately duplicates flat provenance.
 - **2026-07-31:** the newer wing anatomy ruling contradicts the v0 finding that
@@ -362,3 +394,395 @@ ancestry; neither operation is implemented as a flat star rebuild.
   federated adapter-training lane. A dated note was added at this doc's
   tulpa mention rather than rewriting the historical text; see repo
   `CLAUDE.md`. No code changed.
+- **2026-09-07:** researched and scoped C0-C5 and the cross-wing lane map at
+  Mark's request. Added the live source findings above and reconciled the
+  scheduling pointer. This is a proposed implementation scope; no new creator,
+  portable schema, or runtime acceptance gate landed in this pass.
+- **2026-09-07, generation correction:** Mark made procedural generation a
+  first-slice requirement and welcomed discussion of its design questions.
+  C0 now includes a bounded seeded generator, retained features, and structural
+  variation alongside authored comparisons. Updated the dependency ledger and
+  index to match; generation is scoped here, not implemented by this doc edit.
+- **2026-09-07, input and system direction:** Mark chose seed plus key criteria
+  before a detailed parts editor and proposed optional description inference.
+  Added the taxonomy/function/trait distinction and the Isometry mapping layer
+  that preserves biology while applying the selected tabletop rules faithfully.
+  These are design updates; no generator or model integration was implemented.
+
+## 11. Shared character creator scope (2026-09-07)
+
+### Recommendation and boundary
+
+Start here. A creator is a useful shared product surface because it makes
+body generation, capability, history, rendering, and admission meet in a
+small inspectable loop. It can expose weak joins before a full game hides
+them. Completing a general engine or world generator first would postpone
+that evidence without deciding the creator's hardest questions.
+
+The proposed shared interaction is **choose, inspect, change, preview, enter**.
+The user sees a recognizable body and the consequences of choices. Each game
+supplies its available changes, prices, explanations, and commit operation.
+Shared controls do not require a shared strength score, class list, or biology.
+
+The September historical-entry ruling in the founding record governs the older
+critter/borg/character shorthand: naming, agency, cognition, and faction
+association are independent facts. There is no three-step unlock ladder.
+An unnamed organism is a valid subject; every game must work from a generated
+start without a prior game save. Use **Character creator** for a working UI
+label if appropriate to the host; these are not three separate editor engines.
+
+### What the player edits
+
+Keep five readings available, with the host choosing which are relevant:
+
+| Reading | Editable proposal | What the preview explains |
+|---|---|---|
+| Starting life | Authored/generated start; supported import; scenario and place | What exists here, source of this life, and entry constraints |
+| Body | Supported developmental choices, part arrangements, expression, appearance | Present anatomy, potential, costs, lost options, and unsupported changes |
+| Actions | Product-permitted equipment or technique choices | Current bindings, prerequisites, environmental limits, and why an action fails |
+| History | Name and permitted background choices | Generated, played, inherited, taught, and merely reported facts |
+| Enter | Destination-specific admission | Exact accepted changes, accommodations, and what remains opaque |
+
+Do not require all five as a wizard. A generated start should already be
+inspectable and usable. Name, vary, compare, and enter should be short paths;
+deeper anatomy and causal history are disclosures. A rooted body must not be
+forced through a walking test, nor an Isometry character through Paredros's
+learning model. Anatomical validity, destination support, and suitability for
+a particular scenario are separate answers.
+
+The spatial body view uses actual part arrangement with stable part selection,
+an optional separated-part view, and a complete keyboard/list alternative.
+Injury, attachments, interior parts, and overlapping branches need readable
+selection; a humanoid paper doll is not the underlying model. Changing the
+camera or separating parts for inspection changes presentation only.
+
+Authoring scope is supplied by the game/session: a scenario may allow bounded
+founder customization, a live game may offer only a paid graft or expression,
+and an explicitly selected sandbox may offer freer design. Expose the active
+constraints and configurable budgets. Sandbox authorship retains its origin
+and still needs admission into a constrained game. Draft undo does not rewind
+accepted gameplay history.
+
+### Three product adapters
+
+| Host | First useful integration | Authority and boundaries |
+|---|---|---|
+| Mesocosm | Extend the existing graft/expression menu and founder preview into a bounded starting-body flow | Core admission and developmental programs own changes. Somatic expression, reproduction, and epoch lineage revision remain different operations. Founder material and environment determine viability; the UI adds no universal point currency. |
+| Paredros | Extend the three-lives Body/Actions fixture into inspectable starting lives, then join the selected life to ordinary `GameState` | Admit anatomy and equipment through world transitions. Knowledge survives an injury; current action availability may not. The separate `ContactWorld` crossing probe is not already the durable game. |
+| Isometry | Expand the existing host character panel with body appearance and an optional system reading, preserving atomic token/sheet creation | The loaded system and host decide sheet legality. A campaign may retain foreign anatomy opaquely and use baked appearance. Token ownership is a session grant, not portable subject ownership. |
+
+Mesocosm is the first donor for checked body changes; Paredros is the first
+donor for body-shaped inspection and source-bound action explanations.
+Neither current UI is automatically the shared implementation. Build adapters
+against their real seams, then extract the repeated mechanics into the existing
+Cambium/projection stack when two hosts demonstrate them. The Paredros
+anatomy/equipment working lane retains ownership of its files during that join.
+
+### Draft, body, and projection are separate artifacts
+
+A creator draft records chosen inputs, pinned content/generator revisions,
+seed and locks, destination context, and optional source subject/revision.
+Preview is disposable and does not mint a living subject, advance the world,
+consume resources, or append history. Randomizing an unlocked choice must not
+silently change locked choices. Saving a reusable design saves a template;
+instantiating it twice produces two subjects. Continuing an existing subject
+preserves its identity and records any accepted new body revision.
+
+Commit rechecks the current source revision, destination rules, permission,
+inventory, and place. If the world changed after preview, explain the stale
+inputs and require a refreshed proposal. Save/reopen must retain accepted
+facts; rendering and collision caches rebuild from them. A thumbnail or
+portable sprite is never the only copy of the design.
+
+For W1, qualify local subject ids with their issuing world/history domain;
+raw `OrganismId(1)` and `SubjectId(1)` from different worlds cannot alias.
+Specify branch identity, revision ancestry, and import mapping before choosing
+the wire representation. Do not mistake a lineage-program revision, a
+geometry digest, a render-cache generation, or a token id for a body revision.
+This adds a W1 acceptance case, not a new universal identity service.
+
+For v1, use an explicitly extensible envelope with required and optional
+features, bounded decoding, and lossless retention of uninterpreted payloads.
+The current positional postcard mirror does not automatically preserve fields
+it does not decode. Test preservation through an edit and re-export, rather
+than only loading a file. Unknown required biology refuses active simulation;
+an optional baked projection may still permit display. Carry and regrow are
+explicit destination choices, and regrow is offered only where implemented.
+
+### Generation inputs and system interpretation (2026-09-07)
+
+**Mark's direction:** start with a seed and a few key criteria; a detailed
+parts editor follows later. Natural-language descriptions interpreted by local
+or other inference are an interesting later input route. Isometry may mute
+biological mechanics to embed the chosen tabletop system faithfully, with
+world-generation and metagame composition around that system.
+
+The first UI should expose seed, criteria, generate, and retain/regenerate.
+Represent criteria as required, preferred, or unconstrained choices, with
+unsupported requests visible. Candidate criteria for discussion are biological
+family/line, environment, scale, body organization, means of movement and
+feeding, and desired traits. Begin with a small supported vocabulary and
+explain which criteria a candidate satisfies. Do not require the player to
+fill in a complete taxonomy before seeing a body. Required criteria cannot
+be silently relaxed to produce an answer.
+
+Separate three kinds of classification:
+
+- **Descent and taxonomy:** which biological line this belongs to and how
+  the world's classification describes it. A request may constrain an existing
+  family; an unfamiliar generated line can acquire classification afterward.
+- **Ecological function:** how it obtains resources, survives, and reproduces.
+- **Realized traits:** anatomy, processes, tolerances and capabilities that
+  the developed body actually supports, distinct from unexpressed potential.
+
+The current `mesocosm-core/src/organism/kingdom.rs::Kingdom` is explicitly a
+trophic-role reading (producer, consumer, decomposer), not biological kingdom
+taxonomy. That naming must not accidentally define the creator's classification
+system. How much taxonomy is authored, generated, or inferred remains open.
+The detailed editor later exposes available/unlocked parts and their effects;
+the host defines availability, and the relationship between play progression,
+editor access and sandbox freedom needs discussion rather than an assumed
+universal unlock ladder.
+
+**Optional description input:** first make the structured criteria work through
+a deterministic generator and ordinary admission. A later model translates a
+description into that same supported criteria representation, showing the
+interpretation and uncertainties before generation. It does not mint arbitrary
+working organs, facts, or rules. Record the accepted structured request and
+generator inputs so recreating a body does not depend on repeating inference.
+Evaluate description parsing on authored examples, ambiguities, contradictions,
+and unsupported requests before selecting a local model or provider. Model
+size, host compatibility, latency and quality remain unmeasured here.
+
+**Isometry's composition:** world generation supplies bodies, histories and
+places; a versioned campaign/system adapter maps admitted facts into the chosen
+system's legal representations. The chosen system resolves play. A biological
+trait can become a supported mechanical feature, remain appearance/history,
+or require an explicit custom rule. Extra appendages, for example, do not by
+themselves award extra attacks or equipment uses. Show the mapping and any
+mechanically muted traits while preserving the source biology for later use.
+For each overlapping concern such as injury, movement or resource consumption,
+name which layer resolves it and how accepted results update other readings;
+do not independently apply both ecological and tabletop consequences to the
+same action. Background world advancement has an explicit campaign policy.
+System id/version, content and mapping version belong in the admission context.
+This is a compositional world/metagame layer, not a new universal tabletop
+ruleset. A mapping receipt must show both fidelity to the selected system and
+preservation of foreign facts, including when the system ignores them.
+
+### C0-C5: implementation lanes and done-conditions
+
+**C0. First generator, fixtures, and admission matrix.** Generation is part
+of the first creator deliverable (Mark's correction, 2026-09-07). Begin by
+working through what the player asks for and what the generator chooses;
+unanswered design questions invite discussion and experiments rather than
+automatically deferring generation. Mesocosm's existing `mesocosm-core/src/axis.rs`
+recipe machinery and `world/genesis/` founding route are the first donors to
+inspect. They do not yet constitute this creator flow, and axial animal
+recipes must not silently become the universal grammar for every life form.
+
+The first loop is: supply a seed and key criteria, generate several bodies,
+inspect their form and capabilities, retain selected features, and vary the
+rest. A detailed parts editor follows this initial generator. Start with a
+small declared set of structural
+choices such as proportions, segment count, or appendage arrangement, using
+the existing developmental and admission rules. Meaningful variation must
+affect anatomy or a relevant capability; recolouring a preset alone is not
+the generation receipt. Which choices should be direct controls, requests
+to the generator, or discoveries during play remains a design conversation.
+
+Use authored bodies as comparison cases and stable regression fixtures.
+Build a small corpus and expected answers: a rooted/radial body, an articulated
+mobile body, an asymmetrically injured or grafted body, and one unknown optional
+mechanism. Reuse Paredros's three wetland lives for the action comparison;
+they alone do not challenge the breadth of morphology. Record each specimen's
+source and whether each game supports simulation, appearance-only retention,
+or refusal. Include an unnamed start and a factionless named life.
+
+**Done when:** the first bounded generator produces inspectable candidate
+bodies with recorded seed, recipe/content revision, conditions, and locks.
+Identical inputs reproduce the body; varied seeds produce structural variety;
+retained features survive regeneration; impossible requests report their
+conflict or bounded search failure. Preview generation does not create a live
+subject or spend world resources. Compare generated and authored bodies in
+the same admission matrix, recording accepted/rejected candidates, reasons,
+generation cost, and visible differences. At least one supported body family
+must be genuinely generated; the other fixture families may initially be
+authored. Wider biological generation remains iterative. Novel multi-body
+colonies still need PE5's subject/body decision.
+
+**C1. Body inspection and checked preview.** Reuse Mesocosm's menu and
+Paredros's sheet to select parts, compare before/after, show costs and
+blockers, and cancel. Adapt a small amount of repeated presentation into
+Cambium only after both hosts use it. Keep game-specific queries local.
+
+**Done when:** two native hosts show the C0 shapes with keyboard and pointer
+access, preserved selection through rotation, small-window fit, and readable
+invalid choices. Browsing, randomizing, and cancel leave authoritative state,
+resources, and event logs unchanged. Present at 960x540 and 1920x1080 as the
+initial acceptance sizes; dimensions remain configurable. Report frame time,
+resident bytes, and preview rebuilds with device and fixture, using the local
+baseline rather than inventing a shared performance threshold.
+
+**C2. Local creation and entry.** Add a bounded founder/start proposal using
+the first game's real transition path, then the second game's adapter.
+Isometry's existing create flow is the third consumer, not a replacement
+biological authority. Persist drafts separately from instances.
+
+**Done when:** a generated and a customized start can enter a supported local
+scene, perform one characteristic action, save, reopen, and replay. A stale
+preview, invalid placement, exhausted cost, and failed admission produce no
+partial subject, sheet, or item grant. Creating two lives from one template
+does not reuse identity. Each host receives its own receipt; one pass does
+not close all three. C1/C2 do not wait for portable v1 or world-scale work.
+
+**C3. Portable body and destination preview.** Execute the existing W gates,
+starting with stable addresses and local branch provenance. Add a destination
+reading to the same creator only after those prerequisites hold. Generated
+and imported starts use the same destination validator.
+
+**Done when:** W1-W6 have their own evidence, including wrong-world and
+wrong-subject rejection, stale revision refusal, required-feature refusal,
+opaque preservation through re-export, and same-subject versus descendant
+behavior. One portable body has distinct, explained game readings, an Isometry
+projection, and a causally addressed return fact. File-based transfer suffices
+for this gate; live federation is a later transport receipt.
+
+**C4. Body in motion and use.** Feed a created body into a small local task:
+Mesocosm's applicable movement/intake or growth, Paredros's supported
+attachment/rescue action, and Isometry's system-resolved turn. This is the
+voxel/motion lane's forcing scene, not a shared action enum.
+
+**Done when:** a consequential body change remains recognizable in preview
+and play; appropriate motion, picking, collision, and action sources agree
+with the current revision. A rooted form is not made to walk. Failed motion
+or missing rendering has a truthful fallback. C4 can use local bodies while
+C3 proceeds; broad procedural animation remains separate from C1 acceptance.
+
+**C5. Historical starts.** Use a tiny authored world/place/checkpoint slice,
+then add bounded generation. Supply a life with a biological source, one
+transmitted technique, equipment supply, and one known relationship; vary a
+checkpoint to make a teacher or item unavailable.
+
+**Done when:** a player can select a causally possible start and understand
+the refusal of an impossible one. An earlier branch admits no later knowledge;
+generated history cannot overwrite accepted events; importing a played history
+displaces a compatible generated slot. This requires the world/history lane's
+small context contract, not a civilization simulator or a universal world map.
+
+### First joint habitat/body slice (2026-09-07)
+
+World generation and character generation start together in Mesocosm. A small
+habitat supplies the conditions for a life; changing the life does not silently
+regenerate its habitat. This is a bounded local C0/C2 experiment, not completion
+of the two-host C1 creator or the W1 portable-identity contract.
+
+The implementation lives in `mesocosm-core::world::generation`, with a runtime
+constructor and native `generate-start` / `--start` entry. Versioned request
+JSON holds a habitat seed, independent body variation, selected place, bounded
+search, initial population, nutrient range, and body criteria. It reuses seeded
+developmental recipes, rather than selecting authored bodies. Initial criteria
+are trophic role, movement organs, mass, segment bounds, and maximum part count.
+Movement organs means actual contractile anatomy; producers can creep without
+it, and player steering has its own rule. It is not an immobility toggle.
+Symmetry remains the existing generator's geometry policy; accepting a label
+override would not actually rearrange its axial development. Taxonomy, novel
+body grammars, fine parts editing, and description inference remain open.
+
+The habitat is the existing nine-place terrain with independently seeded soil
+supply per place. The default has 24 background founders plus the played life;
+background roles retain the existing producer-heavy founding distribution.
+Admission checks developed organs, actual body-sized footing,
+and nearby matter sufficient for body plus reserve. Entry pays that material
+from the local patch and uses ordinary simulation transitions thereafter.
+Candidate variation preserves habitat and background inhabitants. Bounded
+refusals are recorded, including empty candidate sets; criteria are never
+silently relaxed. Initial recipe variety is not evidence of resilient ecology
+or open-ended evolution. Temperature, moisture, and historical causes require
+their own modeled semantics before becoming controls.
+
+Generate and inspect a request, then enter a selected life from the repo root:
+
+```powershell
+cargo run -p mesocosm-genet --bin generate-start -- --seed 7 --output generated-start
+cargo run -p mesocosm-genet -- --start generated-start/start-1.json
+```
+
+The output directory must be fresh. `report.json` retains recipes, realized
+bodies, habitat conditions, and counted refusals; each `start-N.json` selects
+one candidate. `--variation 1` varies bodies, `--role consumer --movement-organs yes`
+constrains them, and `--request request.json` exposes the full bounded request.
+Native traces retain the selection and resolved content. This JSON is a local
+generator input, not a portable body identity or substitute for a world save.
+Keep the matching generator/content version when reproducing an old start.
+
+Core verification: 435 library tests passed (one pre-existing ignored test).
+The six generator tests also pass separately after the final material guard,
+including a seven-seed corpus, actual movement, unchanged habitat/background
+when varying bodies, unavailable candidate refusal, matter conservation, and
+snapshot/replay. All eight native content tests pass on the final source,
+including saved-content replay and refusal of mismatched recording metadata;
+both native binaries build with `--offline --locked --target-dir target`.
+The broad native all-target check found an existing non-exhaustive `CameraMode`
+match in `examples/camera_compare.rs:125`; that wider check remains unpassed.
+
+Local executable receipts are under `Code/testing/mesocosm/generated_start/`:
+
+- Seed 7 produced four candidates in four attempts, 0.941 seconds for the
+  preview: producer 46 parts, consumer 25, decomposer 11, producer 90. Selected
+  place 4 has 67 mg per soil column and 3,283 mg available for founding nearby.
+- Variation 1, consumer plus movement organs, produced four candidates in eight
+  attempts. Four anatomies were refused for lacking the requested organs.
+- Soil range 1..1 mg produced zero candidates, 128 material refusals, an
+  inspectable report, and exit code 1.
+- The consumer entered the native world and played 24 ordinary demo actions.
+  `played.json` and `replay-receipt.json` agree at `37752396bba1dfb2`;
+  `state_hash_matches` is true and `dev_intents` is zero.
+- `consumer-inspection.png` and `producer.png` show the generated bodies in
+  the existing graft-review framing. Both captures stayed at tick zero.
+  The broad ecology camera leaves substantial empty headroom; the review
+  framing is currently the clearer way to inspect a selected body (press H,
+  Escape to cancel). This reuses an existing view, not a new candidate picker.
+
+A graphical candidate picker, wider body grammars, longer ecological
+experiments, and a second game's consumer are subsequent lanes rather than
+claims attached to this implementation. C0's broader fixture/admission matrix
+and C1's two-host editing gate remain open.
+
+### Research and its consequences
+
+Primary sources checked 2026-09-07. These inform the proposed design; they are
+not dependency selections or proof of this stack's implementation.
+
+- [Spore's morphology-independent animation paper, Hecker et al., 2008](https://chrishecker.com/images/c/cb/Sporeanim-siggraph08.pdf)
+  describes semantic part selection, generalized motion, and runtime pose
+  goals solved for varied bodies. This supports separating body authorship
+  from motion realization. Our inference: admit a bounded morphology set and
+  prove one useful motion before promising arbitrary animated anatomy.
+- [Cataclysm: DDA's body graphs and limb scores](https://docs.cataclysmdda.org/JSON/JSON_INFO.html#body-graphs)
+  separate body navigation from readings affected by wounds and encumbrance.
+  Borrow the visible link from part to capability and the nested/list access
+  pattern. Its particular limb taxonomy and numerical rules are not a wing
+  schema; Paredros already supplies a narrower local reading.
+- [Thrive's Microbe Editor development design](https://wiki.revolutionarygamesstudio.com/wiki/Microbe_Editor_Development)
+  places editing, metrics, constraints, and a test environment together, with
+  a separately accessible free editor. It is a design document, not a verified
+  inventory of today's shipped features. The useful proposal here is a cheap
+  experiment loop and explicit editing context. Retain Mesocosm's own material
+  economy rather than adopting Thrive's mutation-point budget.
+- [Jason Grinblat's GDC 2018 history-generation talk](https://gdcvault.com/play/1024990/Procedurally-Generating-History-in-Caves)
+  describes generating events and rationalizing them without a full historical
+  simulation. That supports a bounded C5 fixture. Our stricter requirement is
+  to constrain generated causes against already accepted history; plausible
+  prose alone cannot establish a teacher, lineage, or carried item.
+
+### Deliberately open design
+
+The first editable morphology vocabulary, amount of founder authorship,
+Paredros learning economy, and public shared component API remain proposals
+to test. Free voxel sculpting cannot automatically award a functional organ;
+if wanted, it needs an explicit geometry-to-function admission rule. A rich
+creator can begin with meaningful developmental choices and later add sculpting.
+Multi-body organisms, arbitrary world gravity, a shared combat ruleset, asset
+marketplaces, procedural civilizations, and online simultaneous editing each
+need their own consumer evidence. They do not block C0-C2.

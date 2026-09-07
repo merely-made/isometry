@@ -22,6 +22,7 @@ mod discover;
 mod express;
 mod expression_practice;
 mod filial;
+pub mod generation;
 mod genesis;
 mod graft;
 mod intent;

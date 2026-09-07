@@ -210,7 +210,12 @@ fn pack_root() -> PathBuf {
 }
 
 impl Host {
-    pub fn new(config: HostConfig) -> Self {
+    pub fn new(mut config: HostConfig) -> Self {
+        if let Some(selection) = config.effective_start() {
+            let (seed, organisms) = (selection.request.seed, selection.request.organisms);
+            config.seed = seed;
+            config.organisms = organisms;
+        }
         let (runtime, content, volumes) = content::start(&config).unwrap_or_else(|why| {
             eprintln!("body content: {why}");
             std::process::exit(1);

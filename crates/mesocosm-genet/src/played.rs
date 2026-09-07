@@ -149,6 +149,8 @@ pub struct Script {
 /// A recorded run, complete enough to reproduce and to judge.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct PlayedTrace {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub start: Option<mesocosm_core::world::generation::Selection>,
     /// Native eating semantics. Unversioned traces predate typed intake.
     #[serde(default)]
     pub trophic_grammar: u32,
@@ -380,6 +382,18 @@ pub fn read_trace(path: &Path) -> Result<PlayedTrace, String> {
 
 impl PlayedTrace {
     pub fn validate_rules(&self) -> Result<(), String> {
+        if let Some(selection) = &self.start {
+            selection
+                .request
+                .validate()
+                .map_err(|e| format!("generated start: {e:?}"))?;
+            if self.seed != selection.request.seed
+                || self.organisms != selection.request.organisms
+                || self.scene != SceneMode::Ecology
+            {
+                return Err("recording metadata disagrees with its generated start".into());
+            }
+        }
         let current = mesocosm_core::TROPHIC_GRAMMAR_REVISION;
         if self.trophic_grammar != current {
             return Err(format!(
@@ -443,6 +457,7 @@ pub fn record_demo(seed: u64, organisms: u32, ticks_per_second: u32, steps: u64)
         demo_step(&mut runtime, &volumes, step, &mut script);
     }
     PlayedTrace {
+        start: None,
         trophic_grammar: mesocosm_core::TROPHIC_GRAMMAR_REVISION,
         scene: SceneMode::Ecology,
         body_layout: BodyLayout::Axial,

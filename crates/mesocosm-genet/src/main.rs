@@ -69,6 +69,15 @@ fn main() {
 
     while let Some(arg) = args.next() {
         match arg.as_str() {
+            "--start" => {
+                let selection = read_start(args.next()).unwrap_or_else(|why| {
+                    eprintln!("--start: {why}");
+                    std::process::exit(1);
+                });
+                config.seed = selection.request.seed;
+                config.organisms = selection.request.organisms;
+                config.start = Some(selection);
+            },
             "--frames" => config.frames = args.next().and_then(|v| v.parse().ok()),
             "--size" => {
                 let size = args.next().unwrap_or_default();
@@ -273,6 +282,18 @@ fn main() {
     }
 }
 
+fn read_start(path: Option<String>) -> Result<mesocosm_core::world::generation::Selection, String> {
+    let path = path.ok_or("expected a selection JSON path")?;
+    let bytes = std::fs::read(&path).map_err(|why| format!("{path}: {why}"))?;
+    let selection: mesocosm_core::world::generation::Selection =
+        serde_json::from_slice(&bytes).map_err(|why| format!("{path}: {why}"))?;
+    selection
+        .request
+        .validate()
+        .map_err(|why| format!("{why:?}"))?;
+    Ok(selection)
+}
+
 const HELP: &str = "\
 mesocosm-genet: run Mesocosm in a window
 
@@ -288,6 +309,7 @@ mesocosm-genet: run Mesocosm in a window
   --replay PATH   drive the run from a recorded trace and assert its hash
   --scenario PATH drive the run from a text scenario and exit 1 if it fails
   --seed N        world seed
+  --start PATH    enter a generated selection JSON (recorded for replay)
   --scene MODE    ecology (default), terrarium, or authored graft-practice/expression-practice
   --terrarium-pitch DEG  shallow camera pitch, 0..45 degrees (default 12)
   --cutaway MODE  occupied (default), always (expose interior), or never

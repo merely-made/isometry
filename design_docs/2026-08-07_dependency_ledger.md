@@ -1,15 +1,75 @@
 # Dependency Ledger (2026-08-07)
 
-**Status: active ordering authority, corrected against live code and the
-playable-ecology ruling 2026-08-31.** Successor to the
+**Status: active ordering authority; cross-wing creator scope proposed
+2026-09-07 after a source/plan review; the first joint Mesocosm habitat/body
+slice is locally verified.** Existing product receipt statuses
+remain attached to their dated entries below. Successor to the
 [execution waves plan](2026-07-31_execution_waves_plan.md), demoted to
 Wave 1/2 history by the audit. The governing plans own the *what*; this
-owns the *when* and the *blocks-what*. One page on purpose; when it
-stops fitting on one page, that is a finding.
+owns dependencies and integration order. Detailed design and evidence live
+in the owning plans; this ledger supplies the cross-plan map.
 
 The founding condition remains causal: another run should pull product work.
 It does not make one product slice a prerequisite for reusable mechanics whose
 ownership and consumer proof have already settled.
+
+## Cross-wing lanes: character creation as the first join (2026-09-07)
+
+**Proposed scope, not new implementation receipts.** Mark asked whether a
+creator for critters, borgs, and characters is the best shared starting point,
+or whether engine, voxels, game systems, and worldbuilding must come first.
+The answer from the current seams is to start the creator while advancing
+specific dependencies beside it. A universal engine or world generator is not
+a prerequisite. All three games remain valid entry points into the wing.
+
+The [wing body/creator contract](2026-07-31_wing_phenotype_contract_plan.md#11-shared-character-creator-scope-2026-09-07)
+owns C0-C5, the source findings, and the primary-source research. These rows
+are bounded work lanes, not new crates or separate competing plans.
+
+| Lane | Owning seam and current foundation | First deliverable and done-condition | Dependency |
+|---|---|---|---|
+| **A. Character creator** | Wing contract C0-C2; Mesocosm checked graft/expression and founder previews; Paredros Body/Actions sheet; Isometry host creation | A bounded seeded body generator with retained features, compared against authored specimens in an admission matrix, then two-host body inspection/change preview and local creation. Cancel is inert; commit revalidates; generated/custom starts enter, act, save and reopen. A third Isometry adapter retains its system-owned sheet and atomic event. | Starts now. Shared UI extraction follows two actual hosts. Each local entry has its own gate. |
+| **B. Body identity and interchange** | Wing contract W0-W6/C3; local anatomy and identity types exist, wire body/chronicle remain v0 | World-qualified subjects, causal body revisions and exact source-part addresses; bounded v1 body/chronicle round trip. Prove same individual versus descendant, stale/wrong-domain refusal, and preservation of an unknown optional payload after an edit. | W1 local addressing before v1; local branch proof before exported branch claims. Blocks cross-game continuation, not local A. |
+| **C. Voxel bodies and motion** | Phenotype VB0-VB5/C4; Mere `nisus` voxel values, `modulus` traversal, Conatus spatial state; existing resident rendering | One changed body remains recognizable in editor and play with current-revision picking/collision and one applicable motion/action. Compare radial, articulated and asymmetric shapes. Later test motion retargeting before widening the morphology promise. | Existing local bodies suffice. TG2/TG3 gate typed tissue appearance; PE5 gates genuine multi-body/colony forms. Neither blocks simple creator inspection. |
+| **D. Game rules and action explanations** | Mesocosm ProcessDef/TG and PE lanes; Paredros technique/equipment plus execution plan; Isometry system plugins and resolved events | Same body facts yield explicitly different readings. A lost source disables the relevant action without deleting learned knowledge; costs and environmental blockers explain the result. Commit reaches the owning product transition exactly once. | Simple fixture queries now. Executable Paredros action waits for the contact-to-durable-game join. Isometry system mapping is opt-in. No universal ability evaluator is implied. |
+| **E. World and history entry** | Wing founding record's historical-entry section/C5; Paredros world generation and memory; Isometry watchtower/campaign generation; Mesocosm places and PE4 | One small region and two checkpoints with explicit place/subject mappings, units/frame/scale, law/content revisions, and generated-versus-played facts. A start has a possible biological source, teacher and supply; an impossible historical start is refused. | Author a context fixture now; B before claiming the same portable individual. Full PE4 biology and F3 social acceptance remain their own gates. Matching seeds or similarly named regions are insufficient. |
+| **F. Runtime, host and verification** | Mere Conatus/runtime-composition plans; Genet/Cambium hosts, Netrender tenancy and existing scenario/replay tools | Creator preview shares the host device, restores play on close, rebuilds from accepted facts, and has small-window/keyboard, stale-preview, replay and resource receipts. Extract only a demonstrated duplicate primitive. | Supports A/C in bounded slices. No new engine umbrella, ECS migration, renderer replacement, or device allocator required. |
+
+First batch (joint habitat/body slice locally verified 2026-09-07):
+
+1. **A/C0 plus E/local habitat:** expose a seed plus key criteria through a small body generator
+   using the existing developmental machinery. A detailed parts editor follows;
+   optional description-to-criteria inference comes after structured inputs.
+   Generate, retain chosen features, vary the rest, and compare the results
+   alongside authored bodies. Generation is part of the first deliverable;
+   its open design questions are work to do together, not reasons to defer it.
+   Start with Mesocosm's seeded terrain and nutrient patches, then generate
+   bodies with valid footing and local founding supply. Vary bodies without
+   changing habitat. The wing contract's first joint slice owns implementation
+   and receipts; historical starts and ecological persistence remain separate.
+2. **A/C1 plus B/W1:** build the local preview/inspection join while establishing
+   exact portable addresses. These can proceed independently with product-local
+   ids in C1; serialization must wait for W1's semantics.
+3. **A/C2 plus C/C4:** enter and use created bodies locally. D supplies concrete
+   validation and action explanations; F supplies the shared-host receipts.
+4. **B/C3:** prove portable identity and destination interpretation. In parallel,
+   E can prepare a tiny historical context, then integrate C5 when identity and
+   checkpoint semantics are ready.
+
+Paredros's anatomy/equipment and Isometry's watchtower surfaces were dirty at
+review. Their current owners should perform the product joins; a later creator
+pass must re-read their landed state before choosing files. Mesocosm's latest
+body menu is already a donor for expression as well as grafting. Do not count
+three copies of a read-only sheet as a shared creator or count a standalone
+contact probe as creation into a persistent game.
+
+**Reconsider the order only on concrete evidence:** A yields to B if the first
+deliverable requires cross-game continuation; C precedes free sculpting if
+admitted shapes cannot be selected, displayed, or used; E precedes historically
+generated starts if no bounded valid context can be supplied. Larger streaming,
+GPU dynamics, procedural civilization, multi-body life, live collaboration,
+audio and broader accessibility remain useful later lanes, activated by their
+own consumer requirements. They are not a blanket foundation phase.
 
 ## Mesocosm lanes
 

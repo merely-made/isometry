@@ -171,6 +171,20 @@ impl Runtime {
         Ok(Self::from_world(world, seed, organisms, ticks_per_second))
     }
 
+    pub fn generated_start(
+        selection: &mesocosm_core::world::generation::Selection,
+        palette: mesocosm_core::PartPalette,
+        ticks_per_second: u32,
+    ) -> Result<Self, mesocosm_core::world::generation::Error> {
+        let world = selection.enter(palette)?;
+        Ok(Self::from_world(
+            world,
+            selection.request.seed,
+            selection.request.organisms,
+            ticks_per_second,
+        ))
+    }
+
     fn from_world(world: World, seed: u64, organisms: u32, ticks_per_second: u32) -> Self {
         Self {
             world,

@@ -63,6 +63,7 @@ fn confirmation_records_one_graft_and_replays_from_the_named_scene() {
     host.run_action("enter");
     assert_eq!(host.runtime.trace().len(), 1);
     let trace = PlayedTrace {
+        start: None,
         trophic_grammar: mesocosm_core::TROPHIC_GRAMMAR_REVISION,
         scene: SceneMode::GraftPractice,
         body_layout: host.config.effective_body_layout(),

@@ -14,6 +14,7 @@ fn incompatible_recording_is_refused_before_founding_or_content_resolution() {
     assert_eq!(legacy.trophic_grammar, 0);
     for revision in [0, mesocosm_core::TROPHIC_GRAMMAR_REVISION + 1] {
         let trace = PlayedTrace {
+            start: None,
             trophic_grammar: revision,
             ..legacy.clone()
         };
@@ -31,6 +32,66 @@ fn same_mesh(a: mesocosm_mesh::BodyMesh, b: mesocosm_mesh::BodyMesh) {
     for placement in &a.placements {
         assert_eq!(a.mesh_for(placement.volume), b.mesh_for(placement.volume));
     }
+}
+
+#[test]
+fn generated_selection_replays_with_saved_content_and_ignores_current_start() {
+    use mesocosm_core::world::generation::{Request, Selection};
+    assert!(serde_json::from_str::<Request>(r#"{"criteria":{"wings":true}}"#).is_err());
+    assert!(serde_json::from_str::<Request>(r#"{"temperature":20}"#).is_err());
+    let selection = Selection {
+        request: Request::default(),
+        candidate: 1,
+    };
+    let config = HostConfig {
+        start: Some(selection.clone()),
+        ..HostConfig::default()
+    };
+    let (mut live, pack, volumes) = start(&config).unwrap();
+    let expected = selection
+        .request
+        .preview(pack.as_ref().unwrap().palette)
+        .unwrap();
+    assert_eq!(live.world().body().unwrap(), &expected.candidates[1].body);
+    for _ in 0..20 {
+        live.queue(Intent::Idle);
+        live.advance(100_000);
+    }
+    let trace = PlayedTrace {
+        start: Some(selection.clone()),
+        trophic_grammar: mesocosm_core::TROPHIC_GRAMMAR_REVISION,
+        scene: crate::played::SceneMode::Ecology,
+        body_layout: config.body_layout,
+        seed: selection.request.seed,
+        organisms: selection.request.organisms,
+        steps: live.trace().len() as u64,
+        state_hash: live.state_hash(),
+        intents: live.trace().to_vec(),
+        content: pack,
+    };
+    let saved: PlayedTrace = serde_json::from_slice(&serde_json::to_vec(&trace).unwrap()).unwrap();
+    let mut host = Host::new(HostConfig {
+        start: Some(Selection {
+            request: Request {
+                version: 99,
+                ..Request::default()
+            },
+            candidate: 99,
+        }),
+        generated_content: false,
+        replay: Some(saved),
+        ..HostConfig::default()
+    });
+    while !host.advance() {}
+    assert_eq!(host.runtime.state_hash(), trace.state_hash);
+    assert_eq!(host.config.organisms, selection.request.organisms);
+    same_mesh(
+        mesh_body(live.world().body().unwrap(), &volumes).unwrap(),
+        mesh_body(host.runtime.world().body().unwrap(), &host.volumes).unwrap(),
+    );
+    let mut bad = trace;
+    bad.seed += 1;
+    assert!(bad.validate_rules().is_err());
 }
 
 #[test]
@@ -67,6 +128,7 @@ fn recorded_content_replays_without_the_current_generation_setting() {
         live.advance(100_000);
     }
     let trace = PlayedTrace {
+        start: None,
         trophic_grammar: mesocosm_core::TROPHIC_GRAMMAR_REVISION,
         scene: crate::played::SceneMode::Ecology,
         body_layout: config.body_layout,
