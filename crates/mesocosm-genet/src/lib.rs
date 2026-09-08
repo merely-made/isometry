@@ -38,6 +38,7 @@
 pub mod app;
 pub mod body_menu;
 pub mod chrome;
+pub mod creator_draft;
 pub mod dev;
 pub mod fixture;
 pub mod hud;

@@ -236,6 +236,7 @@ impl Host {
                 content.as_ref().expect("generated creator content").palette,
                 runtime.world(),
                 config.camera,
+                config.creator_draft.clone(),
             )
         });
         if creator.is_some() {

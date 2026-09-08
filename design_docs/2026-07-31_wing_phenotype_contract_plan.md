@@ -1,7 +1,7 @@
 # Wing bodies and character creation: one body, sovereign readings
 
 **Status: cross-vessel contract and creator lanes; first joint Mesocosm
-habitat/body slice implemented and locally verified 2026-09-07.
+habitat/body slice and retained-trait creator locally verified through 2026-09-08.
 Body/chronicle wire schemas remain v0.** Existing local body editors and sheets are
 foundations, not a completed shared creator. Section 11 scopes C0-C5; W0-W6
 remain the portable-body gates. This plan specifies what body identity means across
@@ -800,6 +800,55 @@ Headed receipts live under `Code/testing/mesocosm/character_picker/`:
 
 This closes the local picker slice, not C1's two-host editing gate. The earlier
 all-target `camera_compare` example limitation remains outside this receipt.
+
+### Retained traits and criteria drafts (2026-09-08)
+
+**Status: implemented and locally verified.** Complete the C0
+generate/inspect/retain/vary loop using existing request constraints. K copies
+the selected candidate's realized feeding role, presence of movement organs,
+and exact segment count into the filters and generates a new batch. R varies
+within those filters. U clears those three filters, preserving mass, part
+budget, habitat, and variation. C and M remain independent overrides.
+
+`--draft PATH` opens a saved criteria request, or starts a new one when that
+file does not exist; it implies `--create`. S explicitly saves the current
+request through atomic replacement. It stores criteria rather than the selected
+candidate or a played world. Reopening regenerates candidates. A structurally
+valid request with zero viable results is still a useful draft; malformed or
+unsupported requests fail before opening, and failed saves preserve the old
+file. `--draft` and `--start` are distinct input routes and cannot be combined.
+
+Done when retained traits survive meaningful structural variation without
+changing the habitat or parked world, clearing filters preserves unrelated
+criteria, saved requests regenerate identical candidates, impossible requests
+can reopen for revision, and a selected result still enters and replays. Verify
+the longest menu page at a small window size. This adds no new biological
+grammar, taxonomy, portable identity, or detailed part-editing authority.
+
+Run `cargo run -p mesocosm-genet -- --draft criteria.json --seed 7` to start
+or reopen the criteria editor. Saved inputs take precedence over the startup
+seed. The file is also accepted by `generate-start --request`. Enter still
+records the selected candidate and resolved content in the played trace;
+draft saving does not write that trace or create an individual.
+
+Verification: 100 native library tests passed with one existing ignored test;
+all six focused creator/draft tests pass after the final status-message change.
+Tests prove structural recipe variation under retained traits, unchanged
+habitat and parked world, clearing only the named filters, deterministic draft
+reopening, refusal preservation, and non-destructive failed saves. The native
+executable builds with the existing pins and the already-resolved tempfile
+dependency used for atomic replacement. Generator request version remains 1.
+
+Headed receipts are under `Code/testing/mesocosm/creator_traits/`. The six-row
+menu fits at 960x600. Seed 7, variation 1, consumer, movement organs present,
+and exactly 16 segments produced five candidates within 128 attempts, with
+35, 47, 33, 52, and 39 parts. The sixth requested result was not supplied by
+relaxing constraints. Saving leaves candidate counts and refusals visible.
+The saved criteria reopen, candidate 0 enters and takes 24 ordinary actions,
+and replay matches `6f6d63362f3ce9fd` with zero assisted actions. A one-part
+budget draft reopens with zero candidates and can be saved; Enter remains
+inert. Captures and logs record the retained, reopened, full-page, and empty
+states. Broader body-plan generation remains the next substantive C0 question.
 
 ### Research and its consequences
 

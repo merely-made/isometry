@@ -50,9 +50,11 @@ First batch (joint habitat/body slice locally verified 2026-09-07):
 2. **A/C1 plus B/W1:** build the local preview/inspection join while establishing
    exact portable addresses. These can proceed independently with product-local
    ids in C1; portable serialization must wait for W1's semantics. Mesocosm's
-   `--create` picker is locally verified in `work/character-picker`; the wing
+   `--create` picker is merged on main; the wing
    contract holds the tests and headed receipts. Its request/selection JSON
-   remains a local replay input. The second-host gate stays open.
+   remains a local replay input. Retained traits and separate criteria drafts
+   are locally verified on 2026-09-08, completing the first retain/vary loop.
+   Wider body grammars and the second-host gate stay open.
 3. **A/C2 plus C/C4:** enter and use created bodies locally. D supplies concrete
    validation and action explanations; F supplies the shared-host receipts.
 4. **B/C3:** prove portable identity and destination interpretation. In parallel,

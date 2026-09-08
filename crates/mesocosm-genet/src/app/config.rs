@@ -18,6 +18,8 @@ pub struct HostConfig {
     /// Open the local starting-life picker before the ecology clock begins.
     /// Preview changes are disposable until the player confirms a candidate.
     pub creator_request: Option<mesocosm_core::world::generation::Request>,
+    /// Explicit destination for saving creator criteria, separate from play.
+    pub creator_draft: Option<PathBuf>,
     pub start: Option<mesocosm_core::world::generation::Selection>,
     pub seed: u64,
     pub organisms: u32,
@@ -112,6 +114,7 @@ impl Default for HostConfig {
     fn default() -> Self {
         Self {
             creator_request: None,
+            creator_draft: None,
             start: None,
             seed: 0x00A7_7AC4,
             // The world's own area-scaled cohort, not a literal: S1 tied the

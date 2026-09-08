@@ -17,6 +17,7 @@ publish = false
 # master and imports the section as one opaque same-device tenant; the host
 # still owns the final surface blit and presentation.
 [dependencies]
+tempfile = "3"
 mesocosm-core = { workspace = true }
 # The main view since PS1: the ruled side-on section is traced, not rasterized.
 # mesocosm-render stays for the HUD's own backdrop renderer.

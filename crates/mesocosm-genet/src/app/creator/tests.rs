@@ -27,6 +27,119 @@ fn ready(host: &mut Host) {
 }
 
 #[test]
+fn retained_traits_survive_variation_and_can_be_cleared() {
+    let mut host = opened(Request::default());
+    let original = host.runtime.state_hash();
+    ready(&mut host);
+    host.run_action("l");
+    let draft = host
+        .creator
+        .as_ref()
+        .unwrap()
+        .prepared
+        .as_ref()
+        .unwrap()
+        .draft();
+    let chosen = draft.candidates[1].clone();
+    let habitat = draft.habitat.clone();
+    host.run_action("k");
+    ready(&mut host);
+    let before = host
+        .creator
+        .as_ref()
+        .unwrap()
+        .prepared
+        .as_ref()
+        .unwrap()
+        .draft()
+        .candidates
+        .clone();
+    host.run_action("r");
+    ready(&mut host);
+    let creator = host.creator.as_ref().unwrap();
+    let draft = creator.prepared.as_ref().unwrap().draft();
+    assert_eq!(draft.habitat, habitat);
+    assert_eq!(draft.candidates.len(), 4);
+    assert!(draft.candidates.iter().all(|c| c.role == chosen.role
+        && c.segments == chosen.segments
+        && (c.actuator_span > 0) == (chosen.actuator_span > 0)));
+    assert!(
+        draft
+            .candidates
+            .iter()
+            .any(|c| !before.iter().any(|old| old.recipe == c.recipe))
+    );
+    assert_eq!(host.runtime.state_hash(), original);
+    assert!(host.runtime.trace().is_empty());
+    let request = creator.request.clone();
+    host.run_action("u");
+    let cleared = &host.creator.as_ref().unwrap().request;
+    assert_eq!(cleared.criteria.role, None);
+    assert_eq!(cleared.criteria.movement_organs, None);
+    assert_eq!(
+        (cleared.criteria.min_segments, cleared.criteria.max_segments),
+        (1, 32)
+    );
+    assert_eq!(
+        (
+            cleared.seed,
+            cleared.variation,
+            cleared.criteria.mass_mg,
+            cleared.criteria.max_parts
+        ),
+        (
+            request.seed,
+            request.variation,
+            request.criteria.mass_mg,
+            request.criteria.max_parts
+        )
+    );
+}
+
+#[test]
+fn saved_criteria_reopen_without_entry_and_save_failure_keeps_world_untouched() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("criteria.json");
+    let mut host = Host::new(HostConfig {
+        creator_request: Some(Request::default()),
+        creator_draft: Some(path.clone()),
+        ..Default::default()
+    });
+    ready(&mut host);
+    host.run_action("l");
+    host.run_action("k");
+    host.run_action("r");
+    ready(&mut host);
+    let original = host.runtime.state_hash();
+    host.run_action("s");
+    let saved = crate::creator_draft::load(&path).unwrap().unwrap();
+    assert_eq!(saved, host.creator.as_ref().unwrap().request);
+    let mut reopened = opened(saved);
+    ready(&mut reopened);
+    assert_eq!(
+        state_hash(reopened.creator.as_ref().unwrap().world()),
+        state_hash(host.creator.as_ref().unwrap().world())
+    );
+    host.creator.as_mut().unwrap().request.criteria.max_parts = 1;
+    host.creator.as_mut().unwrap().regenerate();
+    ready(&mut host);
+    host.run_action("s");
+    let status = &host.creator.as_ref().unwrap().reading.status;
+    assert!(status.contains("0 candidates") && status.contains("Criteria saved"));
+    host.creator.as_mut().unwrap().draft_path = Some(dir.path().to_owned());
+    host.run_action("s");
+    assert!(
+        host.creator
+            .as_ref()
+            .unwrap()
+            .notice
+            .contains("Could not save")
+    );
+    assert_eq!(host.runtime.state_hash(), original);
+    assert!(host.runtime.trace().is_empty());
+}
+
+#[test]
 fn browse_and_cancel_leave_the_parked_world_untouched() {
     let mut host = opened(Request::default());
     let original = host.runtime.state_hash();

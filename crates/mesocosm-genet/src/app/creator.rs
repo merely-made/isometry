@@ -16,6 +16,7 @@ mod reading;
 mod worker;
 
 pub(super) struct Creator {
+    draft_path: Option<std::path::PathBuf>,
     original_camera: crate::section::CameraMode,
     pub request: Request,
     pub selected: usize,
@@ -35,10 +36,12 @@ impl Creator {
         palette: PartPalette,
         original: &World,
         original_camera: crate::section::CameraMode,
+        draft_path: Option<std::path::PathBuf>,
     ) -> Self {
         let mut empty = original.clone();
         empty.organisms.clear();
         let mut result = Self {
+            draft_path,
             original_camera,
             request,
             selected: 0,
@@ -164,6 +167,22 @@ impl Host {
             _ => {},
         }
         match letter.as_str() {
+            "k" => {
+                creator.keep_traits();
+                return true;
+            },
+            "u" => {
+                let defaults = mesocosm_core::world::generation::Criteria::default();
+                let criteria = &mut creator.request.criteria;
+                criteria.role = defaults.role;
+                criteria.movement_organs = defaults.movement_organs;
+                criteria.min_segments = defaults.min_segments;
+                criteria.max_segments = defaults.max_segments;
+            },
+            "s" => {
+                creator.save_draft();
+                return true;
+            },
             "j" => {
                 creator.move_selection(true);
                 return true;
@@ -284,6 +303,35 @@ impl Host {
         self.pan = Default::default();
         self.follow = None;
         self.events.push("creator-entered".into());
+    }
+}
+
+impl Creator {
+    fn keep_traits(&mut self) {
+        let Some(candidate) = self
+            .prepared
+            .as_ref()
+            .and_then(|p| p.draft().candidates.get(self.selected))
+        else {
+            return;
+        };
+        let criteria = &mut self.request.criteria;
+        criteria.role = Some(candidate.role);
+        criteria.movement_organs = Some(candidate.actuator_span > 0);
+        criteria.min_segments = candidate.segments;
+        criteria.max_segments = candidate.segments;
+        self.regenerate();
+    }
+
+    fn save_draft(&mut self) {
+        self.notice = match &self.draft_path {
+            Some(path) => match crate::creator_draft::save(path, &self.request) {
+                Ok(()) => "Criteria saved. Reopening regenerates candidates.".into(),
+                Err(why) => format!("Could not save criteria: {why}"),
+            },
+            None => "Choose a save path by starting with --draft FILE.".into(),
+        };
+        self.refresh();
     }
 }
 

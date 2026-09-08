@@ -47,12 +47,10 @@ impl Creator {
             Some(true) => "yes",
             Some(false) => "no",
         };
-        let status = if self.pending {
+        let status: String = if self.pending {
             "Generating candidates…".into()
-        } else if !self.notice.is_empty() {
-            self.notice.clone()
         } else {
-            draft.map_or(String::new(), |d| {
+            let report = draft.map_or(String::new(), |d| {
                 let reasons = d
                     .rejected
                     .iter()
@@ -65,7 +63,8 @@ impl Creator {
                     d.attempted,
                     reasons
                 )
-            })
+            });
+            format!("{report} {}", self.notice).trim().into()
         };
         self.reading = BodyMenu::new(
             vec![
@@ -79,14 +78,21 @@ impl Creator {
                 (
                     "body".into(),
                     format!(
-                        "variation {} · {role} · organs {organs} · {} mg",
-                        self.request.variation, self.request.criteria.mass_mg
+                        "variation {} · {role} · organs {organs} · {} mg · segments {}..{}",
+                        self.request.variation,
+                        self.request.criteria.mass_mg,
+                        self.request.criteria.min_segments,
+                        self.request.criteria.max_segments
                     ),
                 ),
             ],
             rows,
             self.selected % MAX_BODY_MENU_ROWS,
-            "Choose a starting life. Changing bodies keeps the habitat.",
+            if self.count() > 0 {
+                "K keeps feeding role, movement organs and segment count. R varies the rest."
+            } else {
+                "Adjust the criteria or habitat; requested traits stay fixed during generation."
+            },
             if self.pending {
                 "Waiting for candidates."
             } else if self.count() == 0 {
@@ -99,7 +105,10 @@ impl Creator {
         self.reading.headline = "Character creator".into();
         self.reading.facts_title = "Habitat and body".into();
         self.reading.choice_label = "Start".into();
-        self.reading.keys = "↑/↓ choose · R vary bodies · N new habitat · P place · C feeding role · M movement organs · +/- mass · Z/V rotate".into();
+        self.reading.keys = "↑/↓ choose · K keep traits · U clear traits · R vary · N habitat · P place · C role · M organs · +/- mass · Z/V rotate".into();
+        if self.draft_path.is_some() {
+            self.reading.keys.push_str(" · S save criteria");
+        }
         if !self.pending && self.count() > 0 {
             self.reading.keys.push_str(" · Enter begin");
         }

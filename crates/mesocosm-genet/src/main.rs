@@ -71,6 +71,13 @@ fn main() {
     while let Some(arg) = args.next() {
         match arg.as_str() {
             "--create" => create = true,
+            "--draft" => {
+                config.creator_draft = Some(PathBuf::from(args.next().unwrap_or_else(|| {
+                    eprintln!("--draft requires a criteria JSON path");
+                    std::process::exit(1);
+                })));
+                create = true;
+            },
             "--start" => {
                 let selection = read_start(args.next()).unwrap_or_else(|why| {
                     eprintln!("--start: {why}");
@@ -280,10 +287,18 @@ fn main() {
             eprintln!("--create requires a fresh ecology run");
             std::process::exit(1);
         }
-        let request = config
-            .start
-            .as_ref()
-            .map(|s| s.request.clone())
+        if config.creator_draft.is_some() && config.start.is_some() {
+            eprintln!("choose --draft for criteria or --start for an admitted selection");
+            std::process::exit(1);
+        }
+        let saved = config.creator_draft.as_ref().and_then(|path| {
+            mesocosm_genet::creator_draft::load(path).unwrap_or_else(|why| {
+                eprintln!("--draft {}: {why}", path.display());
+                std::process::exit(1);
+            })
+        });
+        let request = saved
+            .or_else(|| config.start.as_ref().map(|s| s.request.clone()))
             .unwrap_or_else(|| mesocosm_core::world::generation::Request {
                 seed: config.seed,
                 ..Default::default()
@@ -327,6 +342,8 @@ mesocosm-genet: run Mesocosm in a window
   --scenario PATH drive the run from a text scenario and exit 1 if it fails
   --seed N        world seed
   --create        compare generated starting lives before play (arrows, R/N/P/C/M, +/-)
+  --draft PATH    reopen criteria or begin a new draft; implies --create; S saves
+                  K retains selected role/organs/segment count; U clears these filters
   --start PATH    enter a generated selection JSON (recorded for replay)
   --scene MODE    ecology (default), terrarium, or authored graft-practice/expression-practice
   --terrarium-pitch DEG  shallow camera pitch, 0..45 degrees (default 12)
