@@ -26,6 +26,7 @@ use crate::section::{self, Pan, Section, SectionFrame};
 pub mod actions;
 mod config;
 mod content;
+mod creator;
 mod devtime;
 mod devworld;
 pub mod drive;
@@ -87,6 +88,7 @@ pub(crate) fn look_of(organism: &Organism) -> ([f32; 3], f32) {
 }
 
 pub struct Host {
+    creator: Option<creator::Creator>,
     config: HostConfig,
     runtime: Runtime,
     volumes: VolumeMap,
@@ -211,6 +213,9 @@ fn pack_root() -> PathBuf {
 
 impl Host {
     pub fn new(mut config: HostConfig) -> Self {
+        if config.creator_request.is_some() {
+            config.generated_content = true;
+        }
         if let Some(selection) = config.effective_start() {
             let (seed, organisms) = (selection.request.seed, selection.request.organisms);
             config.seed = seed;
@@ -224,13 +229,18 @@ impl Host {
         // load is a diagnostic and not a reason to refuse to run: the board
         // simply shows one proposal source per row, which is what it does
         // wherever no pack expression applies anyway.
-        let runtime = match mesocosm_runtime::Authored::load(&pack_root()) {
-            Ok(authored) => runtime.with_authored(authored),
-            Err(why) => {
-                eprintln!("pack: {}", why.words());
-                runtime
-            },
-        };
+        let runtime = content::with_authored(runtime);
+        let creator = config.creator_request.take().map(|request| {
+            creator::Creator::new(
+                request,
+                content.as_ref().expect("generated creator content").palette,
+                runtime.world(),
+                config.camera,
+            )
+        });
+        if creator.is_some() {
+            config.camera = section::CameraMode::TerrariumEast;
+        }
         // A fixed follow target for an unattended capture run (DT2). It is
         // only where the camera starts: the ordinary keys move it from here,
         // and a target that is not alive is reported and dropped on the first
@@ -249,6 +259,7 @@ impl Host {
         let habitat = (config.effective_scene() != crate::played::SceneMode::Ecology)
             .then(|| section::framed_habitat(runtime.world()));
         Self {
+            creator,
             habitat,
             config,
             runtime,
@@ -335,7 +346,8 @@ impl Host {
     /// a played session converts elapsed wall time into whole fixed steps.
     /// Returns true when a replay has reached the end of its trace.
     fn advance(&mut self) -> bool {
-        if self.grafting.open {
+        self.poll_creator();
+        if self.grafting.open || self.creator.is_some() {
             self.last = None;
             return false;
         }
@@ -395,8 +407,10 @@ impl ApplicationHandler for Host {
 
             WindowEvent::KeyboardInput { event, .. } if event.state == ElementState::Pressed => {
                 match &event.logical_key {
-                    key if self.grafting.open && !event.repeat => self.press_key(key),
-                    _ if self.grafting.open => {},
+                    key if (self.grafting.open || self.creator.is_some()) && !event.repeat => {
+                        self.press_key(key)
+                    },
+                    _ if self.grafting.open || self.creator.is_some() => {},
                     Key::Named(NamedKey::Escape) => self.finish(event_loop),
                     // Panning and quarter turns are presentation controls.
                     Key::Named(NamedKey::ArrowLeft) => self.pan.x -= section::PAN_STEP,

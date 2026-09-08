@@ -66,9 +66,11 @@ fn main() {
     let mut receipt = None;
     let mut capture = None;
     let mut slab_explicit = false;
+    let mut create = false;
 
     while let Some(arg) = args.next() {
         match arg.as_str() {
+            "--create" => create = true,
             "--start" => {
                 let selection = read_start(args.next()).unwrap_or_else(|why| {
                     eprintln!("--start: {why}");
@@ -273,6 +275,21 @@ fn main() {
         config.slab_half_height = 18.0;
     }
 
+    if create {
+        if config.replay.is_some() || config.effective_scene() != played::SceneMode::Ecology {
+            eprintln!("--create requires a fresh ecology run");
+            std::process::exit(1);
+        }
+        let request = config
+            .start
+            .as_ref()
+            .map(|s| s.request.clone())
+            .unwrap_or_else(|| mesocosm_core::world::generation::Request {
+                seed: config.seed,
+                ..Default::default()
+            });
+        config.creator_request = Some(request);
+    }
     match Host::run(config) {
         Ok(code) => std::process::exit(code),
         Err(error) => {
@@ -309,6 +326,7 @@ mesocosm-genet: run Mesocosm in a window
   --replay PATH   drive the run from a recorded trace and assert its hash
   --scenario PATH drive the run from a text scenario and exit 1 if it fails
   --seed N        world seed
+  --create        compare generated starting lives before play (arrows, R/N/P/C/M, +/-)
   --start PATH    enter a generated selection JSON (recorded for replay)
   --scene MODE    ecology (default), terrarium, or authored graft-practice/expression-practice
   --terrarium-pitch DEG  shallow camera pitch, 0..45 degrees (default 12)

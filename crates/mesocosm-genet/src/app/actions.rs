@@ -113,6 +113,9 @@ impl Host {
     /// queue. At a lineage checkpoint the board's own two keys come first — one
     /// of which sends no intent at all.
     pub(super) fn press_key(&mut self, key: &Key) {
+        if self.try_creator_key(key) {
+            return;
+        }
         if self.try_graft_key(key) {
             return;
         }
@@ -176,6 +179,10 @@ impl Host {
             None => (label.trim(), ""),
         };
         if let Some(key) = key_named(name) {
+            if self.creator.is_some() {
+                self.press_key(&key);
+                return true;
+            }
             if self.try_camera_key(&key) {
                 return true;
             }
@@ -193,7 +200,7 @@ impl Host {
             self.note_outcomes();
             return true;
         }
-        if self.grafting.open {
+        if self.grafting.open || self.creator.is_some() {
             return false;
         }
         // The host actions below set state and start pumps; none of them takes
@@ -366,9 +373,8 @@ fn key_named(name: &str) -> Option<Key> {
         // Play: WASD, E, Q, C; T at a checkpoint; R at the board.
         // Dev (live only under `--dev`): P . , [ ] N B M X F K G.
         "w" | "a" | "s" | "d" | "e" | "q" | "c" | "t" | "r" | "p" | "." | "," | "[" | "]" | "n"
-        | "b" | "m" | "x" | "f" | "k" | "g" | "h" | "o" | "i" | "j" | "l" | "u" | "z" | "v" => {
-            Some(Key::Character(name.into()))
-        },
+        | "b" | "m" | "x" | "f" | "k" | "g" | "h" | "o" | "i" | "j" | "l" | "u" | "z" | "v"
+        | "+" | "=" | "-" => Some(Key::Character(name.into())),
         _ => None,
     }
 }
