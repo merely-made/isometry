@@ -36,7 +36,9 @@ pub use geometry::{
     SceneItem, Vertex, build_scene_vertices, build_vertices, deadened, face_shade, kingdom_colour,
     material_colour, warning_colour,
 };
-pub use live_body::{BodyDrawStats, ClipSlab, LiveBody, LiveBodyError, LiveBodyRenderer};
+pub use live_body::{
+    BodyDrawStats, ClipSlab, LiveBody, LiveBodyError, LiveBodyRenderer, PartMaterial,
+};
 
 /// Colour the frame is cleared to. Distinct from every material colour, so
 /// coverage can be measured by "not this".

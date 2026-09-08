@@ -41,6 +41,8 @@ pub const DEFAULT_BODY_BUDGET: usize = MAX_ROSTER + 1;
 
 #[derive(Clone, Debug, Default, Serialize)]
 pub struct BodyFrameStats {
+    pub material_parts: usize,
+    pub secretory_parts: usize,
     pub candidates: usize,
     pub body_scale: f32,
     pub voxel_bodies: usize,
@@ -62,6 +64,7 @@ pub struct BodyFrameStats {
 
 struct PlacedBody {
     projection: LiveBodyProjection,
+    materials: Vec<mesocosm_render::PartMaterial>,
     origin: [f32; 3],
     tint: [f32; 3],
 }
@@ -232,12 +235,23 @@ impl BodyLayer {
                 .project(organism.id, organism.body(), volumes)
             {
                 Ok(projection) => {
+                    let materials = super::materials::project(&organism.phenotype, world.ruleset());
+                    self.stats.material_parts += materials
+                        .iter()
+                        .map(|m| m.part)
+                        .collect::<std::collections::BTreeSet<_>>()
+                        .len();
+                    self.stats.secretory_parts += materials
+                        .iter()
+                        .filter(|m| m.process == mesocosm_core::process::Process::Secrete)
+                        .count();
                     self.stats.controlled_drawn |= Some(organism.id) == controlled;
                     self.stats.voxel_parts += projection.mesh.placement_count();
                     self.stats.voxel_bodies += 1;
                     self.stats.carcasses += usize::from(!organism.is_alive());
                     self.placed.push(PlacedBody {
                         projection,
+                        materials,
                         origin: body_origin(organism, self.scale, self.ground_anatomy),
                         tint,
                     });
@@ -302,6 +316,7 @@ impl BodyLayer {
             .iter()
             .map(|body| LiveBody {
                 mesh: &body.projection.mesh,
+                materials: &body.materials,
                 origin: body.origin,
                 scale: self.scale,
                 tint: body.tint,
@@ -351,6 +366,8 @@ impl BodyLayer {
         }
         self.stats.voxel_bodies = 0;
         self.stats.voxel_parts = 0;
+        self.stats.material_parts = 0;
+        self.stats.secretory_parts = 0;
         self.stats.projection_failures += 1;
         self.placed.clear();
     }

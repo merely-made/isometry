@@ -185,6 +185,7 @@ fn voxel_body_and_brick_tracer_share_depth_in_both_orders() {
                     None,
                     &[LiveBody {
                         mesh: &body_mesh,
+                        materials: &[],
                         origin: [0.0, 0.0, z],
                         scale: 1.0,
                         tint: [1.0; 3],

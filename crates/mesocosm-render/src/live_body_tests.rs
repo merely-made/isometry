@@ -5,7 +5,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use super::*;
-use mesocosm_core::{PartId, VolumeRef};
+use mesocosm_core::{PartId, VolumeRef, process::Process};
 use mesocosm_mesh::{Volume, place_point};
 
 fn gpu() -> Option<crate::Renderer> {
@@ -283,10 +283,158 @@ fn inspection_tint_prioritizes_the_addressed_part() {
         focused: true,
         ..LiveBody::new(&mesh, [0.0; 3])
     };
-    assert_eq!(part_tint(focused, PartId(9)), [1.08; 3]);
+    assert_eq!(
+        part_appearance(focused, PartId(9)).tint,
+        [1.08, 1.08, 1.08, 0.0]
+    );
     let selected = LiveBody {
         selected_part: Some(PartId(9)),
         ..focused
     };
-    assert_eq!(part_tint(selected, PartId(9)), [1.55, 0.82, 0.22]);
+    assert_eq!(
+        part_appearance(selected, PartId(9)).tint,
+        [1.08, 1.08, 1.08, 1.0],
+        "selection is an accent in the shader, leaving tissue marks readable"
+    );
+}
+
+#[test]
+fn expression_materials_aggregate_by_addressed_part_and_process() {
+    let mesh = BodyMesh::single(VolumeRef::from_tag(1), &Volume::solid([1, 1, 1], 1));
+    let materials = [
+        PartMaterial {
+            part: PartId(3),
+            process: Process::Fix,
+            fraction: 0.25,
+        },
+        PartMaterial {
+            part: PartId(3),
+            process: Process::Secrete,
+            fraction: 0.25,
+        },
+        PartMaterial {
+            part: PartId(3),
+            process: Process::Fix,
+            fraction: 0.25,
+        },
+        PartMaterial {
+            part: PartId(4),
+            process: Process::Sense,
+            fraction: 1.0,
+        },
+    ];
+    let body = LiveBody {
+        materials: &materials,
+        ..LiveBody::new(&mesh, [0.0; 3])
+    };
+    let appearance = part_appearance(body, PartId(3));
+    assert_eq!(appearance.expression, [0.0, 0.0, 0.0, 0.5]);
+    assert_eq!(appearance.expression_tail[0], 0.25);
+    assert_eq!(part_appearance(body, PartId(4)).expression[2], 1.0);
+    assert!(valid_materials(&materials));
+}
+
+#[test]
+fn expression_materials_refuse_impossible_capacity_claims() {
+    let over_capacity = [
+        PartMaterial {
+            part: PartId(3),
+            process: Process::Fix,
+            fraction: 0.75,
+        },
+        PartMaterial {
+            part: PartId(3),
+            process: Process::Secrete,
+            fraction: 0.5,
+        },
+    ];
+    assert!(!valid_materials(&over_capacity));
+    assert!(!valid_materials(&[PartMaterial {
+        part: PartId(3),
+        process: Process::Fix,
+        fraction: f32::NAN,
+    }]));
+}
+
+#[test]
+fn changed_expression_reuses_the_immutable_volume_upload() {
+    let Some(host) = gpu() else { return };
+    let (colour, depth) = attachments(host.device());
+    let colour_view = colour.create_view(&Default::default());
+    let depth_view = depth.create_view(&Default::default());
+    let mesh = BodyMesh::single(VolumeRef::from_tag(41), &Volume::solid([2, 2, 2], 1));
+    let fix = [PartMaterial {
+        part: PartId(0),
+        process: Process::Fix,
+        fraction: 1.0,
+    }];
+    let secrete = [PartMaterial {
+        part: PartId(0),
+        process: Process::Secrete,
+        fraction: 1.0,
+    }];
+    let mut live = LiveBodyRenderer::new(host.device(), wgpu::TextureFormat::Rgba8Unorm, 4);
+    let clip = Mat4::IDENTITY.to_cols_array_2d();
+
+    let mut first = host.device().create_command_encoder(&Default::default());
+    clear(&mut first, &colour_view, &depth_view);
+    let first_stats = live
+        .draw(
+            host.device(),
+            host.queue(),
+            &mut first,
+            &colour_view,
+            &depth_view,
+            clip,
+            None,
+            &[
+                LiveBody {
+                    materials: &fix,
+                    ..LiveBody::new(&mesh, [0.0; 3])
+                },
+                LiveBody {
+                    materials: &secrete,
+                    ..LiveBody::new(&mesh, [4.0, 0.0, 0.0])
+                },
+            ],
+        )
+        .unwrap();
+    host.queue().submit(Some(first.finish()));
+    assert!(first_stats.mesh_upload_bytes > 0);
+    assert_eq!(
+        first_stats.instances, 2,
+        "one VolumeRef can have distinct process material instances"
+    );
+
+    let mut second = host.device().create_command_encoder(&Default::default());
+    let changed = live
+        .draw(
+            host.device(),
+            host.queue(),
+            &mut second,
+            &colour_view,
+            &depth_view,
+            clip,
+            None,
+            &[
+                LiveBody {
+                    materials: &secrete,
+                    ..LiveBody::new(&mesh, [0.0; 3])
+                },
+                LiveBody {
+                    materials: &fix,
+                    ..LiveBody::new(&mesh, [4.0, 0.0, 0.0])
+                },
+            ],
+        )
+        .unwrap();
+    host.queue().submit(Some(second.finish()));
+    assert_eq!(
+        changed.mesh_upload_bytes, 0,
+        "expression must not rebuild VolumeRef geometry"
+    );
+    assert!(
+        changed.instance_upload_bytes > 0,
+        "expression changes only per-instance data"
+    );
 }

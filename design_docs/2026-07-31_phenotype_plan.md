@@ -2122,9 +2122,9 @@ menu, pause, checked candidate projection, and shared-device renderer with
 grafting. Core prepares both preview and commit; the host selects a discovered
 condition and never authors allocations. The menu reports evidence, cost,
 affected part, and before/after process tissue. Somatic expression leaves the
-lineage program unchanged. The mesh projector currently excludes allocation
-state, so this slice reports that change in the panel and highlights its part;
-it does not claim a new silhouette or allocation-driven material rendering.
+lineage program unchanged. At this milestone the mesh projector excluded allocation
+state, so the slice reported that change in the panel and highlighted its part.
+The process-material join below adds allocation-driven surface appearance.
 
 The authored `expression-practice` scene uses real hunger observation during
 explicit reserve-assisted prehistory, then supplies an admitted plate and a
@@ -2140,6 +2140,40 @@ process stalled and was stopped; its serial retry passed 90 tests with one
 ignored in 20 seconds. The other package targets passed in the joined run.
 This is a successful combined receipt, not a clean parallel-suite run. Descendant realization, the unchanged-relative control,
 and the remaining VB4a join stay open.
+
+**Process materials and assisted descendant comparison, locally verified 2026-09-07.**
+The host projects each part's living, admitted process allocations into material
+fractions. The body renderer uses those fractions for a deterministic surface
+pattern and retains the immutable `VolumeRef` geometry cache. A process pattern
+represents density, not an allocation-cell-to-render-voxel mapping. Selection
+adds an amber accent without replacing the underlying process appearance.
+Unknown process definitions and severed parts contribute no process marking.
+
+The authored `descendant_practice` fixture compares somatic expression, a child
+before program revision, a child after admitted revision, and a matched
+counterfactual control. Its common starting recipe and assisted reserves/births
+are explicit. This is not the same-enclosure biological relative or natural
+reproduction timing proof. Renderer captures read the recorded body snapshots through the same material
+adapter and cached renderer as play, using fixed legacy cuboid content.
+The captures frame each body independently; they are not an enclosure scene.
+The full joined intake/relative/descendant scenario remains open.
+
+The combined receipt contains 952 passing tests, two ignored cases, and twelve
+native runs. The first joined run caught a comparison-harness error: rebuilding
+legacy content from each snapshot changed an existing volume address. Matching
+the host's once-at-origin content admission fixed it; all 96 host tests passed
+on the serial retry. Other package targets passed in the joined run. This is a
+successful combined receipt, not a clean first suite run.
+
+GPU readback proves that checked preview and accepted expression have identical
+pixels, somatic expression changes pixels without uploading geometry again,
+and the revised child's secretion changes pixels independently of anatomy.
+Native previews keep authority at `2e5236bc44fa408f`; acceptance and replay keep
+`e92a6157f4003d1f`. Historical graft and TG1 replay hashes remain exact, with one
+shared graph submission boundary and no body projection fallbacks in all twelve
+runs. The labelled six-stage comparison, separate intervention/control event
+streams, source hashes and logs are at workspace-root
+`testing/mesocosm/expression_materials/`.
 
 **VB4a, existing mechanics.** First join existing graft, whole-part consumption/loss, expression and filial
 realization. Compare two relatives: retain one unchanged, give the other a

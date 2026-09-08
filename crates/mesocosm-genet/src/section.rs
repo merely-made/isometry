@@ -9,7 +9,6 @@
 //! `mesocosm-lens` owns the tracer; this module owns the vessel's policy over
 //! it — which Ground the map binds, where the slab sits, which body is posed,
 //! and how the traced texture reaches the surface the HUD then composites on.
-//! No world state lives here and no rule is decided here.
 //!
 //! Which way it looks is [`camera`]'s, and stays a host flag: the shallow
 //! oblique Mark ruled on 2026-09-04 is the default, and the two level arms the
@@ -19,6 +18,7 @@
 mod bodies;
 mod camera;
 mod capture;
+mod materials;
 mod terrain;
 mod terrarium;
 pub use terrain::TerrainStyle;

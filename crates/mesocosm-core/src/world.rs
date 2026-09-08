@@ -17,6 +17,7 @@ use crate::rng::Rng;
 mod act;
 mod adapt;
 mod consume;
+mod descendant_practice;
 mod dev;
 mod discover;
 mod express;
@@ -31,8 +32,8 @@ mod records;
 mod review;
 mod revise;
 mod terrarium;
-
 pub use adapt::{Round, Score, Turn};
+pub use descendant_practice::{DescendantPractice, DescendantStage};
 pub use dev::PLACE_MATTER_MAX_MG;
 pub use express::ExpressionPreview;
 pub use genesis::Founding;
@@ -42,7 +43,6 @@ pub use read::Gland;
 pub use review::{Offer, Prospect, Untakeable};
 pub use revise::Unrevised;
 pub use terrarium::{TERRARIUM_EXTENT, TERRARIUM_ROUTE_BUDGET, TerrariumBounds, TerrariumHabitat};
-
 /// How far the enclosure reaches from its middle, in voxels.
 ///
 /// **Sixty-four since S1** (scale plan, 2026-08-29): a 129-voxel span, 15.3x

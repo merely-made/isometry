@@ -20,6 +20,12 @@ use wgpu::util::DeviceExt;
 
 use crate::geometry::{Vertex, face_shade, material_colour};
 
+mod materials;
+
+pub use materials::PartMaterial;
+
+use materials::{part_appearance, valid_materials};
+
 /// A body owned by the caller's projection. Identity remains alongside this
 /// lightweight draw item in the host's attributed projection.
 #[derive(Clone, Copy, Debug)]
@@ -35,6 +41,9 @@ pub struct LiveBody<'a> {
     pub focused: bool,
     /// The one addressed part that receives the inspection colour.
     pub selected_part: Option<PartId>,
+    /// Per-part expression summaries from the host's phenotype projection.
+    /// They are per-instance data and never alter the immutable volume cache.
+    pub materials: &'a [PartMaterial],
 }
 
 impl<'a> LiveBody<'a> {
@@ -46,6 +55,7 @@ impl<'a> LiveBody<'a> {
             tint: [1.0; 3],
             focused: false,
             selected_part: None,
+            materials: &[],
         }
     }
 }
@@ -105,6 +115,9 @@ pub enum LiveBodyError {
         capacity: usize,
     },
     InvalidBody,
+    /// The caller supplied a non-finite, negative, or over-capacity process
+    /// summary. Refuse rather than making a decorative claim about tissue.
+    InvalidMaterials,
     InvalidClip,
 }
 
@@ -125,6 +138,8 @@ struct CachedInstances {
 struct Instance {
     model: [[f32; 4]; 4],
     tint: [f32; 4],
+    expression: [f32; 4],
+    expression_tail: [f32; 4],
 }
 
 impl Instance {
@@ -155,6 +170,16 @@ impl Instance {
             wgpu::VertexAttribute {
                 offset: 64,
                 shader_location: 6,
+                format: wgpu::VertexFormat::Float32x4,
+            },
+            wgpu::VertexAttribute {
+                offset: 80,
+                shader_location: 7,
+                format: wgpu::VertexFormat::Float32x4,
+            },
+            wgpu::VertexAttribute {
+                offset: 96,
+                shader_location: 8,
                 format: wgpu::VertexFormat::Float32x4,
             },
         ],
@@ -324,6 +349,9 @@ impl LiveBodyRenderer {
                     });
                 }
             }
+            if !valid_materials(body.materials) {
+                return Err(LiveBodyError::InvalidMaterials);
+            }
         }
         self.clock = self.clock.wrapping_add(1);
         let mut stats = BodyDrawStats::default();
@@ -332,10 +360,12 @@ impl LiveBodyRenderer {
             for placement in &body.mesh.placements {
                 let key = placement.volume.0;
                 let model = model_matrix(*body, placement.yaw, placement.pivot, placement.pivot_at);
-                let tint = part_tint(*body, placement.part);
+                let appearance = part_appearance(*body, placement.part);
                 instances.entry(key).or_default().push(Instance {
                     model: model.to_cols_array_2d(),
-                    tint: [tint[0], tint[1], tint[2], 1.0],
+                    tint: appearance.tint,
+                    expression: appearance.expression,
+                    expression_tail: appearance.expression_tail,
                 });
             }
         }
@@ -514,16 +544,6 @@ impl LiveBodyRenderer {
             cached.bytes.clear();
             cached.bytes.extend_from_slice(bytes);
         }
-    }
-}
-
-fn part_tint(body: LiveBody<'_>, part: PartId) -> [f32; 3] {
-    if body.selected_part == Some(part) {
-        [1.55, 0.82, 0.22]
-    } else if body.focused {
-        body.tint.map(|channel| channel * 1.08)
-    } else {
-        body.tint
     }
 }
 

@@ -53,7 +53,7 @@ impl Host {
                     );
                     let after = tissue_mg(&preview.phenotype, preview.part, process);
                     detail = format!(
-                        "Tissue performing this process: {before} -> {after} mg. Amber marks the affected part. The outer shape stays the same; your lineage program is unchanged."
+                        "Tissue performing this process: {before} -> {after} mg. Surface markings show each process’s tissue share; magenta marks secretion. Amber highlights the part. Your lineage program is unchanged."
                     );
                     state.root = Some(preview.part);
                     let mut projected = world.clone();
