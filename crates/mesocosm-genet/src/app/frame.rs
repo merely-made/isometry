@@ -69,13 +69,14 @@ impl Host {
             1.0
         };
         let mut view_half = half;
+        let mut preview_depth = section::SLAB_DEPTH;
         if body_review {
             let frame = self
                 .gpu
                 .as_ref()
                 .map(|gpu| (gpu.config.width, gpu.config.height))
                 .unwrap_or((960, 540));
-            if let Some((focused, fitted)) = grafting::framing(
+            if let Some((focused, fitted, depth)) = grafting::framing(
                 self.creator
                     .as_ref()
                     .map(creator::Creator::world)
@@ -92,11 +93,12 @@ impl Host {
             ) {
                 centre = focused;
                 view_half = fitted;
+                preview_depth = depth;
             }
         }
         if let Some(gpu) = &mut self.gpu {
             gpu.section.set_half_height(view_half);
-            gpu.section.set_body_preview(body_review);
+            gpu.section.set_body_preview(body_review, preview_depth);
             gpu.section.configure_bodies(
                 if body_review {
                     section::BodyMode::Voxels

@@ -207,8 +207,17 @@ fn browse_and_cancel_leave_the_parked_world_untouched() {
     assert_eq!(host.runtime.state_hash(), original);
     assert_eq!(host.runtime.queued_len(), 0);
     let preview_camera = host.config.camera;
+    assert_eq!(preview_camera, crate::section::CameraMode::Oblique);
     host.run_action("v");
     assert_ne!(host.config.camera, preview_camera);
+    for _ in 0..4 {
+        host.run_action("v");
+    }
+    assert_eq!(host.config.camera, preview_camera);
+    host.run_action("z");
+    host.run_action("v");
+    assert_eq!(host.config.camera, preview_camera);
+    host.run_action("v"); // Cancel must restore from a different view.
     assert!(host.run_action("escape"));
     assert!(host.creator.is_none());
     assert_eq!(host.config.camera, crate::section::CameraMode::Oblique);

@@ -13,6 +13,63 @@ fn host() -> Host {
 }
 
 #[test]
+fn whole_body_preview_fits_deep_bodies_after_every_turn() {
+    use crate::section::{CameraMode, camera_basis};
+    use mesocosm_core::world::generation::{BodyPlan, Request};
+    let mut exceeds_world_slice = false;
+    for plan in [BodyPlan::Axial, BodyPlan::Branched] {
+        let mut request = Request::default();
+        request.criteria.body_plan = plan;
+        let prepared = request
+            .prepare(mesocosm_core::Founding::Drawn.palette())
+            .unwrap();
+        for index in 0..prepared.draft().candidates.len() {
+            let world = prepared.enter(index).unwrap();
+            let organism = world.controlled().unwrap();
+            let bounds = organism.body().aabb();
+            for mode in CameraMode::ALL {
+                for pitch in [None, Some(12.0)] {
+                    for frame in [(960, 600), (1280, 720)] {
+                        let (centre, half, depth) =
+                            framing(&world, frame, mode, pitch, 1.0).unwrap();
+                        exceeds_world_slice |= depth > crate::section::SLAB_DEPTH;
+                        let [right, up, _] = camera_basis(mode, pitch);
+                        let normal = [right[2], 0.0, -right[0]];
+                        for mask in 0..8 {
+                            let delta: [f32; 3] = [0, 1, 2].map(|i| {
+                                let corner = if mask & (1 << i) == 0 {
+                                    bounds.min[i]
+                                } else {
+                                    bounds.max[i]
+                                };
+                                organism.position[i] as f32 + corner as f32
+                                    - centre[i]
+                                    - if i == 1 && pitch.is_some() {
+                                        bounds.min[1] as f32
+                                    } else {
+                                        0.0
+                                    }
+                            });
+                            let dot =
+                                |axis: [f32; 3]| (0..3).map(|i| delta[i] * axis[i]).sum::<f32>();
+                            assert!(
+                                dot(normal).abs() < depth * 0.5,
+                                "{plan:?}/{mode:?}: whole body must survive cutaway clipping"
+                            );
+                            assert!(dot(up).abs() < half);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    assert!(
+        exceeds_world_slice,
+        "fixture must exercise the old thin-slice failure"
+    );
+}
+
+#[test]
 fn browsing_and_cancelling_a_graft_never_change_the_world_or_trace() {
     let mut host = host();
     let hash = host.runtime.state_hash();

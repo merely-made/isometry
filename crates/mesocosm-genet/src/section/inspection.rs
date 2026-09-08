@@ -25,8 +25,13 @@ pub struct BodySelection {
 impl Section {
     /// An isolated body view reuses the resident body renderer and depth target.
     /// The host restores ordinary scene rendering when its menu closes.
-    pub fn set_body_preview(&mut self, isolated: bool) {
+    pub fn set_body_preview(&mut self, isolated: bool, depth: f32) {
         self.bodies.isolated = isolated;
+        self.bodies.preview_depth = if depth.is_finite() && depth > 0.0 {
+            depth
+        } else {
+            super::SLAB_DEPTH
+        };
     }
 
     /// Walks parts in the last successful voxel-body draw for `subject`.

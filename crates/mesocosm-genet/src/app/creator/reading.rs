@@ -106,7 +106,7 @@ impl Creator {
         self.reading.headline = "Character creator".into();
         self.reading.facts_title = "Habitat and body".into();
         self.reading.choice_label = "Start".into();
-        self.reading.keys = "↑/↓ choose · B body plan · K keep · U clear · R vary · N habitat · P place · C role · M organs · +/- mass · Z/V rotate".into();
+        self.reading.keys = "↑/↓ choose · B body plan · K keep · U clear · R vary · N habitat · P place · C role · M organs · +/- mass · Z/V change view".into();
         if self.draft_path.is_some() {
             self.reading.keys.push_str(" · S save criteria");
         }

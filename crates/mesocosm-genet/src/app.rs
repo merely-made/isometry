@@ -240,7 +240,7 @@ impl Host {
             )
         });
         if creator.is_some() {
-            config.camera = section::CameraMode::TerrariumEast;
+            config.camera = section::CameraMode::Oblique;
         }
         // A fixed follow target for an unattended capture run (DT2). It is
         // only where the camera starts: the ordinary keys move it from here,

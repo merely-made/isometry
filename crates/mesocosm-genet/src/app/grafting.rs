@@ -295,10 +295,10 @@ pub(super) fn framing(
     mode: crate::section::CameraMode,
     pitch: Option<f32>,
     scale: f32,
-) -> Option<([f32; 3], f32)> {
+) -> Option<([f32; 3], f32, f32)> {
     let organism = world.controlled()?;
     let bounds = organism.body().aabb();
-    let [right, up, _] = crate::section::camera_basis(mode, pitch);
+    let [right, up, forward] = crate::section::camera_basis(mode, pitch);
     let size: [f32; 3] = [0, 1, 2].map(|i| (bounds.max[i] - bounds.min[i]) as f32 * scale);
     let span = |axis: [f32; 3]| (0..3).map(|i| size[i] * axis[i].abs()).sum::<f32>();
     let available = (frame.0 as f32 - mesocosm_views::BODY_MENU_WIDTH as f32 - 24.0).max(80.0);
@@ -313,7 +313,12 @@ pub(super) fn framing(
     for i in 0..3 {
         centre[i] += right[i] * offset;
     }
-    Some((centre, half))
+    // The cutaway slab is upright, even when the camera pitches downward.
+    // Fit its horizontal normal, not the camera's pitched forward vector.
+    let horizontal = (forward[0].powi(2) + forward[2].powi(2)).sqrt();
+    let normal = [forward[0] / horizontal, 0.0, forward[2] / horizontal];
+    let depth = span(normal) + 2.0;
+    Some((centre, half, depth))
 }
 
 pub(super) fn selection(

@@ -200,7 +200,23 @@ impl Host {
                 return true;
             },
             "z" | "v" => {
-                self.try_camera_key(key);
+                use crate::section::CameraMode::*;
+                let views = [
+                    Oblique,
+                    TerrariumEast,
+                    TerrariumSouth,
+                    TerrariumWest,
+                    TerrariumNorth,
+                ];
+                let current = views
+                    .iter()
+                    .position(|mode| *mode == self.config.camera)
+                    .unwrap_or(0);
+                let step = if letter == "z" { views.len() - 1 } else { 1 };
+                self.config.camera = views[(current + step) % views.len()];
+                if let Some(gpu) = &mut self.gpu {
+                    gpu.section.set_mode(self.config.camera);
+                }
                 return true;
             },
             "r" => creator.request.variation = creator.request.variation.wrapping_add(1),

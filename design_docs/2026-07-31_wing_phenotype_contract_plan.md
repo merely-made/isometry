@@ -893,10 +893,44 @@ replays at `6f6d63362f3ce9fd`. A branched one-part budget returns zero candidate
 128 part refusals and exit 1. Both native binaries build; changed Rust files
 pass formatting and the 600-line ceiling.
 
-The current cardinal preview can hide branches behind a trunk. Z/V exposes
-the alternate view, recorded for both producer and consumer. The rotated
-producer has a visible crosswise crown and stem; this does not close the
-broader camera/framing or body-motion gates.
+These first captures used cardinal previews that hid branches behind a trunk.
+Z/V exposed an alternate view, recorded for both producer and consumer; the
+rotated producer showed a crosswise crown and stem. The follow-up below
+addresses clipping and the initial view. Broader body-motion gates stay open.
+
+### Whole-body preview follow-up (2026-09-08)
+
+The branching capture exposed a local inspection defect: isolated previews
+kept the world's 16-voxel cutaway depth. Rotating a long body could therefore
+remove geometry from the image as well as occlude it. The shared creator/graft
+framing path now fits the complete body's extent along the upright cutaway
+normal, including margin. The renderer uses that depth for projection,
+culling and clipping, and temporarily clears habitat bounds during isolated
+inspection. Closing the menu restores the scene's depth and bounds.
+
+The creator starts with the existing oblique camera. Z/V cycles through that
+overview and four cardinal views in either direction. The original play
+camera is restored on cancellation or entry; camera choices remain host
+presentation and do not change the generator request or recorded intents.
+This is a local C1 inspection repair. Free orbit/zoom, two-host editing and
+body-motion acceptance remain open.
+
+Verification: 103 native library tests pass with one existing ignored test.
+The geometry regression covers axial and branched candidates, every camera
+mode, pitched and unpitched framing, and two window sizes. A renderer-backed
+test checks temporary depth/bounds and exact scene-matrix restoration for
+both ordinary and terrarium views. Creator checks cover cycling all five
+views, reversal, inert world state and restoration on cancel.
+
+Headed verification under `Code/testing/mesocosm/creator_preview/` shows the
+complete branched producer and consumer in the initial oblique overview and
+cardinal views at 960x600, with the six-choice menu fitting beside them.
+The consumer's formerly sliced side view now retains its branches and organs.
+Cycling back to the overview and entering candidate 1 still produces the
+previous 24-action hash, `4d16b4cb1d20ffec`, with zero dev intents; both the new
+trace and the previous branching trace replay exactly. The executable builds,
+formatting and the 600-line ceiling pass, and the strengthened cancellation
+check passes after explicitly leaving the overview before closing the menu.
 
 ### Research and its consequences
 

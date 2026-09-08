@@ -194,26 +194,11 @@ impl Section {
         self.width as f32 / self.height.max(1) as f32
     }
 
-    /// Depth stays the G2 number; the half-height and the direction are the
-    /// host's. The tracer orthonormalizes what it is handed, which is why an
+    /// Scene depth stays the G2 number or the terrarium's bounds; an isolated
+    /// preview fits the complete body. The tracer orthonormalizes its basis, so an
     /// off-axis section costs three unit vectors and nothing else.
     fn camera(&self, centre: [f32; 3]) -> Option<TraceCamera> {
         self.view(centre).trace()
-    }
-
-    fn view(&self, centre: [f32; 3]) -> view::View {
-        view::View {
-            mode: self.mode,
-            centre,
-            half: self.half_height,
-            aspect: self.aspect(),
-            depth: self
-                .terrarium
-                .as_ref()
-                .map_or(SLAB_DEPTH, |view| view.depth()),
-            pitch: self.terrarium.as_ref().map(|view| view.pitch()),
-            bounds: self.terrarium.as_ref().map(|view| view.bounds()),
-        }
     }
 
     /// Which way this section is looking. The receipt names it, so a capture

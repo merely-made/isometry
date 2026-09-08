@@ -31,6 +31,41 @@ fn prepare(layer: &mut BodyLayer, world: &World, volumes: &mesocosm_mesh::Volume
 }
 
 #[test]
+fn preview_depth_and_bounds_are_temporary() {
+    let Some((renderer, _)) = layer() else {
+        return;
+    };
+    let world = World::new(7, 3);
+    let mut section = Section::new(
+        renderer.device().clone(),
+        renderer.queue().clone(),
+        16,
+        16,
+        wgpu::TextureFormat::Rgba8Unorm,
+        world.ground(),
+        Framing::new(28.0, CameraMode::TerrariumEast),
+    )
+    .unwrap();
+    for habitat in [None, Some(framed_habitat(&world))] {
+        if let Some(habitat) = habitat {
+            section.configure_terrarium(&habitat, 12.0, Cutaway::Always, [0, 0, 0]);
+        }
+        let centre = [0.0, 20.0, 0.0];
+        let original = section.view(centre);
+        section.set_body_preview(true, 80.0);
+        let preview = section.view(centre);
+        assert_eq!(preview.depth, 80.0);
+        assert_eq!(preview.clip().bounds, None);
+        assert!(preview.window().half[2] >= 40.0);
+        section.set_body_preview(false, 80.0);
+        let restored = section.view(centre);
+        assert_eq!(restored.depth, original.depth);
+        assert_eq!(restored.bounds, original.bounds);
+        assert_eq!(restored.matrix(), original.matrix());
+    }
+}
+
+#[test]
 fn selection_carries_owner_and_expires_after_severing() {
     let Some((_renderer, mut layer)) = layer() else {
         eprintln!("no adapter; skipping inspection identity receipt");

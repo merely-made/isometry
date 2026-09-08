@@ -18,6 +18,30 @@ pub(super) struct View {
     pub bounds: Option<([f32; 3], [f32; 3])>,
 }
 
+impl super::Section {
+    pub(super) fn view(&self, centre: [f32; 3]) -> View {
+        View {
+            mode: self.mode,
+            centre,
+            half: self.half_height,
+            aspect: self.aspect(),
+            depth: if self.bodies.isolated {
+                self.bodies.preview_depth
+            } else {
+                self.terrarium
+                    .as_ref()
+                    .map_or(super::SLAB_DEPTH, |view| view.depth())
+            },
+            pitch: self.terrarium.as_ref().map(|view| view.pitch()),
+            bounds: if self.bodies.isolated {
+                None
+            } else {
+                self.terrarium.as_ref().map(|view| view.bounds())
+            },
+        }
+    }
+}
+
 impl View {
     pub fn basis(self) -> [[f32; 3]; 3] {
         camera_basis(self.mode, self.pitch)
