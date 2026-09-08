@@ -9,6 +9,89 @@ fn palette() -> PartPalette {
 }
 
 #[test]
+fn old_requests_keep_their_bodies_and_reject_new_grammar() {
+    let old = Request {
+        version: 1,
+        ..Request::default()
+    };
+    let new = Request::default();
+    assert_eq!(
+        old.preview(palette()).unwrap().candidates,
+        new.preview(palette()).unwrap().candidates
+    );
+    assert_eq!(
+        state_hash(&old.prepare(palette()).unwrap().enter(1).unwrap()),
+        state_hash(&new.prepare(palette()).unwrap().enter(1).unwrap())
+    );
+    let mut invalid = old;
+    invalid.criteria.body_plan = BodyPlan::Branched;
+    assert!(invalid.validate().is_err());
+}
+
+#[test]
+fn branching_corpus_changes_geometry_and_survives_restore_and_replay() {
+    for seed in [0, 7, 42] {
+        for role in [Kingdom::Producer, Kingdom::Consumer, Kingdom::Decomposer] {
+            let mut request = Request {
+                seed,
+                ..Request::default()
+            };
+            request.criteria.body_plan = BodyPlan::Branched;
+            request.criteria.role = Some(role);
+            let prepared = request.prepare(palette()).unwrap();
+            let draft = prepared.draft();
+            assert_eq!(
+                draft.candidates.len(),
+                4,
+                "{seed}/{role:?}: {:?}",
+                draft.rejected
+            );
+            for candidate in &draft.candidates {
+                assert_eq!(candidate.role, role);
+                assert!(candidate.recipe.layout.len() >= 4);
+                assert_eq!(candidate.recipe.layout[2].parent, Some(1));
+                assert_eq!(candidate.recipe.layout[3].parent, Some(1));
+                let mut axial = candidate.recipe.clone();
+                axial.layout.clear();
+                let soma = Soma::develop(&axial, candidate.seed);
+                let body = crate::develop_body(
+                    SpeciesId(1),
+                    &axial,
+                    &soma,
+                    request.criteria.mass_mg,
+                    palette(),
+                )
+                .unwrap();
+                assert_ne!(
+                    body.parts, candidate.body.parts,
+                    "layout must change realized geometry"
+                );
+            }
+            let mut world = prepared.enter(0).unwrap();
+            assert_eq!(
+                world.lineages.get(SpeciesId(1)).unwrap().recipe,
+                draft.candidates[0].recipe
+            );
+            let mut saved = restore(&snapshot(&world).unwrap()).unwrap();
+            let mut replay = request.prepare(palette()).unwrap().enter(0).unwrap();
+            let matter = world.total_matter_mg();
+            for _ in 0..8 {
+                for state in [&mut world, &mut saved, &mut replay] {
+                    state.apply(Intent::Idle);
+                }
+                assert_eq!(world.total_matter_mg(), matter);
+                assert_eq!(state_hash(&world), state_hash(&saved));
+                assert_eq!(state_hash(&world), state_hash(&replay));
+            }
+            request.variation += 1;
+            let varied = request.preview(palette()).unwrap();
+            assert_eq!(draft.habitat, varied.habitat);
+            assert_ne!(draft.candidates, varied.candidates);
+        }
+    }
+}
+
+#[test]
 fn prepared_previews_are_disposable_and_match_fresh_entry() {
     let request = Request::default();
     let prepared = request.prepare(palette()).unwrap();

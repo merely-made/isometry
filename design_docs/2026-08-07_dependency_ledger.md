@@ -76,6 +76,11 @@ GPU dynamics, procedural civilization, multi-body life, live collaboration,
 audio and broader accessibility remain useful later lanes, activated by their
 own consumer requirements. They are not a blanket foundation phase.
 
+The 2026-09-08 C0 continuation adds seeded branching layouts alongside axial
+bodies, retaining the same local habitat/admission and creator entry seams.
+The wing contract records the version boundary and verification; this does
+not close broader morphology, ecology persistence or two-host C1 acceptance.
+
 ## Mesocosm lanes
 
 **Playable ecology integration chain** (product order; founded 2026-08-31):

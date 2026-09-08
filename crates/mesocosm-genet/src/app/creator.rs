@@ -167,6 +167,14 @@ impl Host {
             _ => {},
         }
         match letter.as_str() {
+            "b" => {
+                use mesocosm_core::world::generation::{BodyPlan, VERSION};
+                creator.request.version = VERSION;
+                creator.request.criteria.body_plan = match creator.request.criteria.body_plan {
+                    BodyPlan::Axial => BodyPlan::Branched,
+                    BodyPlan::Branched => BodyPlan::Axial,
+                };
+            },
             "k" => {
                 creator.keep_traits();
                 return true;

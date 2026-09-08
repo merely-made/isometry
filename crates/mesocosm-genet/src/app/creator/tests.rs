@@ -27,6 +27,53 @@ fn ready(host: &mut Host) {
 }
 
 #[test]
+fn body_plan_switch_upgrades_old_draft_and_preserves_habitat() {
+    use mesocosm_core::world::generation::{BodyPlan, VERSION};
+    let mut host = opened(serde_json::from_str(r#"{"version":1,"seed":7}"#).unwrap());
+    let original = host.runtime.state_hash();
+    ready(&mut host);
+    let habitat = host
+        .creator
+        .as_ref()
+        .unwrap()
+        .prepared
+        .as_ref()
+        .unwrap()
+        .draft()
+        .habitat
+        .clone();
+    host.run_action("b");
+    host.run_action("enter");
+    assert!(host.creator.is_some());
+    ready(&mut host);
+    let creator = host.creator.as_ref().unwrap();
+    assert_eq!(creator.request.version, VERSION);
+    assert_eq!(creator.request.criteria.body_plan, BodyPlan::Branched);
+    let saved = serde_json::to_vec(&creator.request).unwrap();
+    assert_eq!(
+        serde_json::from_slice::<Request>(&saved).unwrap(),
+        creator.request
+    );
+    assert_eq!(creator.prepared.as_ref().unwrap().draft().habitat, habitat);
+    assert!(creator.count() > 0);
+    host.run_action("k");
+    ready(&mut host);
+    host.run_action("r");
+    ready(&mut host);
+    host.run_action("u");
+    ready(&mut host);
+    assert_eq!(
+        host.creator.as_ref().unwrap().request.criteria.body_plan,
+        BodyPlan::Branched
+    );
+    assert_eq!(host.runtime.state_hash(), original);
+    let expected = state_hash(host.creator.as_ref().unwrap().world());
+    host.run_action("enter");
+    assert!(host.creator.is_none());
+    assert_eq!(host.runtime.state_hash(), expected);
+}
+
+#[test]
 fn retained_traits_survive_variation_and_can_be_cleared() {
     let mut host = opened(Request::default());
     let original = host.runtime.state_hash();

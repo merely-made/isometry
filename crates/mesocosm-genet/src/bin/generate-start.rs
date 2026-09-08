@@ -4,7 +4,7 @@
 //! Generate inspectable candidates and selection files for `mesocosm-genet --start`.
 use mesocosm_core::{
     Founding, Kingdom,
-    world::generation::{Request, Selection},
+    world::generation::{BodyPlan, Request, Selection, VERSION},
 };
 use std::path::PathBuf;
 
@@ -15,7 +15,7 @@ fn run() -> Result<(), String> {
     while let Some(flag) = args.next() {
         if flag == "--help" {
             println!(
-                "generate-start [--request request.json] [--seed N] [--variation N] [--role producer|consumer|decomposer|any] [--movement-organs yes|no|any] [--place 0..8] [--mass MG] [--max-parts N] [--candidates N] [--output DIR]\nWrites report.json and start-N.json. Enter with mesocosm-genet --start DIR/start-N.json. Requested criteria are enforced; unsatisfied requests remain visible."
+                "generate-start [--request request.json] [--seed N] [--variation N] [--body-plan axial|branched] [--role producer|consumer|decomposer|any] [--movement-organs yes|no|any] [--place 0..8] [--mass MG] [--max-parts N] [--candidates N] [--output DIR]\nWrites report.json and start-N.json. Enter with mesocosm-genet --start DIR/start-N.json. Requested criteria are enforced; unsatisfied requests remain visible."
             );
             return Ok(());
         }
@@ -23,6 +23,14 @@ fn run() -> Result<(), String> {
             .next()
             .ok_or_else(|| format!("{flag} requires a value"))?;
         match flag.as_str() {
+            "--body-plan" => {
+                request.version = VERSION;
+                request.criteria.body_plan = match value.as_str() {
+                    "axial" => BodyPlan::Axial,
+                    "branched" => BodyPlan::Branched,
+                    _ => return Err("body plan must be axial or branched".into()),
+                };
+            },
             "--request" => {
                 request = serde_json::from_slice(&std::fs::read(&value).map_err(|e| e.to_string())?)
                     .map_err(|e| e.to_string())?

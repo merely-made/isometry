@@ -850,6 +850,54 @@ budget draft reopens with zero candidates and can be saved; Enter remains
 inert. Captures and logs record the retained, reopened, full-page, and empty
 states. Broader body-plan generation remains the next substantive C0 question.
 
+### Generated branching bodies (2026-09-08)
+
+C0 now admits two explicit developmental arrangements: axial and branched.
+The branched generator keeps the seeded feeding organs and generates a trunk
+with at least two daughter stretches attached to its realized segments.
+Producers raise that trunk; consumers and decomposers extend it horizontally.
+Branch lengths and attachment anchors vary with the body seed. These are
+ordinary heritable recipe layouts consumed by development, collision and
+rendering. Feeding role remains a separate criterion. This is a bounded
+branching grammar, not taxonomy, radial symmetry, a colony, or evidence of
+ecological resilience. The existing ecological symmetry field does not assert
+geometric symmetry of these layouts.
+
+B switches the creator's body plan while preserving habitat and other filters.
+K, R and U preserve the selected plan; U still clears only role, organs and
+segment bounds. Saving a draft retains its plan. The report tool accepts
+`--body-plan axial|branched`. New requests use generator version 2; explicit
+version-1 requests keep the exact axial stream and refuse branched criteria.
+Choosing a plan in the creator explicitly upgrades an old draft to version 2.
+Axial version-2 requests use the same generation behavior as version 1.
+
+Acceptance checks cover geometry differences, all three feeding roles,
+bounded admission, habitat-preserving variation, entry, matter conservation,
+save/restore and replay. Broader articulated and radial grammars, free parts
+editing and population-level persistence remain separate follow-ups.
+
+Verification: all nine focused generator tests pass, including a three-seed,
+three-role branching corpus, retained lineage recipes, geometry changes,
+snapshot restoration, replay and unchanged axial version-1 behavior. All 101
+native library tests pass with one existing ignored test. Creator tests also
+cover opening an old JSON draft, switching its plan while Enter is inert,
+keeping the plan through K/R/U, serialized criteria round trip, unchanged
+habitat and parked world, and confirmation at the exact preview hash.
+
+Headed receipts live under `Code/testing/mesocosm/creator_body_plans/`.
+At 960x600 the full six-choice menu fits. Seed 7 produces six branched
+candidates in six attempts; the saved request reopens and the report tool
+reproduces the batch. Candidate 1 completes 24 ordinary actions and replays
+at `4d16b4cb1d20ffec`, with zero dev intents. The older axial recording still
+replays at `6f6d63362f3ce9fd`. A branched one-part budget returns zero candidates,
+128 part refusals and exit 1. Both native binaries build; changed Rust files
+pass formatting and the 600-line ceiling.
+
+The current cardinal preview can hide branches behind a trunk. Z/V exposes
+the alternate view, recorded for both producer and consumer. The rotated
+producer has a visible crosswise crown and stem; this does not close the
+broader camera/framing or body-motion gates.
+
 ### Research and its consequences
 
 Primary sources checked 2026-09-07. These inform the proposed design; they are

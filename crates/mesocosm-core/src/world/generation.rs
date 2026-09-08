@@ -14,11 +14,15 @@ use crate::{
 };
 
 /// Bump when seed streams, admission, or founding interpretation change.
-pub const VERSION: u32 = 1;
+pub const VERSION: u32 = 2;
+
+mod body_plan;
+pub use body_plan::BodyPlan;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(default, deny_unknown_fields)]
 pub struct Criteria {
+    pub body_plan: BodyPlan,
     /// Feeding role read from realized organs, not biological taxonomy.
     pub role: Option<Kingdom>,
     pub min_segments: u32,
@@ -33,6 +37,7 @@ pub struct Criteria {
 impl Default for Criteria {
     fn default() -> Self {
         Self {
+            body_plan: BodyPlan::Axial,
             role: None,
             min_segments: 1,
             max_segments: 32,
@@ -130,8 +135,13 @@ pub enum Error {
 
 impl Request {
     pub fn validate(&self) -> Result<(), Error> {
-        if self.version != VERSION {
+        if self.version != 1 && self.version != VERSION {
             return Err(Error::Version(self.version));
+        }
+        if self.version == 1 && self.criteria.body_plan != BodyPlan::Axial {
+            return Err(Error::Invalid(
+                "branched bodies require generator version 2",
+            ));
         }
         let c = &self.criteria;
         if !(1..=16).contains(&self.candidates)
@@ -240,7 +250,7 @@ impl Request {
         role: Kingdom,
     ) -> Result<Candidate, &'static str> {
         let mut rng = Rng::from_seed(seed);
-        let recipe = crate::axis::seed(&mut rng, role);
+        let recipe = self.criteria.body_plan.generate(&mut rng, role);
         let segments = recipe.segments();
         if !(self.criteria.min_segments..=self.criteria.max_segments).contains(&segments) {
             return Err("segment constraint");
@@ -249,8 +259,8 @@ impl Request {
         let mut body =
             crate::develop_body(SpeciesId(1), &recipe, &soma, self.criteria.mass_mg, palette)
                 .map_err(|_| "development or material constraint")?;
-        // Existing axial development owns placement. A symmetry override here
-        // would only relabel the plan, so it is not an admitted input yet.
+        // Layout owns placement. This existing ecological symmetry label is
+        // not a claim that a generated branch graph is geometrically symmetric.
         body.plan.symmetry = role.symmetry();
         if body.parts.len() > self.criteria.max_parts as usize {
             return Err("part constraint");
