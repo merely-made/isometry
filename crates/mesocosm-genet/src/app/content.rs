@@ -8,6 +8,16 @@ use mesocosm_runtime::Runtime;
 
 use super::HostConfig;
 
+pub(super) fn with_authored(runtime: Runtime) -> Runtime {
+    match mesocosm_runtime::Authored::load(&super::pack_root()) {
+        Ok(authored) => runtime.with_authored(authored),
+        Err(why) => {
+            eprintln!("pack: {}", why.words());
+            runtime
+        },
+    }
+}
+
 fn runtime(
     config: &HostConfig,
     founding: mesocosm_core::Founding,
@@ -44,6 +54,12 @@ fn runtime(
 pub(super) fn start(
     config: &HostConfig,
 ) -> Result<(Runtime, Option<ContentPack>, VolumeMap), String> {
+    if config.creator_request.is_some()
+        && (config.replay.is_some()
+            || config.effective_scene() != crate::played::SceneMode::Ecology)
+    {
+        return Err("the creator requires a new ecology session".into());
+    }
     if let Some(trace) = &config.replay {
         trace.validate_rules()?;
     }

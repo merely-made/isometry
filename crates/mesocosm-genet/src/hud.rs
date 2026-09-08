@@ -106,6 +106,11 @@ impl Hud {
         }
     }
 
+    /// Refresh the cached image after replacing the starting world.
+    pub fn invalidate(&mut self) {
+        self.rendered_at = None;
+    }
+
     /// Re-renders the enclosure's self-portrait if the cadence has elapsed.
     ///
     /// The same scene items the frame draws, seen from straight above: the

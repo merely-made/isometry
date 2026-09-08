@@ -62,7 +62,7 @@ impl Host {
                     .create_command_encoder(&wgpu::CommandEncoderDescriptor {
                         label: Some("mesocosm captured chrome into master"),
                     });
-            if !self.grafting.open {
+            if !self.grafting.open && self.creator.is_none() {
                 lanes
                     .hud
                     .composite(&lanes.device, &mut encoder, &master_view, frame);
@@ -97,6 +97,9 @@ impl Host {
 
     /// A replay's trace is an input; only a played session writes one.
     fn write_trace(&self) {
+        if self.creator.is_some() {
+            return;
+        }
         let (Some(path), None) = (&self.config.trace, &self.config.replay) else {
             return;
         };
@@ -172,7 +175,9 @@ impl Host {
     /// definition, because the receipt and a scenario's `assert snap mode` both
     /// ask.
     pub(crate) fn mode(&self) -> &'static str {
-        if self.config.replay.is_some() {
+        if self.creator.is_some() {
+            "creating"
+        } else if self.config.replay.is_some() {
             "replay"
         } else {
             "played"
@@ -258,7 +263,7 @@ impl Host {
                 .terrain_style
                 .resolved(self.habitat.is_some())
                 .name(),
-            bodies: if self.grafting.open {
+            bodies: if self.grafting.open || self.creator.is_some() {
                 "voxels"
             } else {
                 self.config.body_mode.name()
@@ -276,7 +281,7 @@ impl Host {
                 .then_some(self.grafting.root)
                 .flatten()
                 .map(|p| p.0),
-            body_view: if self.grafting.open {
+            body_view: if self.grafting.open || self.creator.is_some() {
                 "isolated"
             } else {
                 "scene"

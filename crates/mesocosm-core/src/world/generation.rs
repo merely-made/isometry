@@ -84,6 +84,12 @@ pub struct Selection {
     pub candidate: usize,
 }
 
+/// Immutable admitted candidates and founding context for disposable previews.
+pub struct Prepared {
+    draft: Draft,
+    foundation: World,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct Habitat {
     pub place: u16,
@@ -158,6 +164,11 @@ impl Request {
 
     pub fn preview(&self, palette: PartPalette) -> Result<Draft, Error> {
         self.draft_world(palette).map(|(draft, _)| draft)
+    }
+
+    pub fn prepare(&self, palette: PartPalette) -> Result<Prepared, Error> {
+        self.draft_world(palette)
+            .map(|(draft, foundation)| Prepared { draft, foundation })
     }
 
     fn draft_world(&self, palette: PartPalette) -> Result<(Draft, World), Error> {
@@ -290,15 +301,25 @@ impl Request {
 impl Selection {
     /// Found a new life, never replace a subject in an existing played world.
     pub fn enter(&self, palette: PartPalette) -> Result<World, Error> {
-        let (draft, mut world) = self.request.draft_world(palette)?;
-        let candidate =
-            draft
-                .candidates
-                .get(self.candidate)
-                .ok_or(Error::CandidateUnavailable {
-                    requested: self.candidate,
-                    available: draft.candidates.len(),
-                })?;
+        self.request.prepare(palette)?.enter(self.candidate)
+    }
+}
+
+impl Prepared {
+    pub fn draft(&self) -> &Draft {
+        &self.draft
+    }
+
+    pub fn enter(&self, index: usize) -> Result<World, Error> {
+        let mut world = self.foundation.clone();
+        let candidate = self
+            .draft
+            .candidates
+            .get(index)
+            .ok_or(Error::CandidateUnavailable {
+                requested: index,
+                available: self.draft.candidates.len(),
+            })?;
         // The selected founder and its reserve are paid from the local patch.
         // Return the displaced provisional founder to its original soil first.
         let original = &world.organisms[0];

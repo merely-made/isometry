@@ -10,6 +10,7 @@ impl Host {
         // them (DT2). Nothing outside `--dev` calls it.
         self.watch_followed();
         let replay_done = self.advance();
+        let body_review = self.grafting.open || self.creator.is_some();
         // What the world answered this frame, as the describe-strings an
         // `assert event` matches. (DT4)
         self.note_outcomes();
@@ -68,17 +69,22 @@ impl Host {
             1.0
         };
         let mut view_half = half;
-        if self.grafting.open {
+        if body_review {
             let frame = self
                 .gpu
                 .as_ref()
                 .map(|gpu| (gpu.config.width, gpu.config.height))
                 .unwrap_or((960, 540));
             if let Some((focused, fitted)) = grafting::framing(
-                self.grafting
-                    .preview
-                    .as_deref()
-                    .unwrap_or(self.runtime.world()),
+                self.creator
+                    .as_ref()
+                    .map(creator::Creator::world)
+                    .unwrap_or_else(|| {
+                        self.grafting
+                            .preview
+                            .as_deref()
+                            .unwrap_or(self.runtime.world())
+                    }),
                 frame,
                 self.config.camera,
                 self.habitat.as_ref().map(|_| self.config.terrarium_pitch),
@@ -90,9 +96,9 @@ impl Host {
         }
         if let Some(gpu) = &mut self.gpu {
             gpu.section.set_half_height(view_half);
-            gpu.section.set_body_preview(self.grafting.open);
+            gpu.section.set_body_preview(body_review);
             gpu.section.configure_bodies(
-                if self.grafting.open {
+                if body_review {
                     section::BodyMode::Voxels
                 } else {
                     self.config.body_mode
@@ -103,15 +109,22 @@ impl Host {
         // Only the section sees this disposable candidate. HUD, receipts and
         // all simulation work keep reading the authoritative runtime world.
         let tint = self
-            .runtime
-            .world()
+            .creator
+            .as_ref()
+            .map(creator::Creator::world)
+            .unwrap_or(self.runtime.world())
             .controlled()
             .map_or([0.42, 0.62, 0.46], |organism| look_of(organism).0);
         let (pose, dropped) = match section::pose_of_scaled(
-            self.grafting
-                .preview
-                .as_deref()
-                .unwrap_or(self.runtime.world()),
+            self.creator
+                .as_ref()
+                .map(creator::Creator::world)
+                .unwrap_or_else(|| {
+                    self.grafting
+                        .preview
+                        .as_deref()
+                        .unwrap_or(self.runtime.world())
+                }),
             tint,
             body_scale,
             self.habitat.is_some(),
@@ -126,7 +139,7 @@ impl Host {
         let roster = self
             .gpu
             .as_ref()
-            .filter(|_| !self.grafting.open)
+            .filter(|_| !body_review)
             .map(|gpu| gpu.section.slab_window(centre))
             .map(|window| {
                 section::roster_of_scaled(
@@ -165,7 +178,11 @@ impl Host {
         // The dev lane's own reading (DT1). `None` outside `--dev`, which is
         // also when nothing below touches `lanes.dev` at all.
         let dev = self.dev_reading();
-        let graft_menu = self.grafting.open.then_some(&self.grafting.reading);
+        let graft_menu = self
+            .creator
+            .as_ref()
+            .map(|c| &c.reading)
+            .or_else(|| self.grafting.open.then_some(&self.grafting.reading));
         let focused_body = self.config.dev.then(|| self.followed()).flatten();
 
         let world = self.runtime.world();
@@ -185,13 +202,17 @@ impl Host {
             backdrop_centre,
             surface_y,
         );
-        let candidate = self.grafting.preview.as_deref().unwrap_or(world);
+        let candidate = self
+            .creator
+            .as_ref()
+            .map(creator::Creator::world)
+            .unwrap_or_else(|| self.grafting.preview.as_deref().unwrap_or(world));
         let graft_selection = self
             .grafting
             .open
             .then(|| grafting::selection(&gpu.section, candidate, self.grafting.root))
             .flatten();
-        let subject = if self.grafting.open {
+        let subject = if body_review {
             candidate.controlled().map(|o| o.id)
         } else {
             focused_body
@@ -213,7 +234,7 @@ impl Host {
 
         let view = surface_texture.texture.create_view(&Default::default());
         let section_frame = SectionFrame {
-            world: self.grafting.preview.as_deref().unwrap_or(world),
+            world: candidate,
             volumes: &self.volumes,
             ground: world.ground(),
             dirty: &dirty,
@@ -273,7 +294,7 @@ impl Host {
                     .create_command_encoder(&wgpu::CommandEncoderDescriptor {
                         label: Some("mesocosm chrome into master"),
                     });
-            if !self.grafting.open {
+            if !body_review {
                 lanes
                     .hud
                     .composite(&lanes.device, &mut chrome_encoder, &master_view, frame);

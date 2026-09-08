@@ -9,6 +9,27 @@ fn palette() -> PartPalette {
 }
 
 #[test]
+fn prepared_previews_are_disposable_and_match_fresh_entry() {
+    let request = Request::default();
+    let prepared = request.prepare(palette()).unwrap();
+    let expected = Selection {
+        request,
+        candidate: 1,
+    }
+    .enter(palette())
+    .unwrap();
+    let mut disposable = prepared.enter(1).unwrap();
+    assert_eq!(state_hash(&disposable), state_hash(&expected));
+    disposable.apply(Intent::Move { delta: [1, 0, 0] });
+    assert_ne!(state_hash(&disposable), state_hash(&expected));
+    assert_eq!(
+        state_hash(&prepared.enter(1).unwrap()),
+        state_hash(&expected)
+    );
+    assert!(prepared.enter(usize::MAX).is_err());
+}
+
+#[test]
 fn deterministic_preview_and_structural_variety() {
     let request = Request::default();
     let draft = request.preview(palette()).unwrap();

@@ -204,7 +204,7 @@ impl Automatable for Host {
                 sheet: held_sheet,
             });
         }
-        if self.config.dev && !self.grafting.open {
+        if self.config.dev && !self.grafting.open && self.creator.is_none() {
             surfaces.push(ProbeSurface {
                 name: "dev",
                 dom: &dev,
@@ -212,7 +212,7 @@ impl Automatable for Host {
                 sheet: dev_sheet,
             });
         }
-        if !self.grafting.open {
+        if !self.grafting.open && self.creator.is_none() {
             surfaces.push(ProbeSurface {
                 name: "vitals",
                 dom: &vitals,
@@ -249,6 +249,23 @@ impl Automatable for Host {
         ProbeSnapshot {
             focused: self.followed().map(|id| format!("critter {}", id.0)),
             fields: [
+                ("creator", yes_no(self.creator.is_some())),
+                (
+                    "creator-pending",
+                    yes_no(self.creator.as_ref().is_some_and(|c| c.pending)),
+                ),
+                (
+                    "creator-selected",
+                    self.creator
+                        .as_ref()
+                        .map_or("none".into(), |c| c.selected.to_string()),
+                ),
+                (
+                    "creator-variation",
+                    self.creator
+                        .as_ref()
+                        .map_or("none".into(), |c| c.request.variation.to_string()),
+                ),
                 (
                     "expression-menu",
                     if self.grafting.open
@@ -473,7 +490,13 @@ impl Automatable for Host {
     /// See the module docs: scripted work in flight, and a checkpoint with
     /// nothing queued is quiet.
     fn busy(&mut self) -> Option<bool> {
-        Some(self.replay_pending() || self.pump.is_some() || self.runtime.queued_len() > 0)
+        self.poll_creator();
+        Some(
+            self.creator.as_ref().is_some_and(|c| c.pending)
+                || self.replay_pending()
+                || self.pump.is_some()
+                || self.runtime.queued_len() > 0,
+        )
     }
 }
 

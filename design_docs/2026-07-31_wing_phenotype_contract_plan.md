@@ -744,10 +744,62 @@ Local executable receipts are under `Code/testing/mesocosm/generated_start/`:
   framing is currently the clearer way to inspect a selected body (press H,
   Escape to cancel). This reuses an existing view, not a new candidate picker.
 
-A graphical candidate picker, wider body grammars, longer ecological
-experiments, and a second game's consumer are subsequent lanes rather than
-claims attached to this implementation. C0's broader fixture/admission matrix
-and C1's two-host editing gate remain open.
+Wider body grammars, longer ecological experiments, and a second game's
+consumer remain subsequent lanes. C0's broader fixture/admission matrix and
+C1's two-host editing gate remain open.
+
+### Local graphical starting-life picker (2026-09-07)
+
+**Status: implemented and locally verified in the isolated
+`work/character-picker` lane.** `mesocosm-genet --create --seed 7` opens the existing body-menu
+chrome over a disposable generated body. Arrow keys select candidates, R varies
+bodies, N advances the habitat seed, P cycles the nine places, C cycles feeding
+role, M cycles the movement-organ constraint, and +/- changes starting mass.
+Z/V rotates the preview. The full request remains available through `--start`.
+This is keyboard navigation through admitted results; unlocked parts editing
+and a second host remain separate gates.
+
+Generation runs on a worker with bounded requests. New control changes retire
+old candidates immediately; queued requests coalesce, and obsolete results are
+discarded. Empty or refused searches show their reasons and offer no body to
+enter. The parked startup world does not advance during inspection. Escape
+discards the creator and restores the camera; Enter regenerates the selected
+request, checks its world hash against the reviewed preview, and installs it
+once. The renderer rebinds to the new ground on its existing device. The saved
+trace records the exact selection and resolved content through the existing
+generated-start replay path. An unfinished creator writes no played trace.
+
+The core's opaque `Prepared` context holds admitted candidates and their common
+founding world. It returns independent preview worlds so selecting another row
+does not repeat the search. It is local transient state, not a new serialized
+body identity. Mesocosm owns this host flow; shared UI extraction still requires
+the second actual consumer in C1.
+
+Verification: 436 core library tests and 94 native library tests passed, each
+suite retaining one existing ignored test. The final focused generator and
+creator runs pass all seven and three tests respectively. The native executable
+builds with the exact dependency pins. Checks cover independent preview worlds,
+stale worker results, empty searches, candidate paging, camera restoration,
+inert cancellation, single entry, and replay through saved content.
+
+Headed receipts live under `Code/testing/mesocosm/character_picker/`:
+
+- `first.png` and `second.png` compare generated producer and consumer bodies
+  at tick zero. The large capture and the 960x600 `recovered.png` show the body
+  and complete keyboard controls without clipping. Long axial bodies become
+  small in the narrow preview space; wider morphology and presentation remain
+  subsequent work.
+- `refused.png` shows zero bodies after a producer-plus-movement-organs request:
+  all 128 attempts are refused. Enter stays in the creator. Changing the role
+  yields candidates again; rotating then cancelling restores the original
+  camera and records zero steps.
+- Entry selects candidate 1 from seed 8, variation 1, place 4. `played.json`
+  records that request and the content pack. After 24 ordinary actions,
+  `played-receipt.json` and `replay-receipt.json` agree at
+  `845c16d1bf876a2d`; `state_hash_matches` is true and `dev_intents` is zero.
+
+This closes the local picker slice, not C1's two-host editing gate. The earlier
+all-target `camera_compare` example limitation remains outside this receipt.
 
 ### Research and its consequences
 
