@@ -8,6 +8,9 @@ use mesocosm_core::{Founding, OrganismId, World};
 use mesocosm_mesh::{LiveBodyProjector, VolumeMap};
 use mesocosm_render::{LiveBody, LiveBodyRenderer, Renderer};
 
+#[path = "family.rs"]
+mod family;
+
 struct Capture {
     host: Renderer,
     renderer: LiveBodyRenderer,
@@ -19,6 +22,10 @@ struct Capture {
 
 impl Capture {
     fn new(world: &World) -> Option<Self> {
+        Self::with_volumes(crate::fixture::volumes_for(world))
+    }
+
+    fn with_volumes(volumes: VolumeMap) -> Option<Self> {
         let host = match Renderer::headless(512, 512) {
             Ok(host) => host,
             Err(mesocosm_render::RenderError::NoAdapter) => {
@@ -58,7 +65,7 @@ impl Capture {
             projector: LiveBodyProjector::new(),
             // Match host admission: legacy volume content is fixed at origin.
             // Growing envelopes must not redefine an existing volume address.
-            volumes: crate::fixture::volumes_for(world),
+            volumes,
             colour,
             depth,
         })

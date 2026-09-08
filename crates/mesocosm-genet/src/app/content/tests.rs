@@ -26,6 +26,26 @@ fn incompatible_recording_is_refused_before_founding_or_content_resolution() {
     }
 }
 
+#[test]
+fn family_practice_scene_roundtrips_and_overrides_the_host_scene() {
+    let trace: PlayedTrace = serde_json::from_str(
+        r#"{"scene":"family_practice","seed":7,"organisms":1,"steps":0,"state_hash":0,"intents":[]}"#,
+    )
+    .unwrap();
+    assert_eq!(trace.scene, crate::played::SceneMode::FamilyPractice);
+    let saved = serde_json::to_vec(&trace).unwrap();
+    let restored: PlayedTrace = serde_json::from_slice(&saved).unwrap();
+    let config = HostConfig {
+        scene: crate::played::SceneMode::Ecology,
+        replay: Some(restored),
+        ..HostConfig::default()
+    };
+    assert_eq!(
+        config.effective_scene(),
+        crate::played::SceneMode::FamilyPractice
+    );
+}
+
 fn same_mesh(a: mesocosm_mesh::BodyMesh, b: mesocosm_mesh::BodyMesh) {
     assert_eq!(a.placements, b.placements);
     assert_eq!(a.mesh_count(), b.mesh_count());

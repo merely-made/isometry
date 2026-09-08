@@ -2175,6 +2175,48 @@ runs. The labelled six-stage comparison, separate intervention/control event
 streams, source hashes and logs are at workspace-root
 `testing/mesocosm/expression_materials/`.
 
+**Same-enclosure family practice, locally verified 2026-09-08.** The bounded
+scene retains a living biological relative, a changed parent and a subsequent
+descendant in one world. Its authored origin records assisted births and a
+nearby carcass donor. The recorded run uses part consumption, branch grafting,
+somatic expression and admitted lineage revision, then ordinary ecology ticks
+for the next birth. The untreated relative continues through the same elapsed
+ecology. Generated content is admitted once and stored in each replay trace;
+body and material captures read the actual recorded subjects. This is not a
+natural encounter or unassisted-origin reproduction timing claim. The common
+origin includes reserve assistance and a supported carrion intake declaration;
+it does not bypass normal meal admission. The wait reads the parent's actual
+remaining gestation interval. Runtime seeds its history from the origin's real
+birth records before player ticks, and the saved scene reconstructs that past.
+
+The authored VB4a scenario gate is locally complete: 108 passing tests and one
+ignored case across the focused core and full native-host targets; a subsequent
+focused GPU rerun also passed the exact revision/provenance guard. Eight native
+runs cover seven stages and a quarter turn. The trace has 798 recorded intents,
+one developer `EndEpoch`, and no post-origin `ForceBirth`, `Kill` or
+`PlaceMatter`. At world tick 902 the parent produces critter 7 through ordinary
+ecology; existing relative 5 stays alive without somatic expression or grafting.
+The shared lineage revision applies to future births, including the relative's
+children, rather than leaving the relative's lineage program frozen.
+
+The descendant cites the accepted revision and develops fresh tissue instead
+of copying the parent's acquired branch. Total matter is conserved throughout.
+A refused intake compared with the same elapsed ecology gives identical world
+state, flows and body pixels, with no new geometry upload. All eight native
+replays reach their recorded state with one graph submission boundary and no
+body projection fallback; the final state is `3869b09ab2157c85`, including after
+a quarter turn. The proof uses generated content stored in every trace.
+
+The first fixture runs exposed incorrect outcome/name assertions, ambiguous
+branch selection, missing intake admission and an undersized gestation wait;
+those were corrected and verified. A one-frame capture stopped at the epoch
+checkpoint, so final native runs allow the whole trace to finish. Logs, source
+hashes, per-stage history/body records and the visual comparison are at
+workspace-root `testing/mesocosm/family_practice/`. The broader live-roster,
+natural encounter, unassisted-origin timing and VB4b typed-composition gates
+remain open. The east view shows these thin plates edge-on; the south capture
+shows their generated outline more clearly.
+
 **VB4a, existing mechanics.** First join existing graft, whole-part consumption/loss, expression and filial
 realization. Compare two relatives: retain one unchanged, give the other a
 recorded graft or expressed discovery, show the local consequence, then use the

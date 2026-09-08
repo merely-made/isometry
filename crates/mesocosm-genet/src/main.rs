@@ -144,7 +144,7 @@ fn main() {
                 let named = args.next().unwrap_or_default();
                 config.scene =
                     mesocosm_genet::played::SceneMode::parse(&named).unwrap_or_else(|| {
-                        eprintln!("--scene wants ecology, terrarium, graft-practice or expression-practice");
+                        eprintln!("--scene wants ecology, terrarium, graft-practice, expression-practice or family-practice");
                         std::process::exit(1);
                     });
             },
@@ -345,7 +345,7 @@ mesocosm-genet: run Mesocosm in a window
   --draft PATH    reopen criteria or begin a new draft; implies --create; S saves
                   K retains selected role/organs/segment count; U clears these filters
   --start PATH    enter a generated selection JSON (recorded for replay)
-  --scene MODE    ecology (default), terrarium, or authored graft-practice/expression-practice
+  --scene MODE    ecology (default), terrarium, or authored graft-practice/expression-practice/family-practice
   --terrarium-pitch DEG  shallow camera pitch, 0..45 degrees (default 12)
   --cutaway MODE  occupied (default), always (expose interior), or never
   --terrain-style MODE  auto (habitat in terrarium, classic in ecology),

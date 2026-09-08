@@ -21,4 +21,20 @@ impl Runtime {
             .expect("the expression-practice population fits a trace count");
         Ok(Self::from_world(world, seed, organisms, ticks_per_second))
     }
+
+    /// Drives the authored family-practice scene.
+    pub fn family_practice(
+        seed: u64,
+        ticks_per_second: u32,
+        founding: Founding,
+        palette: PartPalette,
+    ) -> Result<Self, DevelopmentError> {
+        let world = World::family_practice(seed, founding, palette)?;
+        let organisms = u32::try_from(world.organisms.len().saturating_sub(1))
+            .expect("the family-practice population fits a trace count");
+        let mut runtime = Self::from_world(world, seed, organisms, ticks_per_second);
+        let origin_events = runtime.world.drain_events();
+        runtime.history.record_all(origin_events);
+        Ok(runtime)
+    }
 }

@@ -47,6 +47,8 @@ pub enum SceneMode {
     GraftPractice,
     /// Authored discovery prehistory and a body ready for somatic expression.
     ExpressionPractice,
+    /// Authored family prehistory and a body ready for family practice.
+    FamilyPractice,
 }
 
 impl SceneMode {
@@ -56,6 +58,7 @@ impl SceneMode {
             Self::Terrarium => "terrarium",
             Self::GraftPractice => "graft-practice",
             Self::ExpressionPractice => "expression-practice",
+            Self::FamilyPractice => "family-practice",
         }
     }
 
@@ -65,6 +68,7 @@ impl SceneMode {
             "terrarium" => Some(Self::Terrarium),
             "graft-practice" => Some(Self::GraftPractice),
             "expression-practice" => Some(Self::ExpressionPractice),
+            "family-practice" => Some(Self::FamilyPractice),
             _ => None,
         }
     }

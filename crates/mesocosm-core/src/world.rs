@@ -22,6 +22,7 @@ mod dev;
 mod discover;
 mod express;
 mod expression_practice;
+mod family_practice;
 mod filial;
 pub mod generation;
 mod genesis;
@@ -36,6 +37,7 @@ pub use adapt::{Round, Score, Turn};
 pub use descendant_practice::{DescendantPractice, DescendantStage};
 pub use dev::PLACE_MATTER_MAX_MG;
 pub use express::ExpressionPreview;
+pub use family_practice::FamilyPracticeIds;
 pub use genesis::Founding;
 pub use graft::{Graft, GraftPreview};
 pub use intent::{Ineligible, Intent, Outcome, Placement, Rejection, Route};
@@ -547,7 +549,6 @@ impl World {
         }
         outcome
     }
-
     /// The rules this world realized. (PD3)
     ///
     /// What a save cites, what a peer compares, and what a replay is checked
@@ -555,7 +556,6 @@ impl World {
     pub fn rules(&self) -> crate::rules::WorldRules {
         self.rules
     }
-
     /// The definitions this world admitted. (PD4)
     ///
     /// The set [`Self::rules`] is the identity of, and the only ruleset any
