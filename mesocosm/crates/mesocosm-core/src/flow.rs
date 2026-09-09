@@ -56,6 +56,8 @@ use crate::organism::{Kingdom, Organism, OrganismId};
 use crate::places::{PlaceId, Places};
 
 mod accounts;
+mod composition;
+pub use composition::{Composition, Conversion};
 
 pub use accounts::Accounts;
 
@@ -226,6 +228,8 @@ pub struct FlowEvent {
     pub source: Account,
     pub destination: Account,
     pub amount_mg: u64,
+    /// Exact material evidence where the emitting route supports it.
+    pub composition: Option<Composition>,
     /// Whose account the matter left, when it left a body.
     pub from: Option<Subject>,
     /// Whose account it reached, when it reached one.
@@ -241,6 +245,7 @@ impl FlowEvent {
             source: Account::Soil,
             destination: into,
             amount_mg,
+            composition: None,
             from: None,
             to: Some(to),
         }
@@ -254,6 +259,7 @@ impl FlowEvent {
             source: out_of,
             destination: Account::Soil,
             amount_mg,
+            composition: None,
             from: Some(from),
             to: None,
         }
@@ -272,6 +278,7 @@ impl FlowEvent {
             source: Account::Dev,
             destination: Account::Soil,
             amount_mg,
+            composition: None,
             from: None,
             to: None,
         }
@@ -292,6 +299,7 @@ impl FlowEvent {
             source: out_of,
             destination: into,
             amount_mg,
+            composition: None,
             from: Some(from),
             to: Some(to),
         }

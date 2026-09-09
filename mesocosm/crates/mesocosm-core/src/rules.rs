@@ -56,7 +56,8 @@ pub const DEFAULT_EPOCH_TICKS: u64 = 1_000;
 /// Zero names the pre-port grammar, so a decoded historical world can be
 /// distinguished at the `WorldRules` admission gate rather than replayed as
 /// TG1. Revision 2 introduces typed soil; revision 3 adds part scruple storage.
-pub const TROPHIC_GRAMMAR_REVISION: u32 = 3;
+/// Revision 4 preserves whole-meal mixtures and records reserve digestion.
+pub const TROPHIC_GRAMMAR_REVISION: u32 = 4;
 
 /// How long a candidate is grown before its flow record is read. (P4b)
 ///

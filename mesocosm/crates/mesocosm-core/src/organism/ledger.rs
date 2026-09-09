@@ -18,6 +18,7 @@
 
 use super::Organism;
 use super::ecology;
+use crate::matter::{Material, Stock};
 
 impl Organism {
     /// The adult mass this body plan describes.
@@ -49,23 +50,33 @@ impl Organism {
         ceiling.saturating_sub(self.biomass_mg()) + ceiling.saturating_sub(self.energy_mg)
     }
 
-    /// Adds substance, to the root part, up to [`Self::mass_ceiling_mg`].
+    /// Adds a typed lot to the root part, up to [`Self::mass_ceiling_mg`].
     ///
     /// Growth by feeding thickens what is already there. Gaining a *part* is
     /// incorporation, which is a different act with a different cost.
     ///
     /// Returns what would not fit. Matter is conserved, so a caller has to put
     /// that somewhere real rather than letting it evaporate.
-    pub fn gain_mass(&mut self, mg: u64) -> u64 {
+    pub fn gain_stock(&mut self, stock: Stock) -> Stock {
         let room = self.mass_ceiling_mg().saturating_sub(self.biomass_mg());
-        let kept = mg.min(room);
+        let (kept, spilled) = stock.take(room);
         // Mass is not allocation: thickening the root moves no organ, so this
         // needs no developmental event and creates no causal record.
-        if self.phenotype.gain_root_mass(kept) {
-            mg - kept
+        if self.phenotype.gain_root_stock(kept).is_ok() {
+            spilled
         } else {
-            mg
+            stock
         }
+    }
+
+    /// Adds untyped substance, keeping the scalar compatibility seam over
+    /// [`Self::gain_stock`].
+    pub fn gain_mass(&mut self, mg: u64) -> u64 {
+        u64::try_from(
+            self.gain_stock(Stock::single(Material::Untyped, mg))
+                .total(),
+        )
+        .expect("a scalar input has a scalar spill")
     }
 
     /// Removes substance across the living body in stable part order.

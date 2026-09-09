@@ -23,8 +23,7 @@ use crate::rng::Rng;
 use crate::species::Lineages;
 
 use crate::history::{Event, MealKind};
-// The routing threshold lives with the played meal's rule in `world`, which is
-// the point: TD5 makes it one rule rather than two that agree.
+// The routing threshold lives with the played meal's rule in `world`, making TD5 one rule.
 use crate::world::STARVED_UPKEEP_TICKS;
 
 use super::{Kingdom, Organism, OrganismId, Stage, Tally};
@@ -35,7 +34,7 @@ mod kinship;
 mod movement;
 mod rates;
 
-use flows::{earn, record_intake, release_reserve};
+use flows::{earn, earn_stock, record_intake, release_reserve};
 use movement::{
     CarrionTarget, LivingTarget, carrion_cells, choose_carrion_target, choose_living_target,
     disperse, living_cells,
@@ -407,8 +406,9 @@ fn step_inner(
     // always payable.
     for meal in &meals {
         let prey_mass_mg = organisms[meal.prey].biomass_mg();
-        let taken = meal.mass_mg - organisms[meal.prey].spend_mass(meal.mass_mg);
-        if taken == 0 {
+        let taken = organisms[meal.prey].phenotype.spend_stock(meal.mass_mg);
+        let taken_mg = u64::try_from(taken.total()).expect("a bite is bounded by its request");
+        if taken_mg == 0 {
             continue;
         }
         let from = organisms[meal.prey].id;
@@ -425,14 +425,16 @@ fn step_inner(
         let eater_id = eater.id;
         let eater_subject = Subject::of(eater);
         let at = eater.position;
-        let landed = earn(eater, taken);
-        soil.deposit(column, landed.spilled_mg);
+        let landed = earn_stock(eater, taken);
+        soil.deposit_stock(column, landed.spilled_stock)
+            .expect("a conserved spill fits the ecology's finite soil");
         record_intake(records, at, Some(prey), eater_subject, &landed);
         // What the mouth could not hold left the prey all the same, so it is
         // the prey's substance the ground got.
         records.flow(
             at,
-            FlowEvent::returned(Process::Spill, prey, Account::Substance, landed.spilled_mg),
+            FlowEvent::returned(Process::Spill, prey, Account::Substance, landed.spilled_mg)
+                .with_stock(landed.spilled_stock),
         );
         // Gains before costs, same order act.rs's played meal settled on: a
         // nearly starved eater must not lose part of the toxin to the zero
@@ -444,7 +446,7 @@ fn step_inner(
         // act.rs's floor. What it actually paid returns to the column under
         // the prey, not the eater: nothing evaporates. (closes the live
         // inconsistency: only the played meal charged venom before this)
-        let dose = venom_mg.saturating_mul(taken) / prey_mass_mg.max(1);
+        let dose = venom_mg.saturating_mul(taken_mg) / prey_mass_mg.max(1);
         let before_venom = eater.energy_mg;
         eater.energy_mg = before_venom.saturating_sub(dose);
         let paid = before_venom - eater.energy_mg;
@@ -458,7 +460,7 @@ fn step_inner(
             Event::Fed {
                 eater: eater_id,
                 from,
-                mass_mg: taken,
+                mass_mg: taken_mg,
                 kind: meal.kind,
             },
         );

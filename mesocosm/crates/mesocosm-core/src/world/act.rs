@@ -22,6 +22,8 @@ use super::{Intent, Outcome, Placement, Rejection, Route, World};
 /// Energy spent per unit of movement, in milligrams.
 const MOVE_COST_MG: u64 = 1;
 
+mod landing;
+
 impl World {
     /// Applies an ordered trace, returning every outcome in order.
     pub fn apply_all(&mut self, trace: &[Intent]) -> Vec<Outcome> {
@@ -406,8 +408,15 @@ impl World {
         // halve, and what a bite of venom cost to bring up. (TD6)
         let column = self.soil.column_at(eaten.position);
         let unkept = eaten.biomass_mg() - landed.budget_mg - landed.body_mg;
+        let stock = eaten.phenotype.total_stock().expect("meal total fits");
+        let (_, after_burn) = stock.take(landed.budget_mg);
+        let unkept_stock = after_burn
+            .checked_sub(landed.body_stock)
+            .expect("landed meal subset");
         self.soil
-            .deposit(column, unkept + eaten.energy_mg + spilled);
+            .deposit_stock(column, unkept_stock)
+            .expect("conserved meal spill fits soil");
+        self.soil.deposit(column, eaten.energy_mg + spilled);
         self.record_meal(&eaten, meal, eater, eater_at, &landed, unkept, spilled);
         self.observed_in(&eaten);
         outcome
@@ -443,106 +452,6 @@ impl World {
             role,
             mass_mg,
         });
-    }
-
-    /// Attempts the routed outcome, returning it and where the meal's mass
-    /// went. Mutates the body but never the roster or the ledger.
-    fn land(
-        &mut self,
-        eaten: &Organism,
-        route: Route,
-        growth: Option<crate::growth::Growth>,
-    ) -> (Outcome, Landed) {
-        match route {
-            Route::Burn => (
-                Outcome::Burned {
-                    organism: eaten.id,
-                    energy_mg: eaten.biomass_mg(),
-                },
-                Landed {
-                    budget_mg: eaten.biomass_mg(),
-                    body_mg: 0,
-                },
-            ),
-            Route::Incorporate {
-                placement:
-                    Placement::Explicit {
-                        parent,
-                        offset,
-                        yaw,
-                    },
-            } => {
-                let provenance = self.taken_from(eaten);
-                let attached = self.controlled_phenotype_mut().attach(
-                    eaten.volume(),
-                    eaten.biomass_mg(),
-                    eaten.half_extent(),
-                    Attachment {
-                        parent,
-                        offset,
-                        yaw,
-                    },
-                    provenance,
-                );
-                match attached {
-                    Ok(part) => (
-                        Outcome::Incorporated { part },
-                        Landed {
-                            budget_mg: 0,
-                            body_mg: eaten.biomass_mg(),
-                        },
-                    ),
-                    Err(_) => (
-                        Outcome::Rejected(Rejection::NoSuchParent(parent)),
-                        Landed::default(),
-                    ),
-                }
-            },
-            Route::Incorporate {
-                placement: Placement::Planned,
-            } => {
-                let growth = growth.expect("resolved above for this route");
-                let provenance = self.taken_from(eaten);
-
-                // A mirrored pair splits the mass it came from, so the budget
-                // stays honest however symmetric the body becomes.
-                let parts = if growth.mirror.is_some() { 2 } else { 1 };
-                let each = eaten.biomass_mg() / parts;
-
-                let Ok(part) = self.controlled_phenotype_mut().attach(
-                    eaten.volume(),
-                    each,
-                    eaten.half_extent(),
-                    crate::growth::attachment(&growth),
-                    provenance.clone(),
-                ) else {
-                    return (Outcome::Rejected(Rejection::NoRoom), Landed::default());
-                };
-
-                // No energy. Growing is the slow answer, and a meal cannot be
-                // both meals.
-                let (outcome, body_mg) = match crate::growth::mirror_attachment(&growth) {
-                    Some(mirrored) => match self.controlled_phenotype_mut().attach(
-                        eaten.volume(),
-                        each,
-                        eaten.half_extent(),
-                        mirrored,
-                        provenance,
-                    ) {
-                        Ok(mirror) => (Outcome::IncorporatedPair { part, mirror }, each * 2),
-                        Err(_) => (Outcome::Incorporated { part }, each),
-                    },
-                    None => (Outcome::Incorporated { part }, each),
-                };
-                (
-                    outcome,
-                    Landed {
-                        budget_mg: 0,
-                        body_mg,
-                    },
-                )
-            },
-        }
     }
 
     /// The played critter's phenotype, mutably. Only reached after control

@@ -126,6 +126,7 @@ pub(super) fn event_for(
 pub(super) struct Landed {
     pub budget_mg: u64,
     pub body_mg: u64,
+    pub body_stock: crate::matter::Stock,
 }
 
 impl World {
@@ -152,13 +153,24 @@ impl World {
         unkept: u64,
         spilled: u64,
     ) {
+        let stock = eaten.phenotype.total_stock().expect("meal total fits");
+        let (burned, remainder) = stock.take(landed.budget_mg);
+        let unkept_stock = remainder
+            .checked_sub(landed.body_stock)
+            .expect("landed meal subset");
         for (into, mg) in [
             (Account::Reserve, landed.budget_mg),
             (Account::Substance, landed.body_mg),
         ] {
+            let flow =
+                FlowEvent::between(Process::Feeding, meal, Account::Substance, eater, into, mg);
             self.flow(
                 eater_at,
-                FlowEvent::between(Process::Feeding, meal, Account::Substance, eater, into, mg),
+                if into == Account::Reserve {
+                    flow.digested(burned)
+                } else {
+                    flow.with_stock(landed.body_stock)
+                },
             );
         }
         let at = eaten.position;
@@ -167,7 +179,8 @@ impl World {
         // last one comes out of the eater rather than the eaten.
         self.flow(
             at,
-            FlowEvent::returned(Process::Spill, meal, Account::Substance, unkept),
+            FlowEvent::returned(Process::Spill, meal, Account::Substance, unkept)
+                .with_stock(unkept_stock),
         );
         self.flow(
             at,

@@ -152,7 +152,8 @@ impl World {
                 eater,
                 Account::Substance,
                 taken,
-            ),
+            )
+            .with_stock(taken_stock),
         );
         // The observation the meal supplied: this organ, off this donor. Not
         // the donor's recipe, and not the rest of its body.

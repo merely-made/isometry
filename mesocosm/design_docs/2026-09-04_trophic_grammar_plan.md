@@ -1,6 +1,8 @@
 # Trophic Grammar Plan (2026-09-04)
 
-**Status: accepted by Mark 2026-09-04; TG1 complete 2026-09-05. TG2-TG7 remain open.** The three rulings in section 4 are given. This is PE4's first
+**Status: accepted by Mark 2026-09-04; TG1 complete 2026-09-05;
+TG2a-TG2d implemented 2026-09-09. Full TG2-TG7 remain open.** The three
+rulings in section 4 are given. This is PE4's first
 build: the material scheme ruled 2026-09-02 turned into a trophic grammar. It
 owns typed intake, typed accounts, part composition, defenses, and selective
 edibility. It does not own fields, generated worlds, or the second form of
@@ -173,6 +175,26 @@ part/graft fixture, not yet a naturally realized dietary difference. Those
 remaining routes must carry actual lots and record any conversion explicitly
 before TG2/TG3 can claim the live trophic loop.
 
+**TG2d feeding join, 2026-09-09.** Whole-body incorporation and NPC bites
+retain actual donor stocks. Growth thickens the existing root through the
+same checked stock allocator; planned mirrored attachments split the meal
+deterministically, and unused tissue returns to soil with its type intact.
+Roots cannot draw that pending typed return. Reserve remains explicitly
+untyped: the feeding flow names digestion and records the consumed mixture
+and resulting reserve stock. These records use the existing conversion
+vocabulary and the existing flow stream, not a second world ledger.
+Purely untyped inputs remain unchanged transfers. The independent receipt
+checker now admits mixed typed/untyped inputs for reserve digestion while
+keeping its tissue-to-tissue conversion restriction intact.
+
+`FlowEvent.composition` is optional during integration. `None` means the
+route has not supplied typed evidence, rather than a claim that its matter
+was untyped. Grammar revision 4 covers the changed feeding semantics. Birth,
+upkeep, travel and completed decay still need their typed joins and accepted
+conversion records; synthesis and lineage tissue recipes remain open as well.
+This slice establishes dietary retention from authored mixed donors. It does
+not establish a naturally generated typed food web or close TG2/TG3.
+
 ### TG3: scruple per part
 
 Composition gets its two ruled layers. The **lineage layer** declares what nis
@@ -289,6 +311,21 @@ beginning body types; start investigating a beginning set of traits.
 ---
 
 ## Findings
+
+- **2026-09-09, TG2d feeding:** an isolated `dadbd0c` checkout with this
+  slice's source changes passed 493 core unit tests, 29 runtime tests,
+  70 embodied-action tests, 14 flow tests, eight matter tests and six replay
+  tests: 620 passed, with one existing ignored core test. Validation used
+  release builds and the resolved lockfile, with the final runs offline.
+  Mixed NPC bites, explicit and planned meals, reserve digestion, refused
+  transactions, snapshot replay and JSON/postcard flow round-trips passed.
+  An odd 301 mg mirrored meal gives two 150 mg parts and one typed milligram
+  back to soil, reconciling every channel. The independent typed receipt
+  checker accepts the same mixed-input reserve conversion. All changed
+  sources remain within the 600-line ceiling. Parallel host, dependency and
+  Paredros work was excluded from this receipt. Long-run tests still establish
+  scalar conservation; full per-channel ecology and a tick-budget measurement
+  remain open.
 
 - **2026-09-09, TG2c part accounts:** validation used an isolated checkout of
   consolidated Isometry `746fbc8` with only this slice's source changes.
@@ -408,6 +445,12 @@ beginning body types; start investigating a beginning set of traits.
   `perception.rs:206`, and no body change measured holds the corridor.
 
 ## Progress
+
+- **2026-09-09, TG2d.** Feeding preserves donor mixtures across whole meals,
+  NPC bites and root growth. Accepted flows distinguish unchanged lots from
+  reserve digestion; typed spill remains pending in soil. Birth, upkeep,
+  travel, decay, synthesis and lineage recipes remain the next accounting
+  joins before a per-channel ecological-loop receipt or TG3 acceptance.
 
 - **2026-09-04.** Drafted, awaiting Mark. No code touched.
 - **2026-09-04, later.** Accepted; the three rulings given as recommended. TG1 dispatches next.

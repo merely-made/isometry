@@ -181,9 +181,9 @@ fn validate_conversion(
         Conversion::Digestion
             if matches!(from, Address::Part(_, _))
                 && matches!(to, Address::Part(_, _) | Address::Reserve(_))
-                && input_amounts[0] == 0
                 && input_amounts[1..].iter().any(|amount| *amount > 0)
-                && ((output_amounts[0] == 0
+                && ((input_amounts[0] == 0
+                    && output_amounts[0] == 0
                     && output_amounts[1..].iter().any(|amount| *amount > 0))
                     || (matches!(to, Address::Reserve(_))
                         && output_amounts[0] > 0

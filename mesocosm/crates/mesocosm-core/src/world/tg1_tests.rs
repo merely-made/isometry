@@ -10,6 +10,9 @@ use crate::organism::{Kingdom, Organism, OrganismId, Stage};
 use crate::places::Tier;
 use crate::process::{IntakePort, NisKind, Process, Registry};
 
+#[path = "tg1_tests/feeding.rs"]
+mod feeding;
+
 fn typed_consumer_world(target_stage: Stage) -> (World, OrganismId) {
     let mut world = World::new(4_242, 0);
     let eater_id = world.controlled_id().expect("the fixture is embodied");

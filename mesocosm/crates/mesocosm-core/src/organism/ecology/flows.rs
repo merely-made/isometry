@@ -13,6 +13,7 @@
 //! that each of them also has to say what it did.
 
 use crate::flow::{Account, FlowEvent, Process, Records, Subject};
+use crate::matter::Stock;
 use crate::places::Soil;
 
 use super::{Organism, STARVED_UPKEEP_TICKS};
@@ -24,6 +25,12 @@ use super::{Organism, STARVED_UPKEEP_TICKS};
 /// nothing is left to evaporate.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub(super) struct Landed {
+    /// The meal's original lot retained in the body.
+    pub body_stock: Stock,
+    /// The input lot consumed into reserve; the flow marks it digested.
+    pub reserve_stock: Stock,
+    /// Matter the body could not hold, retaining its original mixture.
+    pub spilled_stock: Stock,
     pub reserve_mg: u64,
     pub substance_mg: u64,
     /// What the body could not hold. Callers clamp their draw to
@@ -47,26 +54,55 @@ pub(super) struct Landed {
 /// tick's, post-rent. TD6's ceilings bound both halves — substance at the body
 /// plan's adult mass, reserve at the same number.
 pub(super) fn earn(organism: &mut Organism, mg: u64) -> Landed {
+    earn_stock(
+        organism,
+        Stock::single(crate::matter::Material::Untyped, mg),
+    )
+}
+
+/// Typed feeding income, preserving nis when it becomes body substance and
+/// explicitly digesting it when it becomes reserve.
+pub(super) fn earn_stock(organism: &mut Organism, stock: Stock) -> Landed {
     let ceiling = organism.mass_ceiling_mg();
     if organism.budget_below(STARVED_UPKEEP_TICKS) {
-        let reserve_mg = mg.min(ceiling.saturating_sub(organism.energy_mg));
+        let reserve_mg = u64::try_from(stock.total())
+            .unwrap_or(u64::MAX)
+            .min(ceiling.saturating_sub(organism.energy_mg));
+        let (reserve_stock, body_offer) = stock.take(reserve_mg);
         organism.energy_mg += reserve_mg;
-        let spilled_mg = organism.gain_mass(mg - reserve_mg);
+        let spilled_stock = organism.gain_stock(body_offer);
+        let body_stock = body_offer
+            .checked_sub(spilled_stock)
+            .expect("a body's spill comes from its offered stock");
         Landed {
+            body_stock,
+            reserve_stock,
+            spilled_stock,
             reserve_mg,
-            substance_mg: mg - reserve_mg - spilled_mg,
-            spilled_mg,
+            substance_mg: stock_mg(body_stock),
+            spilled_mg: stock_mg(spilled_stock),
         }
     } else {
-        let over = organism.gain_mass(mg);
-        let reserve_mg = over.min(ceiling.saturating_sub(organism.energy_mg));
+        let spilled_stock = organism.gain_stock(stock);
+        let body_stock = stock
+            .checked_sub(spilled_stock)
+            .expect("a body's spill comes from its offered stock");
+        let reserve_mg = stock_mg(spilled_stock).min(ceiling.saturating_sub(organism.energy_mg));
+        let (reserve_stock, spilled_stock) = spilled_stock.take(reserve_mg);
         organism.energy_mg += reserve_mg;
         Landed {
+            body_stock,
+            reserve_stock,
+            spilled_stock,
             reserve_mg,
-            substance_mg: mg - over,
-            spilled_mg: over - reserve_mg,
+            substance_mg: stock_mg(body_stock),
+            spilled_mg: stock_mg(spilled_stock),
         }
     }
+}
+
+fn stock_mg(stock: Stock) -> u64 {
+    u64::try_from(stock.total()).expect("a landed stock is bounded by one body ceiling")
 }
 
 /// Records where a body put what it just earned.
@@ -86,19 +122,28 @@ pub(super) fn record_intake(
     to: Subject,
     landed: &Landed,
 ) {
-    for (into, mg) in [
-        (Account::Reserve, landed.reserve_mg),
-        (Account::Substance, landed.substance_mg),
+    for (into, stock) in [
+        (Account::Reserve, landed.reserve_stock),
+        (Account::Substance, landed.body_stock),
     ] {
+        let mg = stock_mg(stock);
         let flow = match from {
             Some(from) => {
                 FlowEvent::between(Process::Feeding, from, Account::Substance, to, into, mg)
             },
             None => FlowEvent::uptake(to, into, mg),
         };
+        let flow = if into == Account::Reserve {
+            flow.digested(stock)
+        } else {
+            flow.with_stock(stock)
+        };
         records.flow(at, flow);
     }
 }
+
+#[cfg(test)]
+mod feeding;
 
 /// Travel, paid in substance into the ground it was covered over.
 ///
