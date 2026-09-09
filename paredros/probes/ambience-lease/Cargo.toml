@@ -1,0 +1,51 @@
+# P3 of mere's spatial compute plan (2026-08-13): the wing projection.
+#
+# The second consumer of the resident spatial buffer, and the one that
+# decides whether the lease is genuinely domain-neutral. Ambience
+# particles live in a padded-3D position buffer that explicit-regime
+# kernels advance; renderling draws them as instanced geometry with a
+# real 3D camera, reading the same buffer without a readback.
+#
+# Standalone, outside the workspace: a probe, per the wing convention,
+# with the kernel shape copied from mere's resident-graph rather than
+# shared. Sharing is what P4 promotion is for, and copying now is the
+# honest cost of promoting last.
+[package]
+name = "ambience-lease"
+version = "0.0.1"
+edition = "2024"
+license = "MPL-2.0"
+publish = false
+
+# Its own workspace root: a probe stays out of the shipped workspace,
+# and therefore carries its own copy of the patch table. renderling is
+# a rust-gpu consumer and wants the shader toolchain's spirv-std plus
+# the crabslab fork the local checkout is built against; without these
+# three it does not resolve. Same set the workspace root carries, one
+# directory deeper.
+[workspace]
+
+[patch.crates-io]
+spirv-std = { git = "https://github.com/rust-gpu/rust-gpu.git", rev = "05b34493ce661dccd6694cf58afc13e3c8f7a7e0" }
+craballoc = { path = "../../../../crates/crabslab/crates/craballoc" }
+crabslab = { path = "../../../../crates/crabslab/crates/crabslab" }
+
+# The probe builds a lot of shader and rasterizer code; an unoptimized
+# debug build renders slowly enough to misread as a hang.
+[profile.dev]
+opt-level = 1
+
+[dependencies]
+netrender = { path = "../../../netrender/netrender" }
+renderling = { path = "../../../../crates/renderling/crates/renderling" }
+wgpu = { version = "30", default-features = false, features = [
+    "dx12",
+    "vulkan",
+    "metal",
+    "wgsl",
+] }
+bytemuck = { version = "1", features = ["derive"] }
+pollster = "0.4"
+png = "0.17"
+# The windowed run.
+winit = "0.30"

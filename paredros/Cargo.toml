@@ -1,0 +1,47 @@
+[package]
+name = "paredros"
+version = "0.0.2"
+edition = "2024"
+license = "MPL-2.0"
+description = "Name reservation. Paredros is a second-person action RPG: you play one character among companions who are peers, who can outlive you, and who can take your place."
+repository = "https://github.com/merely-made/paredros"
+readme = "README.md"
+keywords = ["game", "rpg", "colony", "companions", "simulation"]
+categories = ["games"]
+exclude = ["design_docs/"]
+
+# Own workspace root. The reservation package plus the crates that have split
+# out so far.
+#
+# Game and application crates use MPL-2.0. A promoted reusable library also
+# stays MPL-2.0 (ruled 2026-09-03, retiring the 2026-07-31 clause that let a
+# proven boundary take MIT OR Apache-2.0): see LICENSES.md.
+[workspace]
+members = [
+    "crates/paredros-identity",
+    "crates/paredros-room",
+    "crates/paredros-social",
+    "crates/paredros-sortie",
+    "crates/paredros-world",
+]
+
+# renderling is a rust-gpu consumer: it wants the shader toolchain's spirv-std
+# and the crabslab fork the local renderling checkout is built against. Without
+# these three the tenant renderer does not resolve. Same set the mesocosm-side
+# device-unity probe used.
+[patch.crates-io]
+spirv-std = { git = "https://github.com/rust-gpu/rust-gpu.git", rev = "05b34493ce661dccd6694cf58afc13e3c8f7a7e0" }
+craballoc = { path = "../../crates/crabslab/crates/craballoc" }
+crabslab = { path = "../../crates/crabslab/crates/crabslab" }
+# Netrender (a sibling path dep here) resolves vello from crates.io, and
+# upstream vello 0.10 still requires wgpu 29. Without this the graph carries
+# two wgpu majors and netrender's vello rasterizer stops type-checking
+# against this workspace's wgpu 30. Retires when a wgpu-30 vello ships.
+vello = { git = "https://github.com/mark-ik/vello.git", branch = "mark-ik/wgpu-30" }
+
+# The probe builds a lot of shader and rasterizer code. Unoptimized debug
+# builds render a frame slowly enough to misread as a hang.
+[profile.dev]
+opt-level = 1
+
+[dependencies]

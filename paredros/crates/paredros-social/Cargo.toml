@@ -1,0 +1,22 @@
+[package]
+name = "paredros-social"
+version = "0.0.1"
+edition = "2024"
+license = "MPL-2.0"
+description = "Paredros social authority: deeds, beliefs, standing, confidence, refusal, agreements, and explanations."
+repository = "https://github.com/merely-made/paredros"
+publish = false
+
+# Pure state and pure rules. No renderer, no world, no kinematics, and above
+# all nothing from the combat and movement owner: the plan's two-owners rule
+# says willingness never reads combat internals, and a dependency list is the
+# only place that rule can be checked mechanically.
+[dependencies]
+paredros-identity = { version = "0.0.1", path = "../paredros-identity" }
+serde = { version = "1", default-features = false, features = ["derive", "alloc"] }
+
+# The replay receipt encodes and hashes the society with the wing's own
+# snapshot organ rather than growing a second one. Test-only, so the library
+# itself stays free of it.
+[dev-dependencies]
+mesocosm-core = { version = "0.0.1", path = "../../../mesocosm/crates/mesocosm-core" }

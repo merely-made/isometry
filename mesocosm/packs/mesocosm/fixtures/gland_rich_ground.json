@@ -1,0 +1,113 @@
+{
+  "name": "gland_rich_ground",
+  "seed": 2,
+  "request": {
+    "trigger": "Discovery",
+    "ruleset": 11989399369617600561,
+    "revision": 0,
+    "expect": 7142651028099162633,
+    "definitions": [
+      {
+        "id": "mesocosm:contract",
+        "expressed_by": [
+          "limb"
+        ],
+        "seeding": "geometry"
+      },
+      {
+        "id": "mesocosm:fix",
+        "expressed_by": [
+          "plate"
+        ],
+        "seeding": "geometry"
+      },
+      {
+        "id": "mesocosm:intake",
+        "expressed_by": [
+          "mass"
+        ],
+        "seeding": "geometry"
+      },
+      {
+        "id": "mesocosm:secrete",
+        "expressed_by": [
+          "plate"
+        ],
+        "seeding": "acquired"
+      },
+      {
+        "id": "mesocosm:sense",
+        "expressed_by": [
+          "sensor"
+        ],
+        "seeding": "geometry"
+      }
+    ],
+    "parts": [
+      {
+        "part": 0,
+        "role": "mass",
+        "cells": 8,
+        "free": 0,
+        "cell_mg": 12,
+        "sites": [
+          {
+            "process": "mesocosm:intake",
+            "cells": 8
+          }
+        ]
+      },
+      {
+        "part": 1,
+        "role": "mass",
+        "cells": 2,
+        "free": 0,
+        "cell_mg": 18,
+        "sites": [
+          {
+            "process": "mesocosm:intake",
+            "cells": 2
+          }
+        ]
+      },
+      {
+        "part": 2,
+        "role": "plate",
+        "cells": 12,
+        "free": 0,
+        "cell_mg": 23,
+        "sites": [
+          {
+            "process": "mesocosm:fix",
+            "cells": 12
+          }
+        ]
+      }
+    ],
+    "candidates": [
+      "mesocosm:secrete"
+    ],
+    "material_mg": 1500,
+    "conditions": [
+      {
+        "name": "ground_mg",
+        "value": 400
+      }
+    ]
+  },
+  "expected": {
+    "sites": [
+      {
+        "part": 2,
+        "process": "mesocosm:secrete",
+        "cells": 5
+      }
+    ]
+  },
+  "draws": [
+    10905525725756348110,
+    13819372491320860226,
+    10987583248141275951,
+    14119491246550939236
+  ]
+}

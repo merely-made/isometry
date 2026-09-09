@@ -1,0 +1,8 @@
+{
+  "namespace": "mesocosm",
+  "name": "fix",
+  "expressed_by": ["plate"],
+  "seeding": "geometry",
+  "label": "a frond",
+  "note": "Makes substance out of the world itself rather than out of a meal. A plate presents area to the world, which is what fixing needs."
+}

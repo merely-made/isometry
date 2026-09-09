@@ -1,0 +1,55 @@
+[package]
+name = "mesocosm-genet"
+default-run = "mesocosm-genet"
+version = "0.0.1"
+edition = "2024"
+license = "MPL-2.0"
+description = "Mesocosm's windowed host: a winit window and wgpu surface driving the core through the shared runtime. Owns the loop and the device, never a rule."
+repository = "https://github.com/merely-made/mesocosm"
+publish = false
+
+# The host. It owns the window, the device, and the frame loop, and it holds
+# no game state: intents go in through mesocosm-runtime and the world comes
+# back out to be drawn. If a rule ever appears in this crate, it is in the
+# wrong crate.
+#
+# Named for the lane rather than the dependency. Netrender owns the frame
+# master and imports the section as one opaque same-device tenant; the host
+# still owns the final surface blit and presentation.
+[dependencies]
+tempfile = "3"
+mesocosm-core = { workspace = true }
+# The main view since PS1: the ruled side-on section is traced, not rasterized.
+# mesocosm-render stays for the HUD's own backdrop renderer.
+mesocosm-lens = { workspace = true }
+mesocosm-mesh = { workspace = true }
+mesocosm-render = { workspace = true }
+mesocosm-runtime = { workspace = true }
+mesocosm-views = { workspace = true }
+netrender = { workspace = true }
+netrender_graph = { workspace = true }
+paint_list_api = { workspace = true }
+paint_list_render = { workspace = true }
+sprigging = { workspace = true }
+# The cambium lane. genet does not own the window here: the runner diffs a
+# view tree into a ScriptedDom, genet-livery lays it out and emits a paint
+# list, and the raster composites over the frame like any other chrome
+# texture. Hence no cambium-winit and no genet-winit-host.
+cambium = { workspace = true }
+genet-livery = { workspace = true }
+genet-scripted-dom = { workspace = true }
+# The scenario driver (DT4). The host implements `Automatable` and `Driveable`
+# over the same cambium surfaces the lanes above already retain, and a text
+# scenario drives a run through them. See `crate::drive`.
+genet-probe = { workspace = true }
+# The dev lane's placement (ruled 2026-09-02): a workbench tile, not a
+# hand-rolled corner constant. See `dev`.
+workbench = { workspace = true }
+wgpu = { workspace = true }
+winit = "0.30"
+pollster = "0.4"
+png = "0.17"
+serde = { workspace = true }
+# Trace and receipt files are read by people and by other hosts, so they are
+# JSON rather than the wire format the world itself travels in.
+serde_json = "1"

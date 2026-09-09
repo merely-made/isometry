@@ -1,0 +1,21 @@
+{
+  "pack": "mesocosm",
+  "version": "0.0.2",
+  "abi": 1,
+  "license": "MPL-2.0",
+  "note": "The definitions this game ships, as data, and the authoring that proposes them. Admission lowers the definitions to the same ruleset mesocosm-core holds natively; that equality is PD3's parity receipt. Nothing here is rule-bearing except each definition's namespace, name, expressed_by and seeding. The expression script proposes and never decides: the host prices what it asks for, lays the tissue out, and runs the one validator.",
+  "processes": [
+    "processes/contract.json",
+    "processes/intake.json",
+    "processes/sense.json",
+    "processes/fix.json",
+    "processes/secrete.json"
+  ],
+  "expression": [
+    "expression/gland.lua"
+  ],
+  "fixtures": [
+    "fixtures/gland_rich_ground.json",
+    "fixtures/gland_lean_ground.json"
+  ]
+}

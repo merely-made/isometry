@@ -1,0 +1,8 @@
+{
+  "namespace": "mesocosm",
+  "name": "contract",
+  "expressed_by": ["limb"],
+  "seeding": "geometry",
+  "label": "an actuator",
+  "note": "Turns stored energy into force. A long thin part is an actuator, so growing one grows this."
+}

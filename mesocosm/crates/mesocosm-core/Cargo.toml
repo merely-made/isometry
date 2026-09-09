@@ -1,0 +1,20 @@
+[package]
+name = "mesocosm-core"
+version = "0.0.1"
+edition = "2024"
+license = "MPL-2.0"
+description = "Mesocosm's deterministic simulation core: seeded world, ordered inputs, body graph with provenance, snapshots, and state hashing. No rendering, no host, no wgpu."
+repository = "https://github.com/merely-made/mesocosm"
+publish = false
+
+# The core is deliberately dependency-light and host-free. It must build for
+# any target a host might run on, so nothing here may pull in windowing,
+# graphics, threading, or clocks.
+[dependencies]
+serde = { workspace = true }
+postcard = { workspace = true }
+muniment = { workspace = true }
+nisus = { workspace = true }
+
+[dev-dependencies]
+serde_json = "1"

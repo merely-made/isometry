@@ -1,0 +1,74 @@
+[package]
+name = "paredros-room"
+version = "0.0.1"
+edition = "2024"
+license = "MPL-2.0"
+description = "S0, the room probe: one body, one room, a close camera, a fixed input trace, and a rendered receipt."
+repository = "https://github.com/merely-made/paredros"
+publish = false
+
+[features]
+# The shared traversal is a permanent compile-time product organ. `ROOM_R1`
+# selects it at runtime for the historical R1 receipt; ordinary room rendering
+# can still select the Renderling tenant.
+default = ["r1-proof"]
+r1-proof = ["dep:modulus", "dep:mesocosm-lens", "dep:serde_json"]
+# V1 keeps the R1 traversal receipt and adds Paredros-owned camera and
+# residency policy over a larger exact Ground working set.
+v1-proof = ["r1-proof"]
+# D1 joins the brick raymarch and the renderling raster tenant on one depth
+# surface, so each occludes the other per pixel.
+d1-proof = ["r1-proof"]
+# V1b holds the V1 travel trace over one capacity-fixed brick cache with
+# per-brick publication and allocator-observed bytes.
+v1b-proof = ["v1-proof"]
+
+# Path deps rather than git, because the probe's whole point is to consume the
+# sibling crates as they stand on this machine: mesocosm's near-tier
+# kinematics, netrender's frame, and the local renderling fork (which has no
+# published home). Revisit when the probe grows into a shipped target.
+[dependencies]
+paredros-world = { path = "../paredros-world" }
+netrender_text = { path = "../../../netrender/netrender_text" }
+modulus = { git = "https://github.com/merely-made/mere.git", rev = "d82afa17e2cca86da843f07a2d718d2e69eb9f10", optional = true }
+mesocosm-core = { version = "0.0.1", path = "../../../mesocosm/crates/mesocosm-core" }
+mesocosm-lens = { version = "0.0.1", path = "../../../mesocosm/crates/mesocosm-lens", optional = true }
+mesocosm-mesh = { version = "0.0.1", path = "../../../mesocosm/crates/mesocosm-mesh" }
+mesocosm-render = { version = "0.0.1", path = "../../../mesocosm/crates/mesocosm-render" }
+netrender = { path = "../../../netrender/netrender" }
+renderling = { path = "../../../../crates/renderling/crates/renderling" }
+wgpu = { version = "30", default-features = false, features = [
+    "dx12",
+    "vulkan",
+    "metal",
+    "wgsl",
+] }
+winit = "0.30"
+pollster = "0.4"
+png = "0.17"
+serde = { version = "1", default-features = false, features = ["derive", "alloc"] }
+serde_json = { version = "1", optional = true }
+
+[[bin]]
+name = "crossing"
+path = "src/bin/crossing.rs"
+required-features = ["r1-proof"]
+
+[[bin]]
+name = "body_sheet"
+path = "src/bin/body_sheet.rs"
+
+[[bin]]
+name = "v1_residency"
+path = "src/bin/v1_residency.rs"
+required-features = ["v1-proof"]
+
+[[bin]]
+name = "d1_depth"
+path = "src/bin/d1_depth.rs"
+required-features = ["d1-proof"]
+
+[[bin]]
+name = "v1b_residency"
+path = "src/bin/v1b_residency.rs"
+required-features = ["v1b-proof"]

@@ -1,0 +1,8 @@
+{
+  "namespace": "mesocosm",
+  "name": "intake",
+  "expressed_by": ["mass"],
+  "seeding": "geometry",
+  "label": "a mouth",
+  "note": "Admits material into the body. A mouth, a gut, an absorbing surface."
+}

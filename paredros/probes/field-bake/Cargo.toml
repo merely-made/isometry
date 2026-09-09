@@ -1,0 +1,36 @@
+# R2 of Mesocosm's engine/ecology review: a Burn field, CubeCL
+# count/prefix/scatter extraction, and a bounded renderling draw.
+[package]
+name = "field-bake"
+version = "0.0.1"
+edition = "2024"
+license = "MPL-2.0"
+publish = false
+
+[workspace]
+
+[patch.crates-io]
+spirv-std = { git = "https://github.com/rust-gpu/rust-gpu.git", rev = "05b34493ce661dccd6694cf58afc13e3c8f7a7e0" }
+craballoc = { path = "../../../../crates/crabslab/crates/craballoc" }
+crabslab = { path = "../../../../crates/crabslab/crates/crabslab" }
+cubecl-wgpu = { path = "../../../mere/support/patches/cubecl-wgpu" }
+vello = { git = "https://github.com/mark-ik/vello.git", branch = "mark-ik/wgpu-30" }
+
+[profile.dev]
+opt-level = 1
+
+[dependencies]
+burn-tensor = { version = "0.21", default-features = false, features = ["std"] }
+burn-wgpu = { version = "0.21", default-features = false, features = ["std"] }
+bytemuck = "1"
+cubecl = { version = "0.10", features = ["wgpu"] }
+netrender = { path = "../../../netrender/netrender" }
+png = "0.17"
+renderling = { path = "../../../../crates/renderling/crates/renderling" }
+wgpu = { version = "30", default-features = false, features = [
+    "dx12",
+    "vulkan",
+    "metal",
+    "wgsl",
+] }
+winit = "0.30"

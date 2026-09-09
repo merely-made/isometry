@@ -1,0 +1,19 @@
+[package]
+name = "paredros-identity"
+version = "0.0.1"
+edition = "2024"
+# The wing's identity crate, promoted by the R4 extraction review
+# (design_docs/2026-08-10_r4_extraction_review.md). Relicensed MPL-2.0
+# 2026-09-03: Mark retired the 2026-07-31 "promoted reusable libraries
+# MIT OR Apache-2.0" clause, so a promoted library stays MPL-2.0 like the
+# rest of the wing rather than taking a separate permissive grant.
+license = "MPL-2.0"
+description = "The wing's identity facts: the continuing person, the body worn, the roles held, and who the player is currently being."
+repository = "https://github.com/merely-made/paredros"
+publish = false
+
+# Deliberately dependency-free apart from serde. Both of the game's owners
+# (social willingness, combat execution) need to name a person; neither should
+# have to depend on the other to do it.
+[dependencies]
+serde = { version = "1", default-features = false, features = ["derive", "alloc"] }

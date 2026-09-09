@@ -1,0 +1,25 @@
+[package]
+name = "mesocosm-runtime"
+version = "0.0.1"
+edition = "2024"
+license = "MPL-2.0"
+description = "Mesocosm's host-neutral runtime: fixed-timestep driving, intent queueing, and trace replay over mesocosm-core. No windowing, no graphics."
+repository = "https://github.com/merely-made/mesocosm"
+publish = false
+
+# The extraction candidate named in the body pipeline plan. It sits between
+# the core and any host, and must stay free of windowing and graphics so both
+# probe hosts can share it. Sharing it is also what keeps the host comparison
+# honest: a difference between hosts cannot be a difference in stepping.
+[dependencies]
+mesocosm-core = { workspace = true }
+# The pack door, and the review's second proposal source (PE3b). The dependency
+# still runs one way — core knows nothing of either crate — and this is the
+# first production consumer the authoring half has had: an epoch review is
+# where a pack's declared expression is shown beside the game's own proposal.
+mesocosm-phenotype = { workspace = true }
+serde = { workspace = true }
+# T1 (engine review §5): the permanent product home of the Conatus tactile
+# adapter. Rapier stays private inside conatus; this crate holds ids and
+# arrays only, and tactile answers are advice, never record authority.
+conatus = { workspace = true }

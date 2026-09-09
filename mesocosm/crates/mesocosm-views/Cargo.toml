@@ -1,0 +1,21 @@
+[package]
+name = "mesocosm-views"
+version = "0.0.1"
+edition = "2024"
+license = "MPL-2.0"
+description = "Mesocosm's view layer: sceno adapters that disclose world facts as scores, and the paint leaves that realize the solved scenes. Never hand-rolls a layout, never holds game state."
+repository = "https://github.com/merely-made/mesocosm"
+publish = false
+
+# The adapter-first posture, ruled 2026-08-02: this crate translates world
+# facts into sceno scores, scenomise solves placement, and the leaves here
+# paint the solved scene. If a layout is ever computed in this crate, it is
+# in the wrong crate; if a rule is, doubly so.
+[dependencies]
+mesocosm-core = { workspace = true }
+# The cambium lane's half of this crate: view fns and the sheet that styles
+# them. Host-agnostic, exactly as the painted leaves below are.
+cambium = { workspace = true }
+sceno = { workspace = true }
+scenomise = { workspace = true }
+sprigging = { workspace = true }

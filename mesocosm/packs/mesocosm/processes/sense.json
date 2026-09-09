@@ -1,0 +1,8 @@
+{
+  "namespace": "mesocosm",
+  "name": "sense",
+  "expressed_by": ["sensor"],
+  "seeding": "geometry",
+  "label": "a sensor",
+  "note": "Receives a signal from outside."
+}

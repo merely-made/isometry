@@ -1,0 +1,17 @@
+[package]
+name = "mesocosm-mesh"
+version = "0.0.1"
+edition = "2024"
+license = "MPL-2.0"
+description = "Turns a Mesocosm body document into geometry: per-part greedy voxel meshing plus rigid placement. Headless and deterministic, with no GPU dependency."
+repository = "https://github.com/merely-made/mesocosm"
+publish = false
+
+# A projection, not a renderer. It produces quads in integer voxel space; a
+# host turns those into vertex buffers, and Isometry's baker turns the same
+# quads into sprites. Nothing here may depend on wgpu or a windowing stack.
+[dependencies]
+mesocosm-core = { workspace = true }
+serde = { workspace = true }
+postcard = { workspace = true }
+blake3 = "1.8.5"

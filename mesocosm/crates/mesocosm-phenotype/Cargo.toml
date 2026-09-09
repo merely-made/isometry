@@ -1,0 +1,26 @@
+[package]
+name = "mesocosm-phenotype"
+version = "0.0.1"
+edition = "2024"
+# Game code, so MPL-2.0 — the processdef plan's license gate is explicit that
+# definitions, pack loaders, validators, fixtures and game-specific schemas are
+# MPL-2.0, and that only a *generic* sandbox crate may become MIT OR Apache-2.0
+# once Isometry and Mesocosm prove one extracted boundary. Nothing here is
+# generic: the schema names this game's roles and seeding rule.
+license = "MPL-2.0"
+description = "Mesocosm's pack door: discovery, admission and lowering of data-only process packs into the core's ruleset. Later, the Piccolo authoring host."
+repository = "https://github.com/merely-made/mesocosm"
+publish = false
+
+# **The dependency runs one way.** This crate may depend on mesocosm-core;
+# mesocosm-core may not depend on it (processdef plan §9, PD3). The core owns
+# the ruleset and the validator; this owns reading files off a disk and
+# refusing the ones that are not admissible, which is precisely the job a
+# deterministic, integer-only, I/O-free core must not have.
+[dependencies]
+mesocosm-core = { workspace = true }
+piccolo = "0.3"
+serde = { workspace = true }
+# The pack format. JSON because this workspace already reads and writes it
+# (traces, receipts, rosters), so a data-only pack costs no new parser.
+serde_json = "1"

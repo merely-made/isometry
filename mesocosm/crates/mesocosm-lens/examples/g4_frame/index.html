@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Mesocosm G4 generated crossing receipt</title>
+  <style>
+    :root { color-scheme: dark; font-family: ui-monospace, monospace; }
+    body { display: flex; flex-direction: column; margin: 0; background: #08100d; color: #c9f5dd; }
+    canvas { order: -1; display: block; width: min(100vw, 960px); height: auto; margin: 0 auto; }
+    pre { margin: 0; padding: 1rem; white-space: pre-wrap; font-size: 12px; }
+    body[data-status="loading"] pre::before { content: "running the G4 generated crossing..."; }
+    body[data-status="error"] pre { color: #ff9d9d; }
+  </style>
+</head>
+<body data-status="loading">
+  <pre id="receipt"></pre>
+  <script type="module">
+    import init from './mesocosm_g4.js';
+    init().catch(error => {
+      document.body.dataset.status = 'error';
+      document.querySelector('#receipt').textContent = String(error?.stack || error);
+    });
+  </script>
+</body>
+</html>
