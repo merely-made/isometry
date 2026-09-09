@@ -43,6 +43,10 @@ use super::{AllocationProposal, Arrangement, BodyPhenotype, ProposedSite, Refusa
 use crate::body::{Attachment, Origin, PartId, Provenance, SpeciesId};
 use crate::process::{IntakePort, ProcessRef};
 
+#[cfg(test)]
+#[path = "graft_stock_tests.rs"]
+mod stock_tests;
+
 /// One part, lifted out of the body it grew in.
 ///
 /// It carries its **source address** — the donor line and the donor-local part
@@ -58,6 +62,8 @@ pub struct Cutting {
     pub source_parent: Option<PartId>,
     pub volume: crate::body::VolumeRef,
     pub mass_mg: u64,
+    /// Actual donor tissue, independent of how arriving organs are arranged.
+    pub stock: crate::matter::Stock,
     pub half_extent: [i32; 3],
     /// The joint this part had inside the branch: offset and yaw, preserved
     /// exactly. `None` for the branch root.
@@ -216,6 +222,7 @@ impl BodyPhenotype {
                         .flatten(),
                     volume: part.volume,
                     mass_mg: part.mass_mg,
+                    stock: *mosaic.scruple(),
                     half_extent: part.half_extent,
                     joint: inside.then_some(part.attachment).flatten(),
                     sites: mosaic
@@ -277,9 +284,10 @@ impl BodyPhenotype {
                 },
             };
             let id = self
-                .attach(
+                .attach_stock(
                     cutting.volume,
                     cutting.mass_mg,
+                    cutting.stock,
                     cutting.half_extent,
                     attachment,
                     // **The source address, per part.** Not the branch root's,
@@ -296,6 +304,8 @@ impl BodyPhenotype {
                 .map_err(|_| Refusal::NoSuchPart(attachment.parent))?;
             mapped.push((cutting.source, id));
             parts.push(id);
+            // Carried, adapted and regrown change process allocation. None
+            // authorizes replacing the donor's material composition.
             self.declare_port(id, cutting.port);
         }
 

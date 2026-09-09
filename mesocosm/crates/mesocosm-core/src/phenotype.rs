@@ -45,7 +45,7 @@
 //! [`BodyPhenotype::allocations`] so it cannot contribute. Historical cells and
 //! sites remain readable; they are not capacity and they express nothing.
 
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 
 use crate::body::{
     AttachError, Attachment, BodyDocument, PartId, Provenance, SpeciesId, VolumeRef,
@@ -55,16 +55,18 @@ use crate::process::{IntakePort, NisKind, Process, ProcessRef, Registry};
 pub mod develop;
 pub mod graft;
 pub mod mosaic;
+pub mod substance;
 
 pub use develop::{
     Aim, AllocationProposal, Arrangement, Development, Instruction, ProposedSite, Refusal, arrange,
 };
 pub use graft::{Branch, Cutting, Graftage, Lowering};
 pub use mosaic::{CellId, Expressed, MAX_CELLS, MAX_SITES, Mosaic, Site, SiteId};
+pub use substance::{AttachStockError, StockMassError, SubstanceError};
 
 /// One critter's anatomy and its process allocation, as one transactional
 /// value.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct BodyPhenotype {
     body: BodyDocument,
     /// Index-aligned with `body.parts`. That alignment is the invariant: a
@@ -403,8 +405,17 @@ impl BodyPhenotype {
         if self.body.parts.len() != self.mosaics.len() {
             return false;
         }
-        self.allocations()
-            .all(|(_, mosaic)| mosaic.conserves() && mosaic.capacity() <= MAX_CELLS)
+        self.body
+            .parts
+            .iter()
+            .zip(&self.mosaics)
+            .enumerate()
+            .all(|(index, (part, mosaic))| {
+                part.id.0 as usize == index
+                    && mosaic.conserves()
+                    && mosaic.capacity() <= MAX_CELLS
+                    && mosaic.scruple().total() == u128::from(part.mass_mg)
+            })
     }
 
     /// Attaches a part **and** seeds its mosaic, in one operation.
@@ -439,58 +450,6 @@ impl BodyPhenotype {
     /// Which lineage this body belongs to. Forking is the only caller.
     pub fn set_species(&mut self, species: SpeciesId) {
         self.body.species = species;
-    }
-
-    /// Adds substance to the root part.
-    ///
-    /// **Mass is not allocation.** Growing or starving changes what a body
-    /// weighs and never where its organs are: reallocating tissue requires a
-    /// discrete developmental event with a cost and a causal record, which is
-    /// what keeps a whole roster tractable.
-    pub fn gain_root_mass(&mut self, mg: u64) -> bool {
-        let root = self.body.root;
-        match self.body.parts.get_mut(root.0 as usize) {
-            Some(part) => {
-                part.mass_mg = part.mass_mg.saturating_add(mg);
-                true
-            },
-            None => false,
-        }
-    }
-
-    /// Takes one part's substance and nothing else, returning what it held.
-    ///
-    /// **Only its own matter** (PE2). [`Self::sever`] takes a branch and
-    /// everything under it, and [`Self::spend_mass`] takes what it needs from
-    /// wherever it can; this takes exactly the named part's milligrams and
-    /// leaves its children where they are, holding theirs. That difference is
-    /// the whole of the part-level meal's claim, so the operation that makes it
-    /// is named rather than assembled at a call site.
-    ///
-    /// The emptied part stays in the anatomy, weighing nothing. It is not
-    /// severed: the branch under it is still attached to a corpse that is still
-    /// decaying, and tombstoning it would take those milligrams out of the
-    /// conservation account.
-    pub fn take_part_mass(&mut self, part: PartId) -> u64 {
-        match self.body.parts.get_mut(part.0 as usize) {
-            Some(found) => std::mem::take(&mut found.mass_mg),
-            None => 0,
-        }
-    }
-
-    /// Removes substance across the living body in stable part order,
-    /// returning what could not be paid.
-    pub fn spend_mass(&mut self, mg: u64) -> u64 {
-        let mut unpaid = mg;
-        for part in self.body.parts.iter_mut().filter(|part| !part.severed) {
-            let paid = part.mass_mg.min(unpaid);
-            part.mass_mg -= paid;
-            unpaid -= paid;
-            if unpaid == 0 {
-                break;
-            }
-        }
-        unpaid
     }
 
     /// **The only way allocation moves.**
@@ -535,6 +494,31 @@ impl BodyPhenotype {
             },
             source: proposal.source,
         })
+    }
+}
+
+#[derive(Deserialize)]
+struct StoredPhenotype {
+    body: BodyDocument,
+    mosaics: Vec<Mosaic>,
+    revision: u32,
+}
+
+impl<'de> Deserialize<'de> for BodyPhenotype {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let stored = StoredPhenotype::deserialize(deserializer)?;
+        let phenotype = Self {
+            body: stored.body,
+            mosaics: stored.mosaics,
+            revision: stored.revision,
+        };
+        phenotype
+            .conserves()
+            .then_some(phenotype)
+            .ok_or_else(|| serde::de::Error::custom("invalid body phenotype mass or mosaic"))
     }
 }
 

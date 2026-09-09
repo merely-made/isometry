@@ -77,6 +77,10 @@ impl World {
             donor.species,
         );
         let carrion = Subject::of(donor);
+        let stock = *donor
+            .phenotype
+            .part_stock(part)
+            .expect("an addressed part has stock");
         if let Err(unmet) = self.reach_to(at) {
             return Outcome::Rejected(Rejection::OutOfReach(unmet));
         }
@@ -114,9 +118,10 @@ impl World {
         // **No mirrored pair.** A meal's mass may split across a bilateral
         // plan; an organ is one organ, and settling *its exact matter* means
         // one part carrying all of it.
-        let attached = self.controlled_phenotype_mut().attach(
+        let attached = self.controlled_phenotype_mut().attach_stock(
             volume,
             mass_mg,
+            stock,
             half_extent,
             crate::growth::attachment(&growth),
             provenance,
@@ -135,8 +140,9 @@ impl World {
 
         // Only now does the corpse give it up, and only this part's own
         // milligrams: its children keep theirs and stay where they are.
-        let taken = self.organisms[index].phenotype.take_part_mass(part);
-        debug_assert_eq!(taken, mass_mg, "the part was read a moment ago");
+        let taken_stock = self.organisms[index].phenotype.take_part_stock(part);
+        debug_assert_eq!(taken_stock, stock, "the part was read a moment ago");
+        let taken = mass_mg;
         self.flow(
             eater_at,
             FlowEvent::between(

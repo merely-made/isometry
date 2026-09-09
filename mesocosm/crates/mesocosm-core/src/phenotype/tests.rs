@@ -592,3 +592,5 @@ fn an_explanation_names_the_definition_the_tissue_expresses() {
         Some(("mesocosm", "intake"))
     );
 }
+
+mod stock;

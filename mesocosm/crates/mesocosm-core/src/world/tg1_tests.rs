@@ -152,3 +152,41 @@ fn consume_requires_and_accepts_active_deadstock_port() {
         matches!(accepted, Outcome::Consumed { from, from_part, .. } if from == target && from_part == root)
     );
 }
+
+#[test]
+fn a_named_part_meal_preserves_its_donor_mixture() {
+    let (mut world, target) = typed_consumer_world(Stage::Carrion);
+    let support = mouth_support(&world);
+    declare_mouth(
+        &mut world,
+        IntakePort::live(NisKind::Consumer)
+            .with_deadstock()
+            .supported_by(support),
+    );
+    let donor = world.organisms.iter_mut().find(|o| o.id == target).unwrap();
+    let root = donor.body().root;
+    let mass = donor.body().part(root).unwrap().mass_mg;
+    let mix = crate::matter::Stock::from_amounts([mass - 6, 1, 2, 3]);
+    donor.phenotype.replace_part_stock(root, mix).unwrap();
+    let Outcome::Consumed { part, .. } = world.consume(target, root) else {
+        panic!("the fixture part must fit")
+    };
+    assert_eq!(
+        world.controlled().unwrap().phenotype.part_stock(part),
+        Some(&mix)
+    );
+    assert_eq!(
+        world
+            .organisms
+            .iter()
+            .find(|o| o.id == target)
+            .unwrap()
+            .phenotype
+            .part_stock(root),
+        Some(&crate::matter::Stock::EMPTY)
+    );
+    let restored =
+        crate::snapshot::restore_under(&crate::snapshot(&world).unwrap(), world.admitted())
+            .unwrap();
+    assert_eq!(world, restored);
+}

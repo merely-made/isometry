@@ -37,6 +37,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::body::Part;
+use crate::matter::{Material, Stock};
 use crate::plan::classify;
 use crate::process::{IntakePort, ProcessRef, Registry};
 
@@ -115,6 +116,9 @@ pub struct Mosaic {
     /// graft, loss and snapshot carry it with the named anatomy.
     #[serde(default)]
     port: IntakePort,
+    /// The exact matter this part carries. It is private to the phenotype
+    /// transaction, so a part's scalar mass and composition cannot drift.
+    pub(super) scruple: Stock,
 }
 
 impl Mosaic {
@@ -174,6 +178,7 @@ impl Mosaic {
             sites,
             next_site,
             port: IntakePort::none(),
+            scruple: Stock::single(Material::Untyped, part.mass_mg),
         }
     }
 
@@ -229,6 +234,11 @@ impl Mosaic {
 
     pub fn port(&self) -> IntakePort {
         self.port
+    }
+
+    /// The exact heterogeneous substance this part carries.
+    pub fn scruple(&self) -> &Stock {
+        &self.scruple
     }
 
     pub(super) fn declare_port(&mut self, port: IntakePort) {

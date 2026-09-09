@@ -147,6 +147,32 @@ Founder and child realization need explicit initial composition. Conversion
 receipts must come from the accepted mutation, never inferred afterward from
 the body's current kingdom. Full TG2 and TG3 remain open.
 
+**TG2c part accounts and carried transfers, 2026-09-09.** Work continues in
+the consolidated Isometry repository. Paredros already consumes Mesocosm's
+`BodyDocument`; the tabletop reads the separate versioned body profile. Keep
+those structural boundaries intact. `Mosaic` now holds each part's scruple,
+and the phenotype's mutation API keeps its total equal to `Part.mass_mg`.
+Typed attachment, growth, spending and named-part removal share the existing
+allocator and exact stock arithmetic. Decode rejects mismatched amounts or
+part/mosaic alignment. Severed scruple stays readable as history and is
+excluded from active totals.
+
+Harvest and receive carry the actual donor mixture in every allocation mode,
+including regrown allocation; rearranging organs does not authorize changing
+their material. Named-part consumption uses the same checked typed attachment
+and empties the exact donor lot. Structural body bytes remain unchanged by
+composition alone, preserving the existing Paredros and tabletop boundaries.
+World grammar revision 3 covers the additional part state; previous world
+snapshots have no migration. Structural body-profile versioning is unchanged.
+
+Existing scalar founders and scalar growth initialize untyped stock. This
+slice does not infer a material kind from current anatomy, and does not close
+the material-aware metabolism, whole-body feeding, birth and decay joins or
+the per-channel full-run receipt. Mixed-stock acceptance here is an authored
+part/graft fixture, not yet a naturally realized dietary difference. Those
+remaining routes must carry actual lots and record any conversion explicitly
+before TG2/TG3 can claim the live trophic loop.
+
 ### TG3: scruple per part
 
 Composition gets its two ruled layers. The **lineage layer** declares what nis
@@ -263,6 +289,19 @@ beginning body types; start investigating a beginning set of traits.
 ---
 
 ## Findings
+
+- **2026-09-09, TG2c part accounts:** validation used an isolated checkout of
+  consolidated Isometry `746fbc8` with only this slice's source changes.
+  Mesocosm passed 584 tests across core, embodied actions, flows, matter and
+  replay, with one existing ignored test. Paredros passed 49 world, anatomy
+  admission, equipment and session-boundary tests. Isometry passed all seven
+  body-profile reader tests. Mixed grafts preserve all material channels in
+  carried, adapted and regrown modes; named-part consumption preserves the
+  donor lot through a world snapshot round-trip. Invalid stored part accounts
+  are rejected, and composition changes leave structural body bytes intact.
+  Concurrent functional-generation and wire-extraction work was excluded
+  from this receipt. This verifies storage and transfers, not a complete
+  typed ecological loop, dietary appearance, or a performance budget.
 
 - **2026-09-09, TG2b live soil:** mixed initial soil retains producer, consumer
   and decomposer totals through 120 ordinary ticks; untyped changes reconcile
