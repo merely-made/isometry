@@ -932,6 +932,54 @@ trace and the previous branching trace replay exactly. The executable builds,
 formatting and the 600-line ceiling pass, and the strengthened cancellation
 check passes after explicitly leaving the overview before closing the menu.
 
+### Held body and habitat comparison (2026-09-08)
+
+The local creator now holds one generated body while the habitat changes.
+`H` retains its development seed and role plus the request's existing body
+criteria. `N` changes terrain/population seed, `P` changes starting place,
+`F` cycles patch, uniform and contrasting nutrient distributions, `[`/`]`
+halve/double the nutrient bounds, `,`/`.` change population by three, and `T`
+cycles a minimum of zero to four body-sized directional steps at the start.
+Body edits remain unavailable until `H` releases the body. Failure makes one
+attempt and explains the refusal instead of substituting another critter.
+
+Generator request v3 records these inputs. Older v1/v2 requests retain their
+streams and reject v3-only criteria. The descriptor is local generation input;
+changing its body criteria changes development. It does not establish portable
+identity. Soil distribution is per place, uniform within each place. Terrain
+variation uses the existing seeded generator. Starting access tests geometry;
+it does not establish a route to food or account for movement energy.
+
+The graphical comparison shows the candidate's actual terrain and inhabitants.
+Each accepted held-body habitat runs 32 idle ticks on a disposable copy in the
+worker. Readings show living producer/consumer/decomposer counts before and
+after, whether the subject survived, and initially diet-compatible living
+neighbours within eight horizontal voxels. Food compatibility does not establish
+reachability. Entry still starts at tick zero. `S` saves the held request through
+the existing criteria-draft path. `generate-start` exposes the same habitat
+criteria and optional `--observe 0..128`, writing per-candidate trial reports.
+
+Verification: core library and native library suites passed (446 core tests;
+106 native tests and one existing ignored test before the final refusal test).
+The focused creator suite then passed all eight tests, including held-body
+controls, refused entry and saved-request round trip. All 12 focused generation
+tests pass, covering deterministic body preservation across seeds, refusal without
+substitution, soil distribution, legacy compatibility and conservative,
+repeatable trials that leave entry untouched.
+
+Headed artifacts are under `Code/testing/mesocosm/habitat_comparison/`.
+Seed 7 and seed 8 show distinct actual terrain with the same 25-part branched
+consumer. The second habitat's 32-tick trial changes living P/C/D counts from
+18/7/3 to 18/6/3, with the subject alive and total matter unchanged at
+2,014,448 mg. Entry, 24 ordinary actions and replay match `25f08b64e7c50c9f`.
+The previous branched recording also replays to `4d16b4cb1d20ffec`.
+Changed Rust files remain below 600 lines; formatting and diff checks pass.
+These observations do not close ecological persistence.
+
+The biological rules and palette remain unchanged. This advances the local
+world/body experiment; PE4 world rules, TG6 persistence, historical entry and
+cross-vessel interpretation retain their own acceptance gates.
+
 ### Research and its consequences
 
 Primary sources checked 2026-09-07. These inform the proposed design; they are

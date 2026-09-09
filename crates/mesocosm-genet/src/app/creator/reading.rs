@@ -103,10 +103,96 @@ impl Creator {
             },
             status,
         );
+        if self.request.fixed_body.is_some() {
+            self.reading = BodyMenu::new(
+                vec![
+                    (
+                        "habitat".into(),
+                        format!(
+                            "seed {} / place {} / {soil}",
+                            self.request.seed, self.request.place
+                        ),
+                    ),
+                    (
+                        "nutrients".into(),
+                        format!(
+                            "{}: {}..{} mg/column",
+                            self.request.soil_pattern.label(),
+                            self.request.soil_min_mg,
+                            self.request.soil_max_mg
+                        ),
+                    ),
+                    (
+                        "population".into(),
+                        format!(
+                            "{} founders; require {} terrain directions",
+                            self.request.organisms, self.request.min_open_steps
+                        ),
+                    ),
+                    (
+                        "body".into(),
+                        format!(
+                            "held seed {}; {} mg",
+                            self.request.fixed_body.as_ref().unwrap().seed,
+                            self.request.criteria.mass_mg
+                        ),
+                    ),
+                    (
+                        "access".into(),
+                        draft.and_then(|d| d.candidates.first()).map_or(
+                            if self.pending {
+                                "pending"
+                            } else {
+                                "start refused"
+                            }
+                            .into(),
+                            |c| format!("{} successful directional steps", c.open_steps),
+                        ),
+                    ),
+                    (
+                        "trial".into(),
+                        self.observation
+                            .as_ref()
+                            .map_or("pending or refused".into(), |o| {
+                                format!(
+                                    "{} ticks: P/C/D {:?} -> {:?}; alive {}",
+                                    o.ticks, o.before, o.after, o.subject_alive
+                                )
+                            }),
+                    ),
+                    (
+                        "food".into(),
+                        self.observation
+                            .as_ref()
+                            .map_or("pending or refused".into(), |o| {
+                                format!(
+                                    "{} diet-compatible neighbours within 8 voxels",
+                                    o.compatible_nearby
+                                )
+                            }),
+                    ),
+                ],
+                Vec::new(),
+                0,
+                "Trial runs on a copy. Diet compatibility does not prove food is reachable.",
+                if self.pending {
+                    "Waiting for the habitat and trial."
+                } else if self.count() > 0 {
+                    "Enter starts at tick zero. A short trial does not establish persistence."
+                } else {
+                    "Start refused. Change the habitat to admit this body."
+                },
+                self.reading.status.clone(),
+            );
+        }
         self.reading.headline = "Character creator".into();
         self.reading.facts_title = "Habitat and body".into();
         self.reading.choice_label = "Start".into();
         self.reading.keys = "↑/↓ choose · B body plan · K keep · U clear · R vary · N habitat · P place · C role · M organs · +/- mass · Z/V change view".into();
+        self.reading.keys.push_str(" / H compare habitats");
+        if self.request.fixed_body.is_some() {
+            self.reading.keys = "H release body  /  N seed  /  P place  /  F nutrients  /  [/] amount  /  ,/. population  /  T access  /  Z/V view".into();
+        }
         if self.draft_path.is_some() {
             self.reading.keys.push_str(" · S save criteria");
         }

@@ -315,3 +315,63 @@ fn selected_world_is_revalidated_entered_once_and_replayed() {
     while !replay.advance() {}
     assert_eq!(replay.runtime.state_hash(), trace.state_hash);
 }
+
+#[test]
+fn held_body_world_controls_preserve_subject_and_parked_runtime() {
+    let mut host = opened(Request::default());
+    ready(&mut host);
+    let original = host.runtime.state_hash();
+    host.run_action("l");
+    let body = host
+        .creator
+        .as_ref()
+        .unwrap()
+        .world()
+        .controlled()
+        .unwrap()
+        .phenotype
+        .clone();
+    host.run_action("h");
+    ready(&mut host);
+    let criteria = host.creator.as_ref().unwrap().request.criteria.clone();
+    for key in ["b", "r", "k", "u", "m", "c", "+"] {
+        host.run_action(key);
+    }
+    assert_eq!(host.creator.as_ref().unwrap().request.criteria, criteria);
+    for key in ["n", "f", ".", "p"] {
+        host.run_action(key);
+        ready(&mut host);
+    }
+    let creator = host.creator.as_ref().unwrap();
+    assert_eq!(creator.world().controlled().unwrap().phenotype, body);
+    assert!(creator.observation.is_some());
+    assert_eq!(host.runtime.state_hash(), original);
+    host.run_action("escape");
+    assert_eq!(host.runtime.state_hash(), original);
+}
+
+#[test]
+fn refused_held_habitat_cannot_enter_and_keeps_saved_body() {
+    let mut host = opened(Request::default());
+    ready(&mut host);
+    host.run_action("h");
+    ready(&mut host);
+    let original = host.runtime.state_hash();
+    let creator = host.creator.as_mut().unwrap();
+    let fixed = creator.request.fixed_body.clone();
+    creator.request.soil_min_mg = 1;
+    creator.request.soil_max_mg = 1;
+    creator.regenerate();
+    ready(&mut host);
+    host.run_action("enter");
+    let creator = host.creator.as_ref().unwrap();
+    assert_eq!(creator.count(), 0);
+    assert!(creator.world().controlled().is_none());
+    assert_eq!(creator.request.fixed_body, fixed);
+    let saved = serde_json::to_vec(&creator.request).unwrap();
+    assert_eq!(
+        serde_json::from_slice::<Request>(&saved).unwrap(),
+        creator.request
+    );
+    assert_eq!(host.runtime.state_hash(), original);
+}

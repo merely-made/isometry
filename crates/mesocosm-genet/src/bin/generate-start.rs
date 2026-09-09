@@ -4,18 +4,19 @@
 //! Generate inspectable candidates and selection files for `mesocosm-genet --start`.
 use mesocosm_core::{
     Founding, Kingdom,
-    world::generation::{BodyPlan, Request, Selection, VERSION},
+    world::generation::{BodyPlan, Request, Selection, SoilPattern, VERSION},
 };
 use std::path::PathBuf;
 
 fn run() -> Result<(), String> {
     let mut request = Request::default();
+    let mut observe = 0u32;
     let mut output = PathBuf::from("generated-start");
     let mut args = std::env::args().skip(1);
     while let Some(flag) = args.next() {
         if flag == "--help" {
             println!(
-                "generate-start [--request request.json] [--seed N] [--variation N] [--body-plan axial|branched] [--role producer|consumer|decomposer|any] [--movement-organs yes|no|any] [--place 0..8] [--mass MG] [--max-parts N] [--candidates N] [--output DIR]\nWrites report.json and start-N.json. Enter with mesocosm-genet --start DIR/start-N.json. Requested criteria are enforced; unsatisfied requests remain visible."
+                "generate-start [--request request.json] [--seed N] [--variation N] [--body-plan axial|branched] [--role producer|consumer|decomposer|any] [--movement-organs yes|no|any] [--place 0..8] [--mass MG] [--max-parts N] [--candidates N] [--population N] [--soil-min MG] [--soil-max MG] [--soil-pattern patches|uniform|contrasting] [--min-open-steps 0..4] [--observe 0..128] [--output DIR]\nWrites report.json and start-N.json. Enter with mesocosm-genet --start DIR/start-N.json. Requested criteria are enforced; unsatisfied requests remain visible."
             );
             return Ok(());
         }
@@ -34,6 +35,34 @@ fn run() -> Result<(), String> {
             "--request" => {
                 request = serde_json::from_slice(&std::fs::read(&value).map_err(|e| e.to_string())?)
                     .map_err(|e| e.to_string())?
+            },
+            "--observe" => {
+                observe = value.parse().map_err(|_| "invalid trial ticks")?;
+                if observe > 128 {
+                    return Err("trial limit is 128 ticks".into());
+                }
+            },
+            "--soil-min" => {
+                request.soil_min_mg = value.parse().map_err(|_| "invalid soil minimum")?
+            },
+            "--soil-max" => {
+                request.soil_max_mg = value.parse().map_err(|_| "invalid soil maximum")?
+            },
+            "--population" => {
+                request.organisms = value.parse().map_err(|_| "invalid population")?
+            },
+            "--min-open-steps" => {
+                request.version = VERSION;
+                request.min_open_steps = value.parse().map_err(|_| "invalid access bound")?;
+            },
+            "--soil-pattern" => {
+                request.version = VERSION;
+                request.soil_pattern = match value.as_str() {
+                    "patches" => SoilPattern::Patches,
+                    "uniform" => SoilPattern::Uniform,
+                    "contrasting" => SoilPattern::Contrasting,
+                    _ => return Err("unknown soil pattern".into()),
+                };
             },
             "--seed" => request.seed = value.parse().map_err(|_| "invalid seed")?,
             "--variation" => request.variation = value.parse().map_err(|_| "invalid variation")?,
@@ -70,9 +99,10 @@ fn run() -> Result<(), String> {
     let pack = mesocosm_mesh::ContentPack::generate(Founding::Drawn.palette())
         .map_err(|e| format!("{e:?}"))?;
     let began = std::time::Instant::now();
-    let draft = request
-        .preview(pack.palette)
+    let prepared = request
+        .prepare(pack.palette)
         .map_err(|e| format!("{e:?}"))?;
+    let draft = prepared.draft();
     println!(
         "Seed {} / variation {}: {} candidates from {} attempts in {:.3}s",
         request.seed,
@@ -115,6 +145,15 @@ fn run() -> Result<(), String> {
             candidate.position,
             candidate.local_soil_mg
         );
+        if observe > 0 {
+            let observation = prepared
+                .observe(index, observe)
+                .map_err(|e| format!("{e:?}"))?;
+            write(
+                &format!("observation-{index}.json"),
+                serde_json::to_vec_pretty(&observation).map_err(|e| e.to_string())?,
+            )?;
+        }
         let selection = Selection {
             request: request.clone(),
             candidate: index,

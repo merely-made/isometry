@@ -47,6 +47,8 @@ First batch (joint habitat/body slice locally verified 2026-09-07):
    bodies with valid footing and local founding supply. Vary bodies without
    changing habitat. The wing contract's first joint slice owns implementation
    and receipts; historical starts and ecological persistence remain separate.
+   The 2026-09-08 continuation holds a chosen body while varying habitat
+   criteria and observing 32 disposable ticks under the existing rules.
 2. **A/C1 plus B/W1:** build the local preview/inspection join while establishing
    exact portable addresses. These can proceed independently with product-local
    ids in C1; portable serialization must wait for W1's semantics. Mesocosm's

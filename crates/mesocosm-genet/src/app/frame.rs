@@ -11,6 +11,10 @@ impl Host {
         self.watch_followed();
         let replay_done = self.advance();
         let body_review = self.grafting.open || self.creator.is_some();
+        let habitat_review = self
+            .creator
+            .as_ref()
+            .is_some_and(|c| c.habitat_view && !c.pending && c.prepared.is_some());
         // What the world answered this frame, as the describe-strings an
         // `assert event` matches. (DT4)
         self.note_outcomes();
@@ -70,7 +74,7 @@ impl Host {
         };
         let mut view_half = half;
         let mut preview_depth = section::SLAB_DEPTH;
-        if body_review {
+        if body_review && !habitat_review {
             let frame = self
                 .gpu
                 .as_ref()
@@ -96,9 +100,28 @@ impl Host {
                 preview_depth = depth;
             }
         }
+        if habitat_review {
+            let c = self.creator.as_ref().unwrap();
+            let at = c.world().position().unwrap_or_else(|| {
+                let centre =
+                    c.prepared.as_ref().unwrap().draft().habitat[c.request.place as usize].centre;
+                [centre[0], 0, centre[1]]
+            });
+            centre = at.map(|v| v as f32);
+            let (width, height) = self.gpu.as_ref().map_or((960.0, 540.0), |g| {
+                (g.config.width as f32, g.config.height as f32)
+            });
+            let panel = mesocosm_views::BODY_MENU_WIDTH as f32;
+            view_half = (24.0 * height / (width - panel - 24.0).max(80.0)).max(24.0);
+            let [right, _, _] = section::camera_basis(self.config.camera, None);
+            for i in 0..3 {
+                centre[i] += right[i] * panel * view_half / height;
+            }
+        }
         if let Some(gpu) = &mut self.gpu {
             gpu.section.set_half_height(view_half);
-            gpu.section.set_body_preview(body_review, preview_depth);
+            gpu.section
+                .set_body_preview(body_review && !habitat_review, preview_depth);
             gpu.section.configure_bodies(
                 if body_review {
                     section::BodyMode::Voxels
@@ -154,7 +177,11 @@ impl Host {
             })
             .unwrap_or_default();
         let scene = self.scene();
-        let dirty = self.runtime.drain_ground_dirty();
+        let dirty = if self.creator.is_some() {
+            Vec::new()
+        } else {
+            self.runtime.drain_ground_dirty()
+        };
         let steps = self.steps;
         // What the world said about the intents this frame fed it. Refusals
         // were polite inside `World::apply` and silent outside it until the
@@ -238,7 +265,7 @@ impl Host {
         let section_frame = SectionFrame {
             world: candidate,
             volumes: &self.volumes,
-            ground: world.ground(),
+            ground: candidate.ground(),
             dirty: &dirty,
             centre,
             pose: pose.as_ref(),

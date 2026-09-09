@@ -3,11 +3,11 @@
 
 use mesocosm_core::{
     PartPalette,
-    world::generation::{Error, Prepared, Request},
+    world::generation::{Error, Observation, Prepared, Request},
 };
 use std::sync::mpsc::{self, Receiver, Sender};
 
-type ResultMessage = (u64, Result<Prepared, Error>);
+type ResultMessage = (u64, Result<(Prepared, Option<Observation>), Error>);
 pub(super) struct Worker {
     requests: Sender<(u64, Request)>,
     pub results: Receiver<ResultMessage>,
@@ -24,7 +24,15 @@ impl Worker {
                 for newer in incoming.try_iter() {
                     job = newer;
                 }
-                let result = job.1.prepare(palette);
+                let result = job.1.prepare(palette).map(|prepared| {
+                    let observation =
+                        if job.1.fixed_body.is_some() && !prepared.draft().candidates.is_empty() {
+                            prepared.observe(0, 32).ok()
+                        } else {
+                            None
+                        };
+                    (prepared, observation)
+                });
                 if finished.send((job.0, result)).is_err() {
                     break;
                 }

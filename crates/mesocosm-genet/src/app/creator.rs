@@ -12,12 +12,16 @@ use mesocosm_core::{
 use mesocosm_views::BodyMenu;
 use winit::keyboard::{Key, NamedKey};
 
+mod habitat;
 mod reading;
 mod worker;
 
 pub(super) struct Creator {
     draft_path: Option<std::path::PathBuf>,
     original_camera: crate::section::CameraMode,
+    pub habitat_view: bool,
+    pub rebind: bool,
+    pub observation: Option<mesocosm_core::world::generation::Observation>,
     pub request: Request,
     pub selected: usize,
     pub prepared: Option<Prepared>,
@@ -43,6 +47,9 @@ impl Creator {
         let mut result = Self {
             draft_path,
             original_camera,
+            habitat_view: request.fixed_body.is_some(),
+            rebind: false,
+            observation: None,
             request,
             selected: 0,
             prepared: None,
@@ -64,6 +71,7 @@ impl Creator {
 
     fn regenerate(&mut self) {
         self.serial += 1;
+        self.observation = None;
         self.prepared = None;
         self.preview = None;
         self.selected = 0;
@@ -92,7 +100,9 @@ impl Creator {
             }
             self.pending = false;
             match result {
-                Ok(prepared) => {
+                Ok((prepared, observation)) => {
+                    self.observation = observation;
+                    self.rebind = true;
                     self.prepared = Some(prepared);
                     self.select(0);
                 },
@@ -107,7 +117,14 @@ impl Creator {
         self.preview = self
             .prepared
             .as_ref()
-            .and_then(|p| p.enter(index).ok())
+            .map(|p| {
+                p.enter(index).unwrap_or_else(|_| {
+                    let mut world = p.habitat_world().clone();
+                    let id = world.controlled().map(|o| o.id);
+                    world.organisms.retain(|o| Some(o.id) != id);
+                    world
+                })
+            })
             .map(Box::new);
         self.refresh();
     }
@@ -130,6 +147,31 @@ impl Host {
     pub(super) fn poll_creator(&mut self) {
         if let Some(creator) = &mut self.creator {
             creator.poll();
+            if creator.rebind {
+                if let Some(gpu) = &mut self.gpu {
+                    match crate::section::Section::new(
+                        gpu.device.clone(),
+                        gpu.queue.clone(),
+                        gpu.config.width,
+                        gpu.config.height,
+                        gpu.config.format,
+                        creator.world().ground(),
+                        crate::section::Framing::new(
+                            self.config.slab_half_height,
+                            self.config.camera,
+                        ),
+                    ) {
+                        Ok(section) => {
+                            gpu.section = section;
+                            creator.rebind = false;
+                        },
+                        Err(why) => {
+                            creator.notice = why;
+                            creator.refresh();
+                        },
+                    }
+                }
+            }
         }
     }
 
@@ -143,6 +185,27 @@ impl Host {
         };
         match key {
             Key::Named(NamedKey::Escape) => {
+                if let Some(gpu) = &mut self.gpu {
+                    match crate::section::Section::new(
+                        gpu.device.clone(),
+                        gpu.queue.clone(),
+                        gpu.config.width,
+                        gpu.config.height,
+                        gpu.config.format,
+                        self.runtime.world().ground(),
+                        crate::section::Framing::new(
+                            self.config.slab_half_height,
+                            creator.original_camera,
+                        ),
+                    ) {
+                        Ok(section) => gpu.section = section,
+                        Err(why) => {
+                            creator.notice = why;
+                            creator.refresh();
+                            return true;
+                        },
+                    }
+                }
                 self.config.camera = creator.original_camera;
                 if let Some(gpu) = &mut self.gpu {
                     gpu.section.set_mode(self.config.camera);
@@ -165,6 +228,9 @@ impl Host {
                 return true;
             },
             _ => {},
+        }
+        if creator.habitat_key(&letter) {
+            return true;
         }
         match letter.as_str() {
             "b" => {
@@ -260,7 +326,7 @@ impl Host {
         let Some(creator) = &self.creator else {
             return;
         };
-        if creator.pending || creator.preview.is_none() {
+        if creator.pending || creator.preview.is_none() || creator.count() == 0 {
             return;
         }
         let selection = Selection {

@@ -284,3 +284,67 @@ fn seed_corpus_has_admitted_varied_bodies() {
         "the corpus must produce more than one recipe per habitat"
     );
 }
+
+#[test]
+fn held_body_survives_habitat_changes_and_is_never_substituted() {
+    let mut request = Request::default();
+    let chosen = request.preview(palette()).unwrap().candidates[1].clone();
+    request.fixed_body = Some(FixedBody {
+        seed: chosen.seed,
+        role: chosen.role,
+    });
+    for seed in [7, 8, 42] {
+        request.seed = seed;
+        request.soil_pattern = SoilPattern::Uniform;
+        request.organisms = 30;
+        let draft = request.preview(palette()).unwrap();
+        assert_eq!(draft.attempted, 1);
+        assert_eq!(draft.candidates.len(), 1);
+        let c = &draft.candidates[0];
+        assert_eq!(c.seed, chosen.seed);
+        assert_eq!(c.recipe, chosen.recipe);
+        assert_eq!(c.body, chosen.body);
+        assert!(draft.habitat.iter().all(|h| h.soil_mg_per_column == 120));
+    }
+    request.soil_min_mg = 1;
+    request.soil_max_mg = 1;
+    let refused = request.preview(palette()).unwrap();
+    assert!(refused.candidates.is_empty());
+    assert_eq!(refused.attempted, 1);
+    assert_eq!(refused.rejected.values().sum::<u32>(), 1);
+    assert!(request.fixed_body.is_some());
+}
+
+#[test]
+fn habitat_trial_is_bounded_conservative_and_does_not_advance_entry() {
+    let prepared = Request::default().prepare(palette()).unwrap();
+    let before = state_hash(&prepared.enter(1).unwrap());
+    let observation = prepared.observe(1, 32).unwrap();
+    assert_eq!(observation.matter_before_mg, observation.matter_after_mg);
+    assert_eq!(state_hash(&prepared.enter(1).unwrap()), before);
+    assert_eq!(observation, prepared.observe(1, 32).unwrap());
+    assert!(prepared.observe(1, 129).is_err());
+    assert!(prepared.observe(999, 32).is_err());
+}
+
+#[test]
+fn habitat_criteria_validate_versions_and_distribution() {
+    let mut request = Request {
+        soil_pattern: SoilPattern::Contrasting,
+        ..Request::default()
+    };
+    let draft = request.preview(palette()).unwrap();
+    assert!(
+        draft
+            .habitat
+            .iter()
+            .all(|h| [60, 180].contains(&h.soil_mg_per_column))
+    );
+    request.min_open_steps = 5;
+    assert!(request.validate().is_err());
+    request.min_open_steps = 0;
+    for version in [1, 2] {
+        request.version = version;
+        assert!(request.validate().is_err());
+    }
+}

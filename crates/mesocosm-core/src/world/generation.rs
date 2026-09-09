@@ -14,10 +14,12 @@ use crate::{
 };
 
 /// Bump when seed streams, admission, or founding interpretation change.
-pub const VERSION: u32 = 2;
+pub const VERSION: u32 = 3;
 
 mod body_plan;
 pub use body_plan::BodyPlan;
+mod habitat;
+pub use habitat::{FixedBody, Observation, SoilPattern};
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(default, deny_unknown_fields)]
@@ -63,6 +65,10 @@ pub struct Request {
     pub soil_min_mg: u64,
     pub soil_max_mg: u64,
     pub criteria: Criteria,
+    pub fixed_body: Option<FixedBody>,
+    pub soil_pattern: SoilPattern,
+    /// Minimum successful cardinal terrain steps from the starting stance.
+    pub min_open_steps: u8,
 }
 
 impl Default for Request {
@@ -78,6 +84,9 @@ impl Default for Request {
             soil_min_mg: 60,
             soil_max_mg: 180,
             criteria: Criteria::default(),
+            fixed_body: None,
+            soil_pattern: SoilPattern::Patches,
+            min_open_steps: 0,
         }
     }
 }
@@ -112,6 +121,7 @@ pub struct Candidate {
     pub actuator_span: u32,
     pub position: [i32; 3],
     pub local_soil_mg: u64,
+    pub open_steps: u8,
     pub recipe: Recipe,
     pub body: BodyDocument,
 }
@@ -135,8 +145,20 @@ pub enum Error {
 
 impl Request {
     pub fn validate(&self) -> Result<(), Error> {
-        if self.version != 1 && self.version != VERSION {
+        if !(1..=VERSION).contains(&self.version) {
             return Err(Error::Version(self.version));
+        }
+        if self.min_open_steps > 4 {
+            return Err(Error::Invalid("start access must be 0..4 directions"));
+        }
+        if self.version < 3
+            && (self.fixed_body.is_some()
+                || self.min_open_steps != 0
+                || self.soil_pattern != SoilPattern::Patches)
+        {
+            return Err(Error::Invalid(
+                "habitat comparison requires generator version 3",
+            ));
         }
         if self.version == 1 && self.criteria.body_plan != BodyPlan::Axial {
             return Err(Error::Invalid(
@@ -144,6 +166,13 @@ impl Request {
             ));
         }
         let c = &self.criteria;
+        if self
+            .fixed_body
+            .as_ref()
+            .is_some_and(|fixed| c.role.is_some_and(|role| role != fixed.role))
+        {
+            return Err(Error::Invalid("held body conflicts with requested role"));
+        }
         if !(1..=16).contains(&self.candidates)
             || !(1..=512).contains(&self.attempts)
             || self.attempts < self.candidates
@@ -193,8 +222,11 @@ impl Request {
             .map(|place| Habitat {
                 place: place.id.0,
                 centre: place.centre,
-                soil_mg_per_column: self.soil_min_mg
-                    + stream.below(self.soil_max_mg - self.soil_min_mg + 1),
+                soil_mg_per_column: self.soil_pattern.draw(
+                    &mut stream,
+                    self.soil_min_mg,
+                    self.soil_max_mg,
+                ),
             })
             .collect();
         world.soil = Soil::seeded(ENCLOSURE, 0);
@@ -218,6 +250,16 @@ impl Request {
         };
         let mut stream =
             Rng::from_seed(self.seed ^ self.variation.rotate_left(29) ^ 0x424F_4459_0000_0001);
+        if let Some(fixed) = &self.fixed_body {
+            draft.attempted = 1;
+            match self.candidate(&world, palette, centre, fixed.seed, fixed.role) {
+                Ok(candidate) => draft.candidates.push(candidate),
+                Err(reason) => {
+                    draft.rejected.insert(reason.into(), 1);
+                },
+            }
+            return Ok((draft, world));
+        }
         while draft.attempted < self.attempts && draft.candidates.len() < self.candidates as usize {
             draft.attempted += 1;
             let candidate_seed = stream.next_u64();
@@ -284,6 +326,10 @@ impl Request {
         if world.places.at(position) != Some(PlaceId(self.place)) {
             return Err("footing outside selected habitat");
         }
+        let open_steps = habitat::open_steps(&world.ground, shape, position);
+        if open_steps < self.min_open_steps {
+            return Err("not enough body-sized terrain directions at start");
+        }
         let column = world.soil.column_at(position);
         let local_soil_mg = world
             .soil
@@ -302,6 +348,7 @@ impl Request {
             actuator_span,
             position,
             local_soil_mg,
+            open_steps,
             recipe,
             body,
         })
