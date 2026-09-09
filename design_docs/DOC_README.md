@@ -12,6 +12,9 @@ with [magic and generator discussions](../mesocosm/design_docs/2026-08-06_genera
 - [Games wing consolidation](2026-09-09_games_wing_consolidation_plan.md):
   history-preserving repository import, source/worktree preservation, separate
   build workspaces, and verification receipts.
+- [Cross-port sharing audit](../mesocosm/design_docs/2026-08-18_engine_ecology_rulings_and_review.md#7-cross-port-sharing-audit-2026-09-09):
+  live-code findings across all three ports; common formats and integration
+  proofs, dependency alignment, readback/surface reuse and minimap adoption.
 
 Canonical index for `design_docs/`. Per DOC_POLICY §5, this file wins over
 any other index and is updated in the same session as any doc change.
@@ -65,3 +68,5 @@ tile geometry seam (diagonal ruling preserved in the ledger), exploration
 mode (E0-E6 landed).
 
 None yet. Retired plans go to `archive_docs/<YYYY-MM-DD>/`.
+
+- [Functional generation](../mesocosm/design_docs/2026-09-09_functional_generation_plan.md): shared charge networks, operators, body bindings, and generator proposal carriage; first slice implemented and tested locally.

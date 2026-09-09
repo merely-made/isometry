@@ -7,12 +7,10 @@
 //! Writes the interchange fixture: one critter, grown by incorporation,
 //! exported as `mesocosm.body/v0` bytes.
 //!
-//! The point is not the file. Wave 1.4 couples Mesocosm and Isometry **by
-//! data**, which means no compiler checks the seam and drift becomes a runtime
-//! failure. A committed fixture is what converts that back into a test failure:
-//! Isometry keeps a copy and reads it, so if this writer changes shape without
-//! a version bump, Isometry's suite goes red instead of a player's sprite going
-//! wrong.
+//! The literal file protects persisted v0 data. The live drift receipt is
+//! `shared/wing-integration`, which invokes this same producer path and feeds
+//! the current bytes to the tabletop reader and baker. Keep the fixture as a
+//! deliberate compatibility record rather than treating it as that live proof.
 //!
 //! Regenerate with:
 //!
@@ -21,8 +19,8 @@
 //! ```
 //!
 //! then copy `fixtures/critter.body` into isometry's
-//! `crates/isometry-voxel/tests/fixtures/`. Deliberately manual: a fixture that
-//! syncs itself would hide exactly the drift it exists to catch.
+//! `crates/isometry-voxel/tests/fixtures/` only as an explicit persisted-data
+//! compatibility update. The live integration receipt remains independent.
 
 use std::{fs, path::PathBuf};
 

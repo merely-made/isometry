@@ -1,21 +1,10 @@
 //! The interchange receipt: real Mesocosm bytes become an Isometry sprite.
 //!
-//! The unit tests in `body.rs` build their own wire bytes, which proves the
-//! reader is self-consistent and proves nothing about the writer. This file
-//! reads `fixtures/critter.body`, produced by
-//! `cargo run -p mesocosm-mesh --example emit_profile` in the mesocosm repo and
-//! committed here unchanged.
-//!
-//! That distinction is the whole point of the seam. The games wing couples its
-//! vessels **by data, not by types**, so no compiler checks that Mesocosm's
-//! writer and this reader still agree — the cost the ruling booked openly. A
-//! committed fixture is what buys the check back: if Mesocosm changes the
-//! profile's shape without bumping its version, this test fails here rather
-//! than a player's sprite quietly coming out wrong.
-//!
-//! When it does fail, the fix is a decision, not a re-copy. Either the writer
-//! bumped the version (then this reader needs to learn the new one) or it
-//! changed shape without bumping (then the writer is wrong).
+//! The unit tests in `body.rs` build their own wire bytes, while this file
+//! keeps a literal v0 artifact readable. It protects persisted data but cannot
+//! by itself detect a later producer change. `shared/wing-integration` feeds
+//! current Mesocosm output to this reader; update this fixture only through a
+//! deliberate schema compatibility decision.
 
 use isometry_voxel::{BakeParams, BodyError, BodyProfile, bake_facing};
 

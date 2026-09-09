@@ -10,6 +10,7 @@ description = "Isometry's voxel appearance pipeline: palette-indexed voxel volum
 [dependencies]
 serde = { workspace = true }
 postcard = { workspace = true }
+wing-formats = { path = "../../shared/wing-formats" }
 dot_vox = "5"
 
 [dev-dependencies]

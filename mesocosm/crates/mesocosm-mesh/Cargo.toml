@@ -12,6 +12,7 @@ publish = false
 # quads into sprites. Nothing here may depend on wgpu or a windowing stack.
 [dependencies]
 mesocosm-core = { workspace = true }
+wing-formats = { path = "../../../shared/wing-formats" }
 serde = { workspace = true }
 postcard = { workspace = true }
 blake3 = "1.8.5"

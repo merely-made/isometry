@@ -6,35 +6,15 @@
 
 //! The interchange artifact: a body, flattened, with its history attached.
 //!
-//! Wave 1.4 ruled that games couple **by data, not by types** — Mesocosm
-//! writes, Isometry reads with its own small adapter, and neither repo depends
-//! on the other. This module is Mesocosm's half of that seam: the bytes that
-//! ride as a part of a `mere.pack/v1` bundle.
+//! The product-free `wing-formats` library owns the primitive v0 layout.
+//! This module projects Mesocosm's body and volumes into that layout, while
+//! the tabletop independently adapts it into voxels and sprites. Neither
+//! product needs the other's runtime to exchange a `mere.pack/v1` artifact.
 //!
-//! Nothing here depends on mere or on eidetic. A pack carries an inventory of
-//! content-addressed blobs; what is *inside* a blob is the writing game's
-//! business, and this is that inside. Depending on the platform to define a
-//! game's own artifact would invert the wing's rule that the federation layer
-//! is extracted from shipped games rather than built before them.
-//!
-//! # V0 crosses a projection, not the body document
-//!
-//! The first cut of this module put a whole [`BodyDocument`] on the wire, and
-//! that quietly broke the ruling it was built to satisfy. A reader would have
-//! needed `mesocosm-core` to decode it — attachment graph, pivots, body plan
-//! and all — which is a type dependency wearing a data dependency's clothes.
-//! "Isometry reads it with its own small adapter" is only true if the adapter
-//! is small.
-//!
-//! So every field here is a primitive, a fixed-size array, or a `Vec` of
-//! those. A reader mirrors [`BodyProfile`] in about twenty lines of plain
-//! structs, decodes with any postcard, and never links a line of this game.
-//!
-//! V0 proves that appearance and provenance can cross through primitive local
-//! mirror types. It does not settle the permanent anatomy contract. The wing's
-//! later ruling makes primitive part identity and parent links portable at v1,
-//! while exact geometry remains an optional projection and each vessel derives
-//! its own capabilities. The live body document remains Mesocosm's authority.
+//! V0 crosses flattened appearance and provenance. The live body document
+//! remains Mesocosm's authority; stable subject identity, parent topology and
+//! body revisions belong to the separately planned v1 contract. Sharing the
+//! wire layout does not share the games' capability or consequence rules.
 //!
 //! # Why the header is raw bytes
 //!
@@ -70,43 +50,41 @@
 
 use mesocosm_core::{BodyDocument, PartOrigin, wire};
 use serde::{Deserialize, Serialize};
+use std::ops::{Deref, DerefMut};
 
 use crate::{MeshError, VolumeSource, flatten::flatten_attributed};
 
 /// The schema this module reads and writes. Cited by name in a pack part so a
 /// reader knows what it is holding before it opens it.
-pub const PROFILE_SCHEMA: &str = "mesocosm.body/v0";
+pub const PROFILE_SCHEMA: &str = wing_formats::BODY_SCHEMA;
 
 /// Schema magic. See [`mesocosm_core::wire`] for why this sits outside the
 /// payload rather than in a version field the decoder cannot reach.
-pub const PROFILE_MAGIC: [u8; 8] = *b"MESOBODY";
+pub const PROFILE_MAGIC: [u8; 8] = wing_formats::BODY_MAGIC;
 
 /// The only version this build accepts.
-pub const PROFILE_VERSION: u16 = 0;
+pub const PROFILE_VERSION: u16 = wing_formats::BODY_VERSION;
 
 /// Bytes before the payload: magic plus a little-endian `u16`.
-pub const HEADER_LEN: usize = wire::HEADER_LEN;
+pub const HEADER_LEN: usize = wing_formats::HEADER_LEN;
 
 /// A body projected for crossing: the grid a baker can consume, and the
 /// history that grid would otherwise lose.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub struct BodyProfile {
-    /// The lineage this body belongs to.
-    pub species: u32,
-    /// Grid dimensions, `x`, `y`, `z`.
-    pub size: [u32; 3],
-    /// Body-space coordinate of the grid's `(0, 0, 0)` cell. Body space has
-    /// negative coordinates; a grid does not.
-    pub origin: [i32; 3],
-    /// Every part composed into one occupancy grid, in `x + y * sx + z * sx *
-    /// sy` order. `0` is empty; anything else is a material id.
-    pub cells: Vec<u8>,
-    /// Parallel to `cells`, same order: which part wrote each cell, as **index
-    /// into `parts` plus one**, with `0` meaning empty. The offset by one
-    /// keeps "no part" distinct from "part zero" without an `Option` per voxel.
-    pub attribution: Vec<u16>,
-    /// One entry per part, indexed by `attribution - 1`.
-    pub parts: Vec<PartOrigin>,
+#[serde(transparent)]
+pub struct BodyProfile(pub wing_formats::BodyProfile);
+
+impl Deref for BodyProfile {
+    type Target = wing_formats::BodyProfile;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for BodyProfile {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
 }
 
 /// Why a profile could not be read. The shared wire error, so every reader in
@@ -124,14 +102,14 @@ impl BodyProfile {
             .map(|part| PartOrigin::from(&part.provenance))
             .collect();
 
-        Ok(Self {
+        Ok(Self(wing_formats::BodyProfile {
             species: body.species.0,
             size: flattened.volume.size,
             origin: flattened.origin,
             cells: flattened.volume.into_voxels(),
             attribution,
             parts,
-        })
+        }))
     }
 
     /// Number of cells the grid claims, from its own dimensions.
@@ -180,14 +158,7 @@ impl BodyProfile {
     pub fn from_bytes(bytes: &[u8]) -> Result<Self, ProfileError> {
         let profile: Self = wire::unframe(PROFILE_MAGIC, PROFILE_VERSION, bytes)?;
 
-        let cells = profile.cell_count();
-        let highest = profile.attribution.iter().copied().max().unwrap_or(0) as usize;
-        if cells != profile.cells.len()
-            || cells != profile.attribution.len()
-            || highest > profile.parts.len()
-        {
-            return Err(ProfileError::Inconsistent);
-        }
+        wing_formats::validate_body_profile(&profile.0)?;
         Ok(profile)
     }
 

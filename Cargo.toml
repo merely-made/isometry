@@ -10,7 +10,7 @@ members = [
     "crates/isometry-system",
     "crates/isometry-voxel",
 ]
-exclude = ["crates/isometry-runtime", "mesocosm", "paredros"]
+exclude = ["crates/isometry-runtime", "mesocosm", "paredros", "shared/wing-functions", "shared/wing-formats", "shared/wing-integration"]
 
 # Keep interactive debug builds responsive; see the watchtower plan's M4 drag
 # receipt. Include the app where generic host/layout code is instantiated.

@@ -21,11 +21,8 @@
 //!
 //! # Nothing here links Mesocosm
 //!
-//! The wing couples its vessels by data, not by types, so the wire structs
-//! below are a deliberate local mirror. Postcard is positional: **field order
-//! is what actually binds**, names are documentation. Keep them in step with
-//! `mesocosm-core`'s `chronicle` module, and rely on the fixture test rather
-//! than on care.
+//! The wing couples vessels through the product-free primitive layout in
+//! `wing-formats`. Postcard remains positional, so framing precedes decoding.
 //!
 //! # Appending, never editing
 //!
@@ -36,11 +33,12 @@
 //! without anybody's history being quietly dropped.
 
 use serde::{Deserialize, Serialize};
+pub use wing_formats::{Chronicle, Deed, PartOrigin};
 
 use crate::world::{HistoryEvent, WorldCharacter};
 
 /// The schema this reads and writes.
-pub const CHRONICLE_SCHEMA: &str = "mesocosm.chronicle/v0";
+pub const CHRONICLE_SCHEMA: &str = wing_formats::CHRONICLE_SCHEMA;
 
 /// How this campaign names itself when it appends a fact.
 pub const VESSEL: &str = "isometry";
@@ -50,55 +48,40 @@ pub const VESSEL: &str = "isometry";
 /// [`Arrival::record_loss`].
 pub const LOST_PART: &str = "lost-part";
 
-const MAGIC: [u8; 8] = *b"MESOCHRN";
-const VERSION: u16 = 0;
-const HEADER_LEN: usize = 10;
+const MAGIC: [u8; 8] = wing_formats::CHRONICLE_MAGIC;
+const VERSION: u16 = wing_formats::CHRONICLE_VERSION;
 
 /// Why a chronicle could not be read.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ChronicleError {
-    TooShort { got: usize },
+    TooShort {
+        got: usize,
+    },
     /// The magic names a different schema. A body profile read as a chronicle
     /// lands here rather than as a confusing decode failure.
     WrongSchema,
     /// This is a chronicle, from a writer we do not agree with.
-    UnknownVersion { found: u16, expected: u16 },
+    UnknownVersion {
+        found: u16,
+        expected: u16,
+    },
     Malformed,
     /// Decoded, but a creature with no parts was never a body.
     Inconsistent,
 }
 
-/// Where one part came from. `from_species` is `None` at founding.
-#[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Eq, Serialize)]
-pub struct PartOrigin {
-    pub from_species: Option<u32>,
-    pub from_part: Option<u32>,
-    pub epoch: u64,
-}
-
-impl PartOrigin {
-    pub fn is_incorporated(&self) -> bool {
-        self.from_species.is_some()
+fn chronicle_error(error: wing_formats::WireError) -> ChronicleError {
+    match error {
+        wing_formats::WireError::TooShort { got } => ChronicleError::TooShort { got },
+        wing_formats::WireError::WrongSchema { .. } => ChronicleError::WrongSchema,
+        wing_formats::WireError::UnknownVersion { found, expected } => {
+            ChronicleError::UnknownVersion { found, expected }
+        },
+        wing_formats::WireError::Malformed | wing_formats::WireError::Encode => {
+            ChronicleError::Malformed
+        },
+        wing_formats::WireError::Inconsistent => ChronicleError::Inconsistent,
     }
-}
-
-/// One thing that happened, in the recording game's own words.
-#[derive(Clone, Debug, Deserialize, PartialEq, Eq, Serialize)]
-pub struct Deed {
-    pub vessel: String,
-    pub verb: String,
-    pub at: u64,
-    /// The recording game's payload. Opaque to everyone else, preserved by
-    /// everyone else.
-    pub detail: Vec<u8>,
-}
-
-/// A creature as a record. Field order must match the writer's.
-#[derive(Clone, Debug, Default, Deserialize, PartialEq, Eq, Serialize)]
-pub struct Chronicle {
-    pub species: u32,
-    pub parts: Vec<PartOrigin>,
-    pub deeds: Vec<Deed>,
 }
 
 /// What this campaign puts in a deed's `detail` when it records history.
@@ -130,22 +113,9 @@ impl Arrival {
     /// newer writer is diagnosed rather than mis-decoded into a creature that
     /// looks plausible and is wrong.
     pub fn read(bytes: &[u8]) -> Result<Self, ChronicleError> {
-        if bytes.len() < HEADER_LEN {
-            return Err(ChronicleError::TooShort { got: bytes.len() });
-        }
-        if bytes[..8] != MAGIC {
-            return Err(ChronicleError::WrongSchema);
-        }
-        let found = u16::from_le_bytes([bytes[8], bytes[9]]);
-        if found != VERSION {
-            return Err(ChronicleError::UnknownVersion { found, expected: VERSION });
-        }
-
         let chronicle: Chronicle =
-            postcard::from_bytes(&bytes[HEADER_LEN..]).map_err(|_| ChronicleError::Malformed)?;
-        if chronicle.parts.is_empty() {
-            return Err(ChronicleError::Inconsistent);
-        }
+            wing_formats::unframe(MAGIC, VERSION, bytes).map_err(chronicle_error)?;
+        wing_formats::validate_chronicle(&chronicle).map_err(|_| ChronicleError::Inconsistent)?;
         Ok(Self { chronicle })
     }
 
@@ -160,7 +130,11 @@ impl Arrival {
 
     /// How many of its parts it took off other organisms.
     pub fn incorporated_parts(&self) -> usize {
-        self.chronicle.parts.iter().filter(|part| part.is_incorporated()).count()
+        self.chronicle
+            .parts
+            .iter()
+            .filter(|part| part.is_incorporated())
+            .count()
     }
 
     /// The roster slot. An ordinary [`WorldCharacter`], indistinguishable from
@@ -250,18 +224,15 @@ impl Arrival {
 
     /// Deeds from other games, which this one keeps and does not interpret.
     pub fn foreign(&self) -> impl Iterator<Item = &Deed> {
-        self.chronicle.deeds.iter().filter(|deed| deed.vessel != VESSEL)
+        self.chronicle
+            .deeds
+            .iter()
+            .filter(|deed| deed.vessel != VESSEL)
     }
 
     /// Writes the chronicle back for the next game to read.
     pub fn to_bytes(&self) -> Result<Vec<u8>, ChronicleError> {
-        let payload =
-            postcard::to_allocvec(&self.chronicle).map_err(|_| ChronicleError::Malformed)?;
-        let mut bytes = Vec::with_capacity(HEADER_LEN + payload.len());
-        bytes.extend_from_slice(&MAGIC);
-        bytes.extend_from_slice(&VERSION.to_le_bytes());
-        bytes.extend_from_slice(&payload);
-        Ok(bytes)
+        wing_formats::frame(MAGIC, VERSION, &self.chronicle).map_err(chronicle_error)
     }
 }
 
@@ -281,7 +252,11 @@ mod tests {
             species: 7,
             parts: vec![
                 PartOrigin::default(),
-                PartOrigin { from_species: Some(42), from_part: Some(1), epoch: 3 },
+                PartOrigin {
+                    from_species: Some(42),
+                    from_part: Some(1),
+                    epoch: 3,
+                },
             ],
             deeds: vec![Deed {
                 vessel: "mesocosm".into(),
@@ -324,7 +299,11 @@ mod tests {
         let history = back.history();
 
         assert_eq!(history.len(), 1);
-        assert_eq!(history[0], event("h1", "held-the-ford", 40), "our own event round-trips whole");
+        assert_eq!(
+            history[0],
+            event("h1", "held-the-ford", 40),
+            "our own event round-trips whole"
+        );
     }
 
     #[test]
@@ -341,7 +320,11 @@ mod tests {
         assert_eq!(foreign[0].vessel, "mesocosm");
         assert_eq!(foreign[0].verb, "outlived-its-kind");
         assert_eq!(foreign[0].detail, vec![7, 7, 7]);
-        assert_eq!(back.history().len(), 1, "and ours is not confused with theirs");
+        assert_eq!(
+            back.history().len(),
+            1,
+            "and ours is not confused with theirs"
+        );
     }
 
     #[test]
@@ -352,7 +335,11 @@ mod tests {
             arrival.record(&event(&format!("h{n}"), "wintered", 40 + n));
         }
         assert_eq!(arrival.chronicle().deeds.len(), before + 5);
-        assert_eq!(arrival.foreign().count(), 1, "the foreign deed survived all of it");
+        assert_eq!(
+            arrival.foreign().count(),
+            1,
+            "the foreign deed survived all of it"
+        );
     }
 
     #[test]
@@ -369,14 +356,24 @@ mod tests {
         bytes[8..10].copy_from_slice(&4u16.to_le_bytes());
         assert_eq!(
             Arrival::read(&bytes),
-            Err(ChronicleError::UnknownVersion { found: 4, expected: 0 })
+            Err(ChronicleError::UnknownVersion {
+                found: 4,
+                expected: 0
+            })
         );
     }
 
     #[test]
     fn a_partless_record_is_refused() {
-        let bytes = framed(&Chronicle { species: 1, parts: vec![], deeds: vec![] });
+        let bytes = framed(&Chronicle {
+            species: 1,
+            parts: vec![],
+            deeds: vec![],
+        });
         assert_eq!(Arrival::read(&bytes), Err(ChronicleError::Inconsistent));
-        assert_eq!(Arrival::read(b"MESO"), Err(ChronicleError::TooShort { got: 4 }));
+        assert_eq!(
+            Arrival::read(b"MESO"),
+            Err(ChronicleError::TooShort { got: 4 })
+        );
     }
 }

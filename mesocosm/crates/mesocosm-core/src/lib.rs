@@ -48,6 +48,7 @@ pub mod cohort;
 pub mod development;
 pub mod discovery;
 pub mod flow;
+pub mod functions;
 pub mod graft;
 pub mod growth;
 pub mod history;

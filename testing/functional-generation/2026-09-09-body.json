@@ -1,0 +1,3023 @@
+{
+  "after": [
+    {
+      "Err": "body part 1:3 is unavailable"
+    },
+    {
+      "Err": "body part 1:4 is unavailable"
+    }
+  ],
+  "before": [
+    {
+      "Ok": {
+        "cost": 10,
+        "effect": {
+          "Strengthened": {
+            "amount": 10,
+            "effect": {
+              "part": 3,
+              "subject": 1
+            }
+          }
+        },
+        "operator": "Strengthen",
+        "supplied_by": [
+          {
+            "amount": 10,
+            "source": 0
+          }
+        ],
+        "target": 3
+      }
+    },
+    {
+      "Ok": {
+        "cost": 10,
+        "effect": {
+          "Strengthened": {
+            "amount": 10,
+            "effect": {
+              "part": 4,
+              "subject": 1
+            }
+          }
+        },
+        "operator": "Strengthen",
+        "supplied_by": [
+          {
+            "amount": 10,
+            "source": 0
+          }
+        ],
+        "target": 4
+      }
+    }
+  ],
+  "body": {
+    "parts": [
+      {
+        "attachment": null,
+        "half_extent": [
+          2,
+          2,
+          2
+        ],
+        "id": 0,
+        "mass_mg": 35,
+        "pivot": [
+          2,
+          2,
+          2
+        ],
+        "provenance": {
+          "epoch": 0,
+          "origin": "Founding"
+        },
+        "severed": false,
+        "volume": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "attachment": {
+          "offset": [
+            0,
+            0,
+            4
+          ],
+          "parent": 0,
+          "yaw": "Zero"
+        },
+        "half_extent": [
+          2,
+          2,
+          2
+        ],
+        "id": 1,
+        "mass_mg": 17,
+        "pivot": [
+          2,
+          2,
+          2
+        ],
+        "provenance": {
+          "epoch": 0,
+          "origin": "Founding"
+        },
+        "severed": false,
+        "volume": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "attachment": {
+          "offset": [
+            0,
+            0,
+            4
+          ],
+          "parent": 1,
+          "yaw": "Zero"
+        },
+        "half_extent": [
+          2,
+          2,
+          2
+        ],
+        "id": 2,
+        "mass_mg": 17,
+        "pivot": [
+          2,
+          2,
+          2
+        ],
+        "provenance": {
+          "epoch": 0,
+          "origin": "Founding"
+        },
+        "severed": false,
+        "volume": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "attachment": {
+          "offset": [
+            0,
+            0,
+            4
+          ],
+          "parent": 2,
+          "yaw": "Zero"
+        },
+        "half_extent": [
+          2,
+          2,
+          2
+        ],
+        "id": 3,
+        "mass_mg": 17,
+        "pivot": [
+          2,
+          2,
+          2
+        ],
+        "provenance": {
+          "epoch": 0,
+          "origin": "Founding"
+        },
+        "severed": true,
+        "volume": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "attachment": {
+          "offset": [
+            0,
+            0,
+            4
+          ],
+          "parent": 3,
+          "yaw": "Zero"
+        },
+        "half_extent": [
+          2,
+          2,
+          2
+        ],
+        "id": 4,
+        "mass_mg": 17,
+        "pivot": [
+          2,
+          2,
+          2
+        ],
+        "provenance": {
+          "epoch": 0,
+          "origin": "Founding"
+        },
+        "severed": true,
+        "volume": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "attachment": {
+          "offset": [
+            0,
+            0,
+            4
+          ],
+          "parent": 4,
+          "yaw": "Zero"
+        },
+        "half_extent": [
+          2,
+          2,
+          2
+        ],
+        "id": 5,
+        "mass_mg": 17,
+        "pivot": [
+          2,
+          2,
+          2
+        ],
+        "provenance": {
+          "epoch": 0,
+          "origin": "Founding"
+        },
+        "severed": true,
+        "volume": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "attachment": {
+          "offset": [
+            0,
+            0,
+            4
+          ],
+          "parent": 5,
+          "yaw": "Zero"
+        },
+        "half_extent": [
+          2,
+          2,
+          2
+        ],
+        "id": 6,
+        "mass_mg": 17,
+        "pivot": [
+          2,
+          2,
+          2
+        ],
+        "provenance": {
+          "epoch": 0,
+          "origin": "Founding"
+        },
+        "severed": true,
+        "volume": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "attachment": {
+          "offset": [
+            0,
+            0,
+            4
+          ],
+          "parent": 6,
+          "yaw": "Zero"
+        },
+        "half_extent": [
+          2,
+          2,
+          2
+        ],
+        "id": 7,
+        "mass_mg": 17,
+        "pivot": [
+          2,
+          2,
+          2
+        ],
+        "provenance": {
+          "epoch": 0,
+          "origin": "Founding"
+        },
+        "severed": true,
+        "volume": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "attachment": {
+          "offset": [
+            0,
+            0,
+            4
+          ],
+          "parent": 7,
+          "yaw": "Zero"
+        },
+        "half_extent": [
+          2,
+          2,
+          2
+        ],
+        "id": 8,
+        "mass_mg": 17,
+        "pivot": [
+          2,
+          2,
+          2
+        ],
+        "provenance": {
+          "epoch": 0,
+          "origin": "Founding"
+        },
+        "severed": true,
+        "volume": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "attachment": {
+          "offset": [
+            0,
+            0,
+            4
+          ],
+          "parent": 8,
+          "yaw": "Zero"
+        },
+        "half_extent": [
+          2,
+          2,
+          2
+        ],
+        "id": 9,
+        "mass_mg": 17,
+        "pivot": [
+          2,
+          2,
+          2
+        ],
+        "provenance": {
+          "epoch": 0,
+          "origin": "Founding"
+        },
+        "severed": true,
+        "volume": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "attachment": {
+          "offset": [
+            0,
+            0,
+            4
+          ],
+          "parent": 9,
+          "yaw": "Zero"
+        },
+        "half_extent": [
+          2,
+          2,
+          2
+        ],
+        "id": 10,
+        "mass_mg": 17,
+        "pivot": [
+          2,
+          2,
+          2
+        ],
+        "provenance": {
+          "epoch": 0,
+          "origin": "Founding"
+        },
+        "severed": true,
+        "volume": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "attachment": {
+          "offset": [
+            0,
+            6,
+            0
+          ],
+          "parent": 10,
+          "yaw": "Zero"
+        },
+        "half_extent": [
+          4,
+          4,
+          1
+        ],
+        "id": 11,
+        "mass_mg": 17,
+        "pivot": [
+          4,
+          4,
+          1
+        ],
+        "provenance": {
+          "epoch": 0,
+          "origin": "Founding"
+        },
+        "severed": true,
+        "volume": [
+          3,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "attachment": {
+          "offset": [
+            0,
+            0,
+            4
+          ],
+          "parent": 10,
+          "yaw": "Zero"
+        },
+        "half_extent": [
+          2,
+          2,
+          2
+        ],
+        "id": 12,
+        "mass_mg": 17,
+        "pivot": [
+          2,
+          2,
+          2
+        ],
+        "provenance": {
+          "epoch": 0,
+          "origin": "Founding"
+        },
+        "severed": true,
+        "volume": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "attachment": {
+          "offset": [
+            0,
+            6,
+            0
+          ],
+          "parent": 12,
+          "yaw": "Zero"
+        },
+        "half_extent": [
+          4,
+          4,
+          1
+        ],
+        "id": 13,
+        "mass_mg": 17,
+        "pivot": [
+          4,
+          4,
+          1
+        ],
+        "provenance": {
+          "epoch": 0,
+          "origin": "Founding"
+        },
+        "severed": true,
+        "volume": [
+          3,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "attachment": {
+          "offset": [
+            0,
+            0,
+            4
+          ],
+          "parent": 12,
+          "yaw": "Zero"
+        },
+        "half_extent": [
+          2,
+          2,
+          2
+        ],
+        "id": 14,
+        "mass_mg": 17,
+        "pivot": [
+          2,
+          2,
+          2
+        ],
+        "provenance": {
+          "epoch": 0,
+          "origin": "Founding"
+        },
+        "severed": true,
+        "volume": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "attachment": {
+          "offset": [
+            0,
+            6,
+            0
+          ],
+          "parent": 14,
+          "yaw": "Zero"
+        },
+        "half_extent": [
+          4,
+          4,
+          1
+        ],
+        "id": 15,
+        "mass_mg": 17,
+        "pivot": [
+          4,
+          4,
+          1
+        ],
+        "provenance": {
+          "epoch": 0,
+          "origin": "Founding"
+        },
+        "severed": true,
+        "volume": [
+          3,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "attachment": {
+          "offset": [
+            0,
+            0,
+            4
+          ],
+          "parent": 14,
+          "yaw": "Zero"
+        },
+        "half_extent": [
+          2,
+          2,
+          2
+        ],
+        "id": 16,
+        "mass_mg": 17,
+        "pivot": [
+          2,
+          2,
+          2
+        ],
+        "provenance": {
+          "epoch": 0,
+          "origin": "Founding"
+        },
+        "severed": true,
+        "volume": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "attachment": {
+          "offset": [
+            0,
+            6,
+            0
+          ],
+          "parent": 16,
+          "yaw": "Zero"
+        },
+        "half_extent": [
+          4,
+          4,
+          1
+        ],
+        "id": 17,
+        "mass_mg": 17,
+        "pivot": [
+          4,
+          4,
+          1
+        ],
+        "provenance": {
+          "epoch": 0,
+          "origin": "Founding"
+        },
+        "severed": true,
+        "volume": [
+          3,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "attachment": {
+          "offset": [
+            0,
+            0,
+            4
+          ],
+          "parent": 16,
+          "yaw": "Zero"
+        },
+        "half_extent": [
+          2,
+          2,
+          2
+        ],
+        "id": 18,
+        "mass_mg": 17,
+        "pivot": [
+          2,
+          2,
+          2
+        ],
+        "provenance": {
+          "epoch": 0,
+          "origin": "Founding"
+        },
+        "severed": true,
+        "volume": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "attachment": {
+          "offset": [
+            0,
+            6,
+            0
+          ],
+          "parent": 18,
+          "yaw": "Zero"
+        },
+        "half_extent": [
+          4,
+          4,
+          1
+        ],
+        "id": 19,
+        "mass_mg": 17,
+        "pivot": [
+          4,
+          4,
+          1
+        ],
+        "provenance": {
+          "epoch": 0,
+          "origin": "Founding"
+        },
+        "severed": true,
+        "volume": [
+          3,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "attachment": {
+          "offset": [
+            0,
+            0,
+            4
+          ],
+          "parent": 18,
+          "yaw": "Zero"
+        },
+        "half_extent": [
+          2,
+          2,
+          2
+        ],
+        "id": 20,
+        "mass_mg": 17,
+        "pivot": [
+          2,
+          2,
+          2
+        ],
+        "provenance": {
+          "epoch": 0,
+          "origin": "Founding"
+        },
+        "severed": true,
+        "volume": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "attachment": {
+          "offset": [
+            0,
+            6,
+            0
+          ],
+          "parent": 20,
+          "yaw": "Zero"
+        },
+        "half_extent": [
+          4,
+          4,
+          1
+        ],
+        "id": 21,
+        "mass_mg": 17,
+        "pivot": [
+          4,
+          4,
+          1
+        ],
+        "provenance": {
+          "epoch": 0,
+          "origin": "Founding"
+        },
+        "severed": true,
+        "volume": [
+          3,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "attachment": {
+          "offset": [
+            0,
+            0,
+            4
+          ],
+          "parent": 20,
+          "yaw": "Zero"
+        },
+        "half_extent": [
+          2,
+          2,
+          2
+        ],
+        "id": 22,
+        "mass_mg": 17,
+        "pivot": [
+          2,
+          2,
+          2
+        ],
+        "provenance": {
+          "epoch": 0,
+          "origin": "Founding"
+        },
+        "severed": true,
+        "volume": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "attachment": {
+          "offset": [
+            0,
+            6,
+            0
+          ],
+          "parent": 22,
+          "yaw": "Zero"
+        },
+        "half_extent": [
+          4,
+          4,
+          1
+        ],
+        "id": 23,
+        "mass_mg": 17,
+        "pivot": [
+          4,
+          4,
+          1
+        ],
+        "provenance": {
+          "epoch": 0,
+          "origin": "Founding"
+        },
+        "severed": true,
+        "volume": [
+          3,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "attachment": {
+          "offset": [
+            0,
+            0,
+            4
+          ],
+          "parent": 22,
+          "yaw": "Zero"
+        },
+        "half_extent": [
+          2,
+          2,
+          2
+        ],
+        "id": 24,
+        "mass_mg": 17,
+        "pivot": [
+          2,
+          2,
+          2
+        ],
+        "provenance": {
+          "epoch": 0,
+          "origin": "Founding"
+        },
+        "severed": true,
+        "volume": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "attachment": {
+          "offset": [
+            0,
+            6,
+            0
+          ],
+          "parent": 24,
+          "yaw": "Zero"
+        },
+        "half_extent": [
+          4,
+          4,
+          1
+        ],
+        "id": 25,
+        "mass_mg": 17,
+        "pivot": [
+          4,
+          4,
+          1
+        ],
+        "provenance": {
+          "epoch": 0,
+          "origin": "Founding"
+        },
+        "severed": true,
+        "volume": [
+          3,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "attachment": {
+          "offset": [
+            0,
+            0,
+            4
+          ],
+          "parent": 24,
+          "yaw": "Zero"
+        },
+        "half_extent": [
+          2,
+          2,
+          2
+        ],
+        "id": 26,
+        "mass_mg": 17,
+        "pivot": [
+          2,
+          2,
+          2
+        ],
+        "provenance": {
+          "epoch": 0,
+          "origin": "Founding"
+        },
+        "severed": true,
+        "volume": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "attachment": {
+          "offset": [
+            0,
+            6,
+            0
+          ],
+          "parent": 26,
+          "yaw": "Zero"
+        },
+        "half_extent": [
+          4,
+          4,
+          1
+        ],
+        "id": 27,
+        "mass_mg": 17,
+        "pivot": [
+          4,
+          4,
+          1
+        ],
+        "provenance": {
+          "epoch": 0,
+          "origin": "Founding"
+        },
+        "severed": true,
+        "volume": [
+          3,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "attachment": {
+          "offset": [
+            0,
+            0,
+            4
+          ],
+          "parent": 26,
+          "yaw": "Zero"
+        },
+        "half_extent": [
+          2,
+          2,
+          2
+        ],
+        "id": 28,
+        "mass_mg": 17,
+        "pivot": [
+          2,
+          2,
+          2
+        ],
+        "provenance": {
+          "epoch": 0,
+          "origin": "Founding"
+        },
+        "severed": true,
+        "volume": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "attachment": {
+          "offset": [
+            0,
+            6,
+            0
+          ],
+          "parent": 28,
+          "yaw": "Zero"
+        },
+        "half_extent": [
+          4,
+          4,
+          1
+        ],
+        "id": 29,
+        "mass_mg": 17,
+        "pivot": [
+          4,
+          4,
+          1
+        ],
+        "provenance": {
+          "epoch": 0,
+          "origin": "Founding"
+        },
+        "severed": true,
+        "volume": [
+          3,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "attachment": {
+          "offset": [
+            0,
+            0,
+            4
+          ],
+          "parent": 28,
+          "yaw": "Zero"
+        },
+        "half_extent": [
+          2,
+          2,
+          2
+        ],
+        "id": 30,
+        "mass_mg": 17,
+        "pivot": [
+          2,
+          2,
+          2
+        ],
+        "provenance": {
+          "epoch": 0,
+          "origin": "Founding"
+        },
+        "severed": true,
+        "volume": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "attachment": {
+          "offset": [
+            0,
+            6,
+            0
+          ],
+          "parent": 30,
+          "yaw": "Zero"
+        },
+        "half_extent": [
+          4,
+          4,
+          1
+        ],
+        "id": 31,
+        "mass_mg": 17,
+        "pivot": [
+          4,
+          4,
+          1
+        ],
+        "provenance": {
+          "epoch": 0,
+          "origin": "Founding"
+        },
+        "severed": true,
+        "volume": [
+          3,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "attachment": {
+          "offset": [
+            0,
+            0,
+            4
+          ],
+          "parent": 30,
+          "yaw": "Zero"
+        },
+        "half_extent": [
+          2,
+          2,
+          2
+        ],
+        "id": 32,
+        "mass_mg": 17,
+        "pivot": [
+          2,
+          2,
+          2
+        ],
+        "provenance": {
+          "epoch": 0,
+          "origin": "Founding"
+        },
+        "severed": true,
+        "volume": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "attachment": {
+          "offset": [
+            0,
+            6,
+            0
+          ],
+          "parent": 32,
+          "yaw": "Zero"
+        },
+        "half_extent": [
+          4,
+          4,
+          1
+        ],
+        "id": 33,
+        "mass_mg": 17,
+        "pivot": [
+          4,
+          4,
+          1
+        ],
+        "provenance": {
+          "epoch": 0,
+          "origin": "Founding"
+        },
+        "severed": true,
+        "volume": [
+          3,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "attachment": {
+          "offset": [
+            0,
+            0,
+            4
+          ],
+          "parent": 32,
+          "yaw": "Zero"
+        },
+        "half_extent": [
+          2,
+          2,
+          2
+        ],
+        "id": 34,
+        "mass_mg": 17,
+        "pivot": [
+          2,
+          2,
+          2
+        ],
+        "provenance": {
+          "epoch": 0,
+          "origin": "Founding"
+        },
+        "severed": true,
+        "volume": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "attachment": {
+          "offset": [
+            0,
+            6,
+            0
+          ],
+          "parent": 34,
+          "yaw": "Zero"
+        },
+        "half_extent": [
+          4,
+          4,
+          1
+        ],
+        "id": 35,
+        "mass_mg": 17,
+        "pivot": [
+          4,
+          4,
+          1
+        ],
+        "provenance": {
+          "epoch": 0,
+          "origin": "Founding"
+        },
+        "severed": true,
+        "volume": [
+          3,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "attachment": {
+          "offset": [
+            0,
+            0,
+            4
+          ],
+          "parent": 34,
+          "yaw": "Zero"
+        },
+        "half_extent": [
+          2,
+          2,
+          2
+        ],
+        "id": 36,
+        "mass_mg": 17,
+        "pivot": [
+          2,
+          2,
+          2
+        ],
+        "provenance": {
+          "epoch": 0,
+          "origin": "Founding"
+        },
+        "severed": true,
+        "volume": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "attachment": {
+          "offset": [
+            0,
+            6,
+            0
+          ],
+          "parent": 36,
+          "yaw": "Zero"
+        },
+        "half_extent": [
+          4,
+          4,
+          1
+        ],
+        "id": 37,
+        "mass_mg": 17,
+        "pivot": [
+          4,
+          4,
+          1
+        ],
+        "provenance": {
+          "epoch": 0,
+          "origin": "Founding"
+        },
+        "severed": true,
+        "volume": [
+          3,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "attachment": {
+          "offset": [
+            0,
+            0,
+            4
+          ],
+          "parent": 36,
+          "yaw": "Zero"
+        },
+        "half_extent": [
+          2,
+          2,
+          2
+        ],
+        "id": 38,
+        "mass_mg": 17,
+        "pivot": [
+          2,
+          2,
+          2
+        ],
+        "provenance": {
+          "epoch": 0,
+          "origin": "Founding"
+        },
+        "severed": true,
+        "volume": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "attachment": {
+          "offset": [
+            0,
+            6,
+            0
+          ],
+          "parent": 38,
+          "yaw": "Zero"
+        },
+        "half_extent": [
+          4,
+          4,
+          1
+        ],
+        "id": 39,
+        "mass_mg": 17,
+        "pivot": [
+          4,
+          4,
+          1
+        ],
+        "provenance": {
+          "epoch": 0,
+          "origin": "Founding"
+        },
+        "severed": true,
+        "volume": [
+          3,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "attachment": {
+          "offset": [
+            0,
+            0,
+            4
+          ],
+          "parent": 38,
+          "yaw": "Zero"
+        },
+        "half_extent": [
+          2,
+          2,
+          2
+        ],
+        "id": 40,
+        "mass_mg": 17,
+        "pivot": [
+          2,
+          2,
+          2
+        ],
+        "provenance": {
+          "epoch": 0,
+          "origin": "Founding"
+        },
+        "severed": true,
+        "volume": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "attachment": {
+          "offset": [
+            0,
+            6,
+            0
+          ],
+          "parent": 40,
+          "yaw": "Zero"
+        },
+        "half_extent": [
+          4,
+          4,
+          1
+        ],
+        "id": 41,
+        "mass_mg": 17,
+        "pivot": [
+          4,
+          4,
+          1
+        ],
+        "provenance": {
+          "epoch": 0,
+          "origin": "Founding"
+        },
+        "severed": true,
+        "volume": [
+          3,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "attachment": {
+          "offset": [
+            0,
+            0,
+            4
+          ],
+          "parent": 40,
+          "yaw": "Zero"
+        },
+        "half_extent": [
+          2,
+          2,
+          2
+        ],
+        "id": 42,
+        "mass_mg": 17,
+        "pivot": [
+          2,
+          2,
+          2
+        ],
+        "provenance": {
+          "epoch": 0,
+          "origin": "Founding"
+        },
+        "severed": true,
+        "volume": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "attachment": {
+          "offset": [
+            0,
+            6,
+            0
+          ],
+          "parent": 42,
+          "yaw": "Zero"
+        },
+        "half_extent": [
+          4,
+          4,
+          1
+        ],
+        "id": 43,
+        "mass_mg": 17,
+        "pivot": [
+          4,
+          4,
+          1
+        ],
+        "provenance": {
+          "epoch": 0,
+          "origin": "Founding"
+        },
+        "severed": true,
+        "volume": [
+          3,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "attachment": {
+          "offset": [
+            0,
+            0,
+            4
+          ],
+          "parent": 42,
+          "yaw": "Zero"
+        },
+        "half_extent": [
+          2,
+          2,
+          2
+        ],
+        "id": 44,
+        "mass_mg": 17,
+        "pivot": [
+          2,
+          2,
+          2
+        ],
+        "provenance": {
+          "epoch": 0,
+          "origin": "Founding"
+        },
+        "severed": true,
+        "volume": [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "attachment": {
+          "offset": [
+            0,
+            6,
+            0
+          ],
+          "parent": 44,
+          "yaw": "Zero"
+        },
+        "half_extent": [
+          4,
+          4,
+          1
+        ],
+        "id": 45,
+        "mass_mg": 17,
+        "pivot": [
+          4,
+          4,
+          1
+        ],
+        "provenance": {
+          "epoch": 0,
+          "origin": "Founding"
+        },
+        "severed": true,
+        "volume": [
+          3,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    ],
+    "plan": {
+      "preferences": [
+        "Below",
+        "Right",
+        "Above",
+        "Front"
+      ],
+      "symmetry": "Radial",
+      "tolerance": 2
+    },
+    "root": 0,
+    "species": 1
+  },
+  "body_seed": 1183728865471312105,
+  "construction": {
+    "actuators": [
+      {
+        "part": 3,
+        "subject": 1
+      },
+      {
+        "part": 4,
+        "subject": 1
+      }
+    ],
+    "form": "Creature",
+    "network": {
+      "edges": [
+        {
+          "capacity": 50,
+          "from": 0,
+          "to": 1
+        },
+        {
+          "capacity": 50,
+          "from": 1,
+          "to": 2
+        },
+        {
+          "capacity": 50,
+          "from": 2,
+          "to": 3
+        },
+        {
+          "capacity": 50,
+          "from": 2,
+          "to": 4
+        }
+      ],
+      "nodes": {
+        "0": {
+          "id": 0,
+          "kind": {
+            "Source": {
+              "capacity": 100,
+              "charge": 100,
+              "part": {
+                "part": 0,
+                "subject": 1
+              }
+            }
+          }
+        },
+        "1": {
+          "id": 1,
+          "kind": {
+            "Store": {
+              "capacity": 100,
+              "charge": 0,
+              "part": {
+                "part": 1,
+                "subject": 1
+              }
+            }
+          }
+        },
+        "2": {
+          "id": 2,
+          "kind": {
+            "Gate": {
+              "open": true,
+              "part": {
+                "part": 2,
+                "subject": 1
+              }
+            }
+          }
+        },
+        "3": {
+          "id": 3,
+          "kind": {
+            "Effect": {
+              "part": {
+                "part": 3,
+                "subject": 1
+              }
+            }
+          }
+        },
+        "4": {
+          "id": 4,
+          "kind": {
+            "Effect": {
+              "part": {
+                "part": 4,
+                "subject": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "seed": 9974468881007221166,
+    "version": 1
+  },
+  "functional_seed": 9974468881007221166,
+  "removed": {
+    "part": 3,
+    "subject": 1
+  }
+}

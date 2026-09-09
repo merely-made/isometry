@@ -1,0 +1,17 @@
+[workspace]
+members = ["."]
+resolver = "2"
+
+[package]
+name = "wing-integration"
+version = "0.0.1"
+edition = "2024"
+publish = false
+license = "MPL-2.0"
+description = "Live producer-to-consumer receipts for the games wing."
+
+[dependencies]
+mesocosm-core = { path = "../../mesocosm/crates/mesocosm-core" }
+mesocosm-mesh = { path = "../../mesocosm/crates/mesocosm-mesh" }
+isometry-campaign = { path = "../../crates/isometry-campaign" }
+isometry-voxel = { path = "../../crates/isometry-voxel" }

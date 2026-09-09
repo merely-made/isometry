@@ -11,6 +11,8 @@ publish = false
 # any target a host might run on, so nothing here may pull in windowing,
 # graphics, threading, or clocks.
 [dependencies]
+wing-functions = { path = "../../../shared/wing-functions" }
+wing-formats = { path = "../../../shared/wing-formats" }
 serde = { workspace = true }
 postcard = { workspace = true }
 muniment = { workspace = true }

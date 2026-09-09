@@ -1,7 +1,7 @@
 # Engine and Ecology Rulings: Critical Review (2026-08-18)
 
 **Status: provisional engine rulings, reviewed against the live code through
-2026-08-26.** The vessel brief remains authority for product identity,
+2026-08-26; cross-port sharing audit added 2026-09-09 in section 7.** The vessel brief remains authority for product identity,
 camera, and presentation. The resident-views composition plan remains
 authority for the shared-device seam and the completed A-F proofs. This
 document records the consequences of those decisions, corrects the
@@ -689,3 +689,128 @@ implied.
 
 These remain consumer-forced contracts. They do not suspend unrelated product
 work, and none authorizes a generic engine umbrella in advance.
+
+## 7. Cross-port sharing audit, 2026-09-09
+
+**Status: source audit and recommended implementation order, not completed
+extractions.** Reviewed the three imported products at Isometry `746fbc8`,
+their manifests and lockfiles, and current local Mere/Netrender sources with
+bounded Luna/Terra lanes. No builds or runtime measurements were performed for
+this audit. Mere contains uncommitted atlas/host changes, so an available local
+API is not necessarily available at a product's published dependency revision.
+
+Repository consolidation is complete. The remaining problem is uneven adoption:
+Mesocosm and Paredros already share substantial world/body/render machinery,
+while the tabletop still mirrors older interchange formats. Generic platform
+mechanisms belong in Mere/Genet/Netrender; portable game facts can share a small
+library in this repository. No running application should depend on another
+application being active. Existing license notices remain part of any extraction.
+
+### Highest-value common solutions
+
+1. **One body/chronicle format definition and live interchange tests.**
+   `crates/isometry-campaign/src/chronicle.rs:24` and
+   `crates/isometry-voxel/src/body.rs:9` in the repository root justify local
+   positional-Postcard mirrors using the old data-not-types restriction.
+   Their live writers remain `mesocosm-core/src/chronicle.rs:55` and
+   `mesocosm-mesh/src/profile.rs:76`. Extract only format types, version framing
+   and structural validation into a wing library. Interpretation, regrowth,
+   gameplay consequences and sprite baking remain with their consumers.
+   The root `isometry-voxel/tests/body_profile.rs:24` reads a fixed literal
+   fixture; despite its comment, that alone cannot detect a changed producer.
+   **Done:** actual current producer bytes pass the tabletop reader and baker,
+   foreign deeds survive a round trip, and literal old fixtures plus explicit
+   version refusals remain tested. Keep v0 bytes stable during extraction.
+
+2. **Portable subject and body revision, followed by one test world.**
+   This is a missing contract, not another duplicated generator. The
+   [body contract](2026-07-31_wing_phenotype_contract_plan.md) already identifies
+   v0's missing subject, revision, parent links and scoped part addresses.
+   Paredros `paredros-world/src/anatomy.rs:13` now admits a Mesocosm body with
+   subject/revision identity; the tabletop receives a flattened appearance.
+   Advance the existing v1 gates after the byte-compatible extraction.
+   Then use one forest/watchtower fixture to require all three adapters to
+   identify the same subject, place, checkpoint and source revision, while
+   declaring their coordinate/material conversions and unsupported facts.
+   **Done:** stale revision and same-species part collisions are refused;
+   projection does not change source identity; an accepted edit survives the
+   supported round trip. A shared seed by itself is not this proof.
+
+3. **Align dependency sources before promoting shared APIs.**
+   Mesocosm/Paredros select Mere `d82afa17`; tabletop's git lock selects
+   `df07ce94` with additional local overrides. Mesocosm deliberately carries
+   Netrender `6f1a4fe7` plus `93b221a5`: `mesocosm-genet/src/chrome.rs:15`
+   documents two renderer facades over the same physical GPU handles.
+   The tabletop lock also contains both Genet `115d348d` and `9e8f9d` sources.
+   **Done:** choose and verify a compatible family across all three build
+   roots, remove the obsolete compatibility facade, and record resolved
+   source identities both with and without local overrides. Separate Cargo
+   workspaces are intentional; merging them is not necessary to close this.
+
+4. **Adopt existing GPU readback, then share surface lifecycle.**
+   Mesocosm `mesocosm-genet/src/section/capture.rs:54` independently implements
+   row padding, staging, mapping and unpadding. Paredros
+   `paredros-room/src/gpu.rs:532` uses Netrender's existing
+   `WgpuDevice::read_rgba8_texture`. Adopt that owner first, preserving the
+   composed master, error handling and opt-in capture policy.
+   **Done:** exact pixels where formats agree, dimensions and existing capture
+   receipts remain intact, without a second GPU device.
+   Larger follow-on: Mesocosm `app/setup.rs:24`, `app/frame.rs:268` and six
+   Paredros headed bins repeat window/surface configuration and recovery.
+   Prove a small surface helper in Paredros room/crossing, then generalize
+   into the platform with Mesocosm as the second consumer. Keep product input,
+   render ordering, color policy and simulation scheduling as callbacks.
+   **Done:** resize, lost/outdated surface, timeout/occlusion and capture paths
+   pass for both products. The tabletop's retained-DOM Cambium host is already
+   shared; it is not a drop-in replacement for these GPU-tenant hosts.
+
+5. **Use the atlas geometry/paint machinery for Mesocosm's minimap.**
+   `mesocosm-views/src/leaf.rs:74` maintains local world-to-pixel and polygon
+   conversion. The tabletop now uses Mere's
+   `crates/cambium/cambium/src/atlas.rs:116` for fixed-world projection and
+   retained geometry. Share that mechanism, or factor its small neutral paint
+   portion if the noninteractive minimap would otherwise acquire unnecessary
+   graph interaction. Keep Mesocosm's dominance colors, nearest-site regions
+   and player marker local, and the tabletop's knowledge filtering local.
+   **Done:** minimap terrain and marker alignment, transparency and retention
+   tests pass beside the atlas pan/zoom/polygon tests. This does not require
+   making the minimap draggable or inventing an atlas UI for Paredros.
+
+### Shared validation and deliberate differences
+
+Add a wing integration target/runner alongside `scripts/wing.ps1` for the
+live writer-reader proof and later the common-world fixture. Report per-product
+default, all-feature, replay and headed results separately. A green unit suite
+must not stand in for another port's consumer or a physical presentation test.
+
+Ground generation is already reused: Paredros `paredros-world/src/world.rs:118`
+calls Mesocosm `Places::grown` and `Ground::grow`. Sparse-brick carriage/DDA
+already uses Mere `modulus` in both games. Conatus already owns reusable spatial
+realization. Paredros's remaining Ground-to-ContactWorld join is product work,
+not evidence for a replacement world generator or physics engine.
+
+Do not merge tactical `GameEvent`, ecological `Intent`, Paredros `GameIntent`,
+or their clocks. Save validation and authority reducers have different jobs.
+Paredros's use of Mesocosm's small Postcard/hash helpers is ownership debt, but
+those few functions are a lower priority than the actual wire contracts; move
+them only into an appropriate existing utility owner. Preserve the distinction
+between a state hash and the tabletop's rolling sequence/event hash.
+
+Likewise, a common generator request/preview shell may eventually reuse the
+tabletop's bounded generator host, but Mesocosm's constrained biological
+generation and Paredros's persistent sites do not need to become Lua programs.
+Only the tabletop currently supplies a network protocol. Future co-op should
+reuse Mere transport/replication with each game's authority adapter; copying
+the tabletop's DM sequencer would not establish compatible authority.
+
+**Recommended first implementation:** coordinate dependency selection in
+parallel with the v0 format extraction and live producer-consumer test. Follow
+with the small readback/minimap adoptions. Advance the existing v1 body contract
+and shared-world fixture before proposing a shared creator or whole runtime.
+
+**Implementation follow-up, 2026-09-09:** the shared v0 format library and live
+producer/consumer target are now implemented in the working tree; verification
+and remaining gates are recorded in the [body plan, section 12](2026-07-31_wing_phenotype_contract_plan.md#12-shared-v0-format-implementation-2026-09-09).
+The dependency review found no need for platform pin changes in this pure-data
+slice. The renderer compatibility bridge remains a separate coordinated API
+migration; the audit does not claim the three dependency graphs aligned.

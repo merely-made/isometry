@@ -1069,3 +1069,78 @@ creator can begin with meaningful developmental choices and later add sculpting.
 Multi-body organisms, arbitrary world gravity, a shared combat ruleset, asset
 marketplaces, procedural civilizations, and online simultaneous editing each
 need their own consumer evidence. They do not block C0-C2.
+
+## 12. Shared v0 format implementation, 2026-09-09
+
+**Status: implemented and focused verification passed in the working tree.** This is the first implementation slice from the
+[cross-port audit](2026-08-18_engine_ecology_rulings_and_review.md#7-cross-port-sharing-audit-2026-09-09),
+authorized after the repository consolidation. It does not advance the wire
+version or close the v1 subject/topology gates above.
+
+1. Extract the primitive body/chronicle payloads, header framing and structural
+   validation into `shared/wing-formats` at the repository root. Preserve v0
+   byte layout and existing consumer API behavior; product projection,
+   interpretation, regrowth and baking remain local. Done when current writer
+   and reader adapters use one schema definition and legacy fixtures pass.
+2. Add `shared/wing-integration` with real Mesocosm producers and tabletop
+   consumers. Done when generated body bytes bake through all facings, a
+   chronicle round trip preserves opaque foreign deeds and recorded loss,
+   and explicit version refusal remains verified. Keep fixed compatibility
+   fixtures alongside the live producer tests.
+3. Review dependency alignment separately. These format crates must remain
+   independent of graphics and runtime types. Do not force unrelated platform
+   upgrades into a wire extraction. Record selected source graphs and any
+   remaining compatibility bridge rather than claiming the family aligned.
+
+Use `scripts/wing.ps1 formats test` and `scripts/wing.ps1 integration test`
+from the repository root. Existing per-product commands retain their separate
+Cargo roots and tabletop-only local override handling. Each shared package is
+an explicit standalone workspace, consistent with the concurrent wing-functions
+work. Preserve existing license notices and concurrent product changes.
+
+### Dependency review
+
+The format library requires only Serde and Postcard; this slice leaves platform
+pins unchanged. Mesocosm retains primary Netrender `6f1a4fe7` and the RG3
+`93b221a5` facade because retained GUI paint types and graph tenant types still
+come from different source identities. Removing the bridge requires a separate
+Mere/Genet/Netrender API migration, followed by Mesocosm GUI and Paredros room
+checks and headed composition receipts. A new local format dependency may
+update package lock entries; that is not a platform revision alignment.
+
+### Verification and API notes
+
+- Shared format suite: 8 passed. Header diagnostics, undecodable newer
+  payloads, truncated data, peeking and overflowing dimensions are covered.
+  Existing v0 Postcard tolerance of trailing bytes is explicitly preserved;
+  this extraction does not silently introduce strict payload exhaustion.
+- Live interchange suite: 4 passed. Current body output equals the retained
+  v0 fixture, all four tabletop facings bake, opaque deeds survive the return
+  trip, and the product readers retain schema/version refusal behavior.
+- Tabletop campaign/voxel suites: 71 passed, including their literal fixtures.
+- Mesocosm mesh suites: 63 passed. Chronicle proof-pair/homecoming: 18 passed.
+- Paredros world all-targets check passed against its existing platform pins.
+- A broader Mesocosm run passed 482 core tests (one existing ignored), 27
+  control tests and 70 embodied tests before it was stopped during the long
+  ecology-flow suite. This is not a full Mesocosm workspace test receipt.
+  Native GUI, full-stack all-feature builds and presented performance were
+  not part of this pure-data verification.
+
+Tests used offline resolution and a separate `C:/t/isometry-wire-target` cache;
+Paredros reused its product target. No shared-library publication, platform
+pin upgrade is claimed for this lane. The extraction was subsequently included
+in the combined reviewed generator/format commit. Concurrent functional
+generation and phenotype work was preserved.
+
+The shared structs are intentionally public primitive data-transfer types,
+not automatically validated game objects. Product readers call the shared
+structural validators and map errors into their established product types.
+Mesocosm's Chronicle and both BodyProfile adapters use transparent wrappers
+with field access/mutation through Deref/DerefMut. Existing producer/reader
+methods and v0 bytes survive; code constructing those wrappers with struct
+literals must instead construct the shared DTO inside the tuple wrapper.
+The tabletop Chronicle is a direct shared-type re-export. Product-specific
+conversions, projection, regrowth and interpretation remain local.
+
+Remaining: the v1 identity/topology contract, a common world/checkpoint fixture,
+minimap/readback adoption and the coordinated renderer dependency migration.

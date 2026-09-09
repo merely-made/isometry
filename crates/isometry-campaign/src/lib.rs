@@ -14,6 +14,7 @@ mod fact;
 mod collaboration;
 mod faction;
 mod generator;
+mod construction;
 mod item;
 mod map;
 mod pack;
@@ -28,6 +29,7 @@ pub use generator::{
     CastRoleRequest, EntropyTape, GenValue, GenValueError, GenerationRecord, GenerationRecordError,
     GeneratorFixture, GeneratorRequest, ItemProposal, MapPatchProposal, NpcProposal,
 };
+pub use construction::{ConstructionProposal, ConstructionError, CONSTRUCTION_SCHEMA};
 pub use item::{
     EquipmentSlot, HiddenItemModifier, Inventory, InventoryError, ItemId, ItemInstance,
     ItemModifier, ItemModifierKind, ItemModifierReveal,

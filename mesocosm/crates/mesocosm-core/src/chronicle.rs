@@ -45,6 +45,8 @@
 //! played one, and `tests/proof_pair.rs` asserts the two are indistinguishable.
 
 use serde::{Deserialize, Serialize};
+use std::ops::{Deref, DerefMut};
+pub use wing_formats::{Deed, PartOrigin};
 
 use crate::axis::{Recipe, Soma};
 use crate::body::{BodyDocument, Origin, PartId, Provenance, SpeciesId};
@@ -53,40 +55,23 @@ use crate::rng::Rng;
 use crate::wire::{WireError, frame, unframe};
 
 /// The chronicle schema.
-pub const CHRONICLE_SCHEMA: &str = "mesocosm.chronicle/v0";
+pub const CHRONICLE_SCHEMA: &str = wing_formats::CHRONICLE_SCHEMA;
 
 /// Schema magic. See [`crate::wire`] for why this sits outside the payload.
-pub const CHRONICLE_MAGIC: [u8; 8] = *b"MESOCHRN";
+pub const CHRONICLE_MAGIC: [u8; 8] = wing_formats::CHRONICLE_MAGIC;
 
 /// The only version this build accepts.
-pub const CHRONICLE_VERSION: u16 = 0;
+pub const CHRONICLE_VERSION: u16 = wing_formats::CHRONICLE_VERSION;
 
 /// Where one part came from.
 ///
 /// The wire form of [`Provenance`]. Flat on purpose: `None` for both fields
 /// means the part was there at founding, and a foreign reader needs no enum
 /// from this crate to tell that from a part that was taken off somebody.
-#[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Eq, Serialize)]
-pub struct PartOrigin {
-    /// The species this part was taken from. `None` at founding.
-    pub from_species: Option<u32>,
-    /// The part's identity in the body it was taken from. `None` at founding.
-    pub from_part: Option<u32>,
-    /// The epoch during which this part joined the body.
-    pub epoch: u64,
-}
-
-impl PartOrigin {
-    /// Whether this part was taken from another organism.
-    pub fn is_incorporated(&self) -> bool {
-        self.from_species.is_some()
-    }
-}
-
 impl From<&Provenance> for PartOrigin {
     fn from(provenance: &Provenance) -> Self {
         match provenance.origin {
-            Origin::Founding => Self {
+            Origin::Founding => PartOrigin {
                 from_species: None,
                 from_part: None,
                 epoch: provenance.epoch,
@@ -94,7 +79,7 @@ impl From<&Provenance> for PartOrigin {
             Origin::Incorporated {
                 from_species,
                 from_part,
-            } => Self {
+            } => PartOrigin {
                 from_species: Some(from_species.0),
                 from_part: Some(from_part.0),
                 epoch: provenance.epoch,
@@ -126,55 +111,22 @@ impl From<&PartOrigin> for Provenance {
 /// Every field except `at` is the appending game's own vocabulary. Readers
 /// that do not recognise a `vessel` or a `verb` must keep the deed anyway, and
 /// must never guess at `detail`.
-#[derive(Clone, Debug, Deserialize, PartialEq, Eq, Serialize)]
-pub struct Deed {
-    /// Which game appended this, named however that game names itself.
-    pub vessel: String,
-    /// What happened, in the appending game's words.
-    pub verb: String,
-    /// Causal order, not wall time. Cross-game clocks are unresolvable any
-    /// other way: a colony decade and a tactics session have no shared second.
-    pub at: u64,
-    /// The appending game's payload. Opaque to every other game, preserved by
-    /// all of them.
-    pub detail: Vec<u8>,
-}
-
-impl Deed {
-    /// A deed with no payload.
-    pub fn new(vessel: impl Into<String>, verb: impl Into<String>, at: u64) -> Self {
-        Self {
-            vessel: vessel.into(),
-            verb: verb.into(),
-            at,
-            detail: Vec::new(),
-        }
-    }
-
-    /// A deed carrying a payload only its author understands.
-    pub fn detailed(
-        vessel: impl Into<String>,
-        verb: impl Into<String>,
-        at: u64,
-        detail: Vec<u8>,
-    ) -> Self {
-        Self {
-            vessel: vessel.into(),
-            verb: verb.into(),
-            at,
-            detail,
-        }
-    }
-}
-
 /// A creature as a record: what lineage, what it was made of, what happened.
 #[derive(Clone, Debug, Default, Deserialize, PartialEq, Eq, Serialize)]
-pub struct Chronicle {
-    pub species: u32,
-    /// What the body was made of when it was last a body here.
-    pub parts: Vec<PartOrigin>,
-    /// Everything that happened, in append order.
-    pub deeds: Vec<Deed>,
+#[serde(transparent)]
+pub struct Chronicle(pub wing_formats::Chronicle);
+
+impl Deref for Chronicle {
+    type Target = wing_formats::Chronicle;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for Chronicle {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
 }
 
 /// What this game makes of a foreign deed. Interpretation is deliberately
@@ -194,7 +146,7 @@ pub const LOST_PART: &str = "lost-part";
 impl Chronicle {
     /// The record of a body as it stands.
     pub fn of(body: &BodyDocument) -> Self {
-        Self {
+        Self(wing_formats::Chronicle {
             species: body.species.0,
             parts: body
                 .parts
@@ -202,7 +154,7 @@ impl Chronicle {
                 .map(|part| PartOrigin::from(&part.provenance))
                 .collect(),
             deeds: Vec::new(),
-        }
+        })
     }
 
     /// Appends a fact. The only mutation there is.
@@ -279,9 +231,7 @@ impl Chronicle {
 
     pub fn from_bytes(bytes: &[u8]) -> Result<Self, WireError> {
         let chronicle: Self = unframe(CHRONICLE_MAGIC, CHRONICLE_VERSION, bytes)?;
-        if chronicle.parts.is_empty() {
-            return Err(WireError::Inconsistent);
-        }
+        wing_formats::validate_chronicle(&chronicle.0)?;
         Ok(chronicle)
     }
 }
@@ -331,11 +281,11 @@ pub fn generate(seed: u64, species: u32) -> Chronicle {
     let mut rng = Rng::from_seed(seed);
     let parts = 2 + rng.below(38) as usize;
 
-    let mut chronicle = Chronicle {
+    let mut chronicle = Chronicle(wing_formats::Chronicle {
         species,
         parts: Vec::with_capacity(parts),
         deeds: Vec::new(),
-    };
+    });
     chronicle.parts.push(PartOrigin {
         from_species: None,
         from_part: None,

@@ -1,0 +1,1402 @@
+[
+  {
+    "candidates": [
+      {
+        "form": "Creature",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 4226240541164079026,
+        "serde_continuation": true,
+        "supported_after_part_loss": 3,
+        "supported_before": 5
+      },
+      {
+        "form": "Staff",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 8881492027501728206,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      }
+    ],
+    "rejected": [],
+    "seed": 0
+  },
+  {
+    "candidates": [
+      {
+        "form": "Creature",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 4727332275863955013,
+        "serde_continuation": true,
+        "supported_after_part_loss": 3,
+        "supported_before": 5
+      },
+      {
+        "form": "Staff",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 6776753496403820349,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      }
+    ],
+    "rejected": [],
+    "seed": 1
+  },
+  {
+    "candidates": [
+      {
+        "form": "Creature",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 336952322507742756,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      },
+      {
+        "form": "Staff",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 4029069232579257389,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      }
+    ],
+    "rejected": [],
+    "seed": 2
+  },
+  {
+    "candidates": [
+      {
+        "form": "Creature",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 6586885273861128800,
+        "serde_continuation": true,
+        "supported_after_part_loss": 7,
+        "supported_before": 9
+      },
+      {
+        "form": "Staff",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 12667373246191798735,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      }
+    ],
+    "rejected": [],
+    "seed": 3
+  },
+  {
+    "candidates": [
+      {
+        "form": "Creature",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 16702306601133411307,
+        "serde_continuation": true,
+        "supported_after_part_loss": 7,
+        "supported_before": 9
+      },
+      {
+        "form": "Staff",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 2118306593218293768,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      }
+    ],
+    "rejected": [],
+    "seed": 4
+  },
+  {
+    "candidates": [
+      {
+        "form": "Creature",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 8890356748481926139,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      },
+      {
+        "form": "Staff",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 2403947798955291324,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      }
+    ],
+    "rejected": [],
+    "seed": 5
+  },
+  {
+    "candidates": [
+      {
+        "form": "Creature",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 14845847917711767174,
+        "serde_continuation": true,
+        "supported_after_part_loss": 7,
+        "supported_before": 9
+      },
+      {
+        "form": "Staff",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 9082467442924913302,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      }
+    ],
+    "rejected": [],
+    "seed": 6
+  },
+  {
+    "candidates": [
+      {
+        "form": "Creature",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 9974468881007221166,
+        "serde_continuation": true,
+        "supported_after_part_loss": 3,
+        "supported_before": 5
+      },
+      {
+        "form": "Staff",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 14666089668286279585,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      }
+    ],
+    "rejected": [],
+    "seed": 7
+  },
+  {
+    "candidates": [
+      {
+        "form": "Creature",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 16119181007968059593,
+        "serde_continuation": true,
+        "supported_after_part_loss": 7,
+        "supported_before": 9
+      },
+      {
+        "form": "Staff",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 3763830045400427464,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      }
+    ],
+    "rejected": [],
+    "seed": 8
+  },
+  {
+    "candidates": [
+      {
+        "form": "Creature",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 18390371616102421577,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      },
+      {
+        "form": "Staff",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 16344249770913833522,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      }
+    ],
+    "rejected": [],
+    "seed": 9
+  },
+  {
+    "candidates": [
+      {
+        "form": "Creature",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 4135863481016065531,
+        "serde_continuation": true,
+        "supported_after_part_loss": 5,
+        "supported_before": 7
+      },
+      {
+        "form": "Staff",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 15696854073172112910,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      }
+    ],
+    "rejected": [],
+    "seed": 10
+  },
+  {
+    "candidates": [
+      {
+        "form": "Creature",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 18251240271203323019,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      },
+      {
+        "form": "Staff",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 3706460425576137279,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      }
+    ],
+    "rejected": [],
+    "seed": 11
+  },
+  {
+    "candidates": [
+      {
+        "form": "Creature",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 323472438419744743,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      },
+      {
+        "form": "Staff",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 13636862760438573763,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      }
+    ],
+    "rejected": [],
+    "seed": 12
+  },
+  {
+    "candidates": [
+      {
+        "form": "Creature",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 17659019192995572422,
+        "serde_continuation": true,
+        "supported_after_part_loss": 3,
+        "supported_before": 5
+      },
+      {
+        "form": "Staff",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 13763388169447090821,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      }
+    ],
+    "rejected": [],
+    "seed": 13
+  },
+  {
+    "candidates": [
+      {
+        "form": "Creature",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 13134868526940003433,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      },
+      {
+        "form": "Staff",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 12098335038288545283,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      }
+    ],
+    "rejected": [],
+    "seed": 14
+  },
+  {
+    "candidates": [
+      {
+        "form": "Creature",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 17106281515272827996,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      },
+      {
+        "form": "Staff",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 1263712593409323688,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      }
+    ],
+    "rejected": [],
+    "seed": 15
+  },
+  {
+    "candidates": [
+      {
+        "form": "Creature",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 1240548565514053910,
+        "serde_continuation": true,
+        "supported_after_part_loss": 7,
+        "supported_before": 9
+      },
+      {
+        "form": "Staff",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 519539945072186803,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      }
+    ],
+    "rejected": [],
+    "seed": 16
+  },
+  {
+    "candidates": [
+      {
+        "form": "Creature",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 1680603331199826425,
+        "serde_continuation": true,
+        "supported_after_part_loss": 7,
+        "supported_before": 9
+      },
+      {
+        "form": "Staff",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 4292324558546933309,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      }
+    ],
+    "rejected": [],
+    "seed": 17
+  },
+  {
+    "candidates": [
+      {
+        "form": "Creature",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 7367750748455656817,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      },
+      {
+        "form": "Staff",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 14528445249376834952,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      }
+    ],
+    "rejected": [],
+    "seed": 18
+  },
+  {
+    "candidates": [
+      {
+        "form": "Creature",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 8700485350483184209,
+        "serde_continuation": true,
+        "supported_after_part_loss": 5,
+        "supported_before": 7
+      },
+      {
+        "form": "Staff",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 2670823085900884159,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      }
+    ],
+    "rejected": [],
+    "seed": 19
+  },
+  {
+    "candidates": [
+      {
+        "form": "Creature",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 12583928153310002099,
+        "serde_continuation": true,
+        "supported_after_part_loss": 7,
+        "supported_before": 9
+      },
+      {
+        "form": "Staff",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 154592705318843695,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      }
+    ],
+    "rejected": [],
+    "seed": 20
+  },
+  {
+    "candidates": [
+      {
+        "form": "Creature",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 9821589355386052131,
+        "serde_continuation": true,
+        "supported_after_part_loss": 3,
+        "supported_before": 5
+      },
+      {
+        "form": "Staff",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 6660084542991560120,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      }
+    ],
+    "rejected": [],
+    "seed": 21
+  },
+  {
+    "candidates": [
+      {
+        "form": "Creature",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 6463912119048186895,
+        "serde_continuation": true,
+        "supported_after_part_loss": 7,
+        "supported_before": 9
+      },
+      {
+        "form": "Staff",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 1405321889523750532,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      }
+    ],
+    "rejected": [],
+    "seed": 22
+  },
+  {
+    "candidates": [
+      {
+        "form": "Creature",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 652939593740399195,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      },
+      {
+        "form": "Staff",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 8815948655447003755,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      }
+    ],
+    "rejected": [],
+    "seed": 23
+  },
+  {
+    "candidates": [
+      {
+        "form": "Creature",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 12778205795264461524,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      },
+      {
+        "form": "Staff",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 15433398828244344797,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      }
+    ],
+    "rejected": [],
+    "seed": 24
+  },
+  {
+    "candidates": [
+      {
+        "form": "Creature",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 8094892424673077326,
+        "serde_continuation": true,
+        "supported_after_part_loss": 3,
+        "supported_before": 5
+      },
+      {
+        "form": "Staff",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 11687429870974071918,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      }
+    ],
+    "rejected": [],
+    "seed": 25
+  },
+  {
+    "candidates": [
+      {
+        "form": "Creature",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 15250536675651189034,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      },
+      {
+        "form": "Staff",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 16233888868988406946,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      }
+    ],
+    "rejected": [],
+    "seed": 26
+  },
+  {
+    "candidates": [
+      {
+        "form": "Creature",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 16078497756229535365,
+        "serde_continuation": true,
+        "supported_after_part_loss": 3,
+        "supported_before": 5
+      },
+      {
+        "form": "Staff",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 13855552612072581814,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      }
+    ],
+    "rejected": [],
+    "seed": 27
+  },
+  {
+    "candidates": [
+      {
+        "form": "Creature",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 7784488343159990818,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      },
+      {
+        "form": "Staff",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 5698997856699314043,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      }
+    ],
+    "rejected": [],
+    "seed": 28
+  },
+  {
+    "candidates": [
+      {
+        "form": "Creature",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 2668504344710606296,
+        "serde_continuation": true,
+        "supported_after_part_loss": 5,
+        "supported_before": 7
+      },
+      {
+        "form": "Staff",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 11261917873231213677,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      }
+    ],
+    "rejected": [],
+    "seed": 29
+  },
+  {
+    "candidates": [
+      {
+        "form": "Creature",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 5922493848954246831,
+        "serde_continuation": true,
+        "supported_after_part_loss": 3,
+        "supported_before": 5
+      },
+      {
+        "form": "Staff",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 4462523836628209553,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      }
+    ],
+    "rejected": [],
+    "seed": 30
+  },
+  {
+    "candidates": [
+      {
+        "form": "Creature",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 7965275756914033346,
+        "serde_continuation": true,
+        "supported_after_part_loss": 3,
+        "supported_before": 5
+      },
+      {
+        "form": "Staff",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 6094627385621866117,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      }
+    ],
+    "rejected": [],
+    "seed": 31
+  },
+  {
+    "candidates": [
+      {
+        "form": "Creature",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 730944698646832108,
+        "serde_continuation": true,
+        "supported_after_part_loss": 5,
+        "supported_before": 7
+      },
+      {
+        "form": "Staff",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 7526892356661893463,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      }
+    ],
+    "rejected": [],
+    "seed": 32
+  },
+  {
+    "candidates": [
+      {
+        "form": "Creature",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 14798870258648762133,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      },
+      {
+        "form": "Staff",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 9393461409770136098,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      }
+    ],
+    "rejected": [],
+    "seed": 33
+  },
+  {
+    "candidates": [
+      {
+        "form": "Creature",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 16133028182128788192,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      },
+      {
+        "form": "Staff",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 2134759136388487582,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      }
+    ],
+    "rejected": [],
+    "seed": 34
+  },
+  {
+    "candidates": [
+      {
+        "form": "Creature",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 7218917732662783419,
+        "serde_continuation": true,
+        "supported_after_part_loss": 5,
+        "supported_before": 7
+      },
+      {
+        "form": "Staff",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 13229977731581975202,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      }
+    ],
+    "rejected": [],
+    "seed": 35
+  },
+  {
+    "candidates": [
+      {
+        "form": "Creature",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 16053741986801090720,
+        "serde_continuation": true,
+        "supported_after_part_loss": 7,
+        "supported_before": 9
+      },
+      {
+        "form": "Staff",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 1908257490944892724,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      }
+    ],
+    "rejected": [],
+    "seed": 36
+  },
+  {
+    "candidates": [
+      {
+        "form": "Creature",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 17086557575178675334,
+        "serde_continuation": true,
+        "supported_after_part_loss": 3,
+        "supported_before": 5
+      },
+      {
+        "form": "Staff",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 14761222983810899449,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      }
+    ],
+    "rejected": [],
+    "seed": 37
+  },
+  {
+    "candidates": [
+      {
+        "form": "Creature",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 17567192199360311140,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      },
+      {
+        "form": "Staff",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 9209820198490855370,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      }
+    ],
+    "rejected": [],
+    "seed": 38
+  },
+  {
+    "candidates": [
+      {
+        "form": "Creature",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 18402822825163646862,
+        "serde_continuation": true,
+        "supported_after_part_loss": 3,
+        "supported_before": 5
+      },
+      {
+        "form": "Staff",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 672675067930840357,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      }
+    ],
+    "rejected": [],
+    "seed": 39
+  },
+  {
+    "candidates": [
+      {
+        "form": "Creature",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 15303105537140801999,
+        "serde_continuation": true,
+        "supported_after_part_loss": 3,
+        "supported_before": 5
+      },
+      {
+        "form": "Staff",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 17317119603862455913,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      }
+    ],
+    "rejected": [],
+    "seed": 40
+  },
+  {
+    "candidates": [
+      {
+        "form": "Creature",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 6375730637354878584,
+        "serde_continuation": true,
+        "supported_after_part_loss": 7,
+        "supported_before": 9
+      },
+      {
+        "form": "Staff",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 5810325158441639869,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      }
+    ],
+    "rejected": [],
+    "seed": 41
+  },
+  {
+    "candidates": [
+      {
+        "form": "Creature",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 7848905660420242348,
+        "serde_continuation": true,
+        "supported_after_part_loss": 3,
+        "supported_before": 5
+      },
+      {
+        "form": "Staff",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 3743557873135808770,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      }
+    ],
+    "rejected": [],
+    "seed": 42
+  },
+  {
+    "candidates": [
+      {
+        "form": "Creature",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 1533406200998811807,
+        "serde_continuation": true,
+        "supported_after_part_loss": 5,
+        "supported_before": 7
+      },
+      {
+        "form": "Staff",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 4791267649822521842,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      }
+    ],
+    "rejected": [],
+    "seed": 43
+  },
+  {
+    "candidates": [
+      {
+        "form": "Creature",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 8822326581225547906,
+        "serde_continuation": true,
+        "supported_after_part_loss": 5,
+        "supported_before": 7
+      },
+      {
+        "form": "Staff",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 14619663457389165292,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      }
+    ],
+    "rejected": [],
+    "seed": 44
+  },
+  {
+    "candidates": [
+      {
+        "form": "Creature",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 12618597985458193293,
+        "serde_continuation": true,
+        "supported_after_part_loss": 5,
+        "supported_before": 7
+      },
+      {
+        "form": "Staff",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 3096891988029745026,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      }
+    ],
+    "rejected": [],
+    "seed": 45
+  },
+  {
+    "candidates": [
+      {
+        "form": "Creature",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 1337226685742632334,
+        "serde_continuation": true,
+        "supported_after_part_loss": 5,
+        "supported_before": 7
+      },
+      {
+        "form": "Staff",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 6412315847284181748,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      }
+    ],
+    "rejected": [],
+    "seed": 46
+  },
+  {
+    "candidates": [
+      {
+        "form": "Creature",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 12654521241029816037,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      },
+      {
+        "form": "Staff",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 2899247046501550415,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      }
+    ],
+    "rejected": [],
+    "seed": 47
+  },
+  {
+    "candidates": [
+      {
+        "form": "Creature",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 12454478513837640984,
+        "serde_continuation": true,
+        "supported_after_part_loss": 3,
+        "supported_before": 5
+      },
+      {
+        "form": "Staff",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 8137557312797583132,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      }
+    ],
+    "rejected": [],
+    "seed": 48
+  },
+  {
+    "candidates": [
+      {
+        "form": "Creature",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 3604898658978683660,
+        "serde_continuation": true,
+        "supported_after_part_loss": 3,
+        "supported_before": 5
+      },
+      {
+        "form": "Staff",
+        "mutation_reasons": [
+          "body part 1:3 is unavailable",
+          "body part 1:3 is unavailable"
+        ],
+        "seed": 17228201615212206608,
+        "serde_continuation": true,
+        "supported_after_part_loss": 1,
+        "supported_before": 3
+      }
+    ],
+    "rejected": [],
+    "seed": 49
+  }
+]

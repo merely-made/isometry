@@ -13,9 +13,8 @@
 //! its output would invert that, and would make every future writer a new
 //! dependency instead of a new file.
 //!
-//! So the wire structs below are a **local mirror**, deliberately duplicated.
-//! Every field is a primitive or a `Vec` of primitives, which is what makes
-//! mirroring cheap enough to be the right call. Nothing here links Mesocosm.
+//! The primitive layout lives in the product-free `wing-formats` crate. This
+//! importer keeps only its voxel projection and its product-local errors.
 //!
 //! # Axes agree, and that was checked
 //!
@@ -33,17 +32,20 @@
 //! profile from a newer writer is diagnosed as a version disagreement rather
 //! than mis-decoded into plausible nonsense.
 
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+#[cfg(test)]
+use serde::Serialize;
+use std::ops::{Deref, DerefMut};
+pub use wing_formats::PartOrigin;
 
 use crate::recipe::Palette;
 use crate::voxel::{Rgb, Voxels};
 
 /// The schema this importer accepts.
-pub const BODY_SCHEMA: &str = "mesocosm.body/v0";
+pub const BODY_SCHEMA: &str = wing_formats::BODY_SCHEMA;
 
-const MAGIC: [u8; 8] = *b"MESOBODY";
-const VERSION: u16 = 0;
-const HEADER_LEN: usize = 10;
+const MAGIC: [u8; 8] = wing_formats::BODY_MAGIC;
+const VERSION: u16 = wing_formats::BODY_VERSION;
 
 /// Why a body profile could not be read.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -60,60 +62,45 @@ pub enum BodyError {
     Inconsistent,
 }
 
-/// Where one part came from. `from_species` is `None` when the part was there
-/// at the lineage's founding, and `Some` when it was taken from somebody.
-#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq, Serialize)]
-pub struct PartOrigin {
-    pub from_species: Option<u32>,
-    pub from_part: Option<u32>,
-    pub epoch: u64,
-}
-
-impl PartOrigin {
-    pub fn is_incorporated(&self) -> bool {
-        self.from_species.is_some()
-    }
-}
-
 /// A body profile as it arrives on the wire. Field order and names must match
 /// the writer's; postcard is positional, so order is what actually binds.
 #[derive(Clone, Debug, Deserialize, PartialEq, Eq)]
-pub struct BodyProfile {
-    pub species: u32,
-    pub size: [u32; 3],
-    pub origin: [i32; 3],
-    pub cells: Vec<u8>,
-    /// Parallel to `cells`: part index + 1, or 0 for empty.
-    pub attribution: Vec<u16>,
-    pub parts: Vec<PartOrigin>,
+#[serde(transparent)]
+pub struct BodyProfile(pub wing_formats::BodyProfile);
+
+impl Deref for BodyProfile {
+    type Target = wing_formats::BodyProfile;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for BodyProfile {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+fn body_error(error: wing_formats::WireError) -> BodyError {
+    match error {
+        wing_formats::WireError::TooShort { got } => BodyError::TooShort { got },
+        wing_formats::WireError::WrongSchema { .. } => BodyError::NotABody,
+        wing_formats::WireError::UnknownVersion { found, expected } => {
+            BodyError::UnknownVersion { found, expected }
+        },
+        wing_formats::WireError::Malformed | wing_formats::WireError::Encode => {
+            BodyError::Malformed
+        },
+        wing_formats::WireError::Inconsistent => BodyError::Inconsistent,
+    }
 }
 
 impl BodyProfile {
     /// Reads a body profile, refusing anything it cannot vouch for.
     pub fn read(bytes: &[u8]) -> Result<Self, BodyError> {
-        if bytes.len() < HEADER_LEN {
-            return Err(BodyError::TooShort { got: bytes.len() });
-        }
-        if bytes[..8] != MAGIC {
-            return Err(BodyError::NotABody);
-        }
-        let found = u16::from_le_bytes([bytes[8], bytes[9]]);
-        if found != VERSION {
-            return Err(BodyError::UnknownVersion { found, expected: VERSION });
-        }
-
-        let profile: Self =
-            postcard::from_bytes(&bytes[HEADER_LEN..]).map_err(|_| BodyError::Malformed)?;
-
-        let cells = profile.size.iter().map(|d| *d as usize).product::<usize>();
-        let highest = profile.attribution.iter().copied().max().unwrap_or(0) as usize;
-        if cells != profile.cells.len()
-            || cells != profile.attribution.len()
-            || highest > profile.parts.len()
-        {
-            return Err(BodyError::Inconsistent);
-        }
-        Ok(profile)
+        let profile = wing_formats::unframe(MAGIC, VERSION, bytes).map_err(body_error)?;
+        wing_formats::validate_body_profile(&profile).map_err(|_| BodyError::Inconsistent)?;
+        Ok(Self(profile))
     }
 
     /// The body as a volume indexed by **material**, which is how the writing
@@ -167,7 +154,10 @@ impl BodyProfile {
 
     /// How many of this body's parts were taken from other organisms.
     pub fn incorporated_parts(&self) -> usize {
-        self.parts.iter().filter(|part| part.is_incorporated()).count()
+        self.parts
+            .iter()
+            .filter(|part| part.is_incorporated())
+            .count()
     }
 
     fn index(&self, x: i32, y: i32, z: i32) -> Option<usize> {
@@ -221,8 +211,16 @@ mod tests {
             cells: vec![1, 2],
             attribution: vec![1, 2],
             parts: vec![
-                PartOrigin { from_species: None, from_part: None, epoch: 0 },
-                PartOrigin { from_species: Some(42), from_part: Some(3), epoch: 5 },
+                PartOrigin {
+                    from_species: None,
+                    from_part: None,
+                    epoch: 0,
+                },
+                PartOrigin {
+                    from_species: Some(42),
+                    from_part: Some(3),
+                    epoch: 5,
+                },
             ],
         }
     }
@@ -248,7 +246,11 @@ mod tests {
         assert_eq!(body.incorporated_parts(), 1);
         assert_eq!(
             body.origin_at(1, 0, 0),
-            Some(PartOrigin { from_species: Some(42), from_part: Some(3), epoch: 5 })
+            Some(PartOrigin {
+                from_species: Some(42),
+                from_part: Some(3),
+                epoch: 5
+            })
         );
         assert!(!body.origin_at(0, 0, 0).unwrap().is_incorporated());
     }
@@ -264,7 +266,10 @@ mod tests {
             0,
             &BakeParams::default(),
         );
-        assert!(sheet.w > 0 && sheet.h > 0, "a body profile produces a sprite");
+        assert!(
+            sheet.w > 0 && sheet.h > 0,
+            "a body profile produces a sprite"
+        );
     }
 
     #[test]
@@ -275,8 +280,16 @@ mod tests {
         assert_eq!(voxels.get(1, 0, 0), Some(2));
 
         let palette = body.origin_palette([90, 140, 60], [200, 120, 70]);
-        assert_eq!(palette.color(1), [90, 140, 60], "the founding part is its own");
-        assert_eq!(palette.color(2), [200, 120, 70], "the taken part reads as taken");
+        assert_eq!(
+            palette.color(1),
+            [90, 140, 60],
+            "the founding part is its own"
+        );
+        assert_eq!(
+            palette.color(2),
+            [200, 120, 70],
+            "the taken part reads as taken"
+        );
     }
 
     #[test]
@@ -293,7 +306,10 @@ mod tests {
             BodyProfile::read(b"NOTABODY plus payload"),
             Err(BodyError::NotABody)
         );
-        assert_eq!(BodyProfile::read(b"MESO"), Err(BodyError::TooShort { got: 4 }));
+        assert_eq!(
+            BodyProfile::read(b"MESO"),
+            Err(BodyError::TooShort { got: 4 })
+        );
     }
 
     #[test]
@@ -302,7 +318,10 @@ mod tests {
         bytes[8..10].copy_from_slice(&99u16.to_le_bytes());
         assert_eq!(
             BodyProfile::read(&bytes),
-            Err(BodyError::UnknownVersion { found: 99, expected: VERSION })
+            Err(BodyError::UnknownVersion {
+                found: 99,
+                expected: VERSION
+            })
         );
     }
 
@@ -310,10 +329,16 @@ mod tests {
     fn a_contradictory_profile_is_refused() {
         let mut bad = wire();
         bad.attribution.pop();
-        assert_eq!(BodyProfile::read(&framed(&bad)), Err(BodyError::Inconsistent));
+        assert_eq!(
+            BodyProfile::read(&framed(&bad)),
+            Err(BodyError::Inconsistent)
+        );
 
         let mut past_the_end = wire();
         past_the_end.attribution[0] = 99;
-        assert_eq!(BodyProfile::read(&framed(&past_the_end)), Err(BodyError::Inconsistent));
+        assert_eq!(
+            BodyProfile::read(&framed(&past_the_end)),
+            Err(BodyError::Inconsistent)
+        );
     }
 }
