@@ -4,7 +4,7 @@ version = "0.0.1"
 edition = "2024"
 license = "MPL-2.0"
 description = "Paredros social authority: deeds, beliefs, standing, confidence, refusal, agreements, and explanations."
-repository = "https://github.com/merely-made/paredros"
+repository = "https://github.com/merely-made/isometry"
 publish = false
 
 # Pure state and pure rules. No renderer, no world, no kinematics, and above

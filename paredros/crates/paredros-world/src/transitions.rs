@@ -11,9 +11,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::bodies::{BodyError, Name};
 use crate::items::{ItemError, ItemId};
-use crate::{MovementError, WorldError, WorldSave};
+use crate::{AnatomyError, MovementError, WorldError, WorldSave};
 
-pub const GAME_STATE_VERSION: u32 = 1;
+pub const GAME_STATE_VERSION: u32 = 3;
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum GameIntent {
@@ -61,6 +61,32 @@ pub enum GameIntent {
         tick: Tick,
         subject: SubjectId,
     },
+    /// Admit an immutable, validated detailed body snapshot for this revision.
+    AdmitAnatomy {
+        tick: Tick,
+        subject: SubjectId,
+        revision: BodyRevisionId,
+        document: Box<mesocosm_core::BodyDocument>,
+    },
+    ReconcileAnatomy {
+        tick: Tick,
+        subject: SubjectId,
+        from_revision: BodyRevisionId,
+        revision: BodyRevisionId,
+        severed_parts: Vec<mesocosm_core::PartId>,
+    },
+    AttachItem {
+        tick: Tick,
+        subject: SubjectId,
+        item: ItemId,
+        part: mesocosm_core::PartId,
+        revision: BodyRevisionId,
+    },
+    DetachItem {
+        tick: Tick,
+        subject: SubjectId,
+        item: ItemId,
+    },
 }
 
 impl GameIntent {
@@ -74,6 +100,10 @@ impl GameIntent {
             | Self::Eat { tick, .. }
             | Self::Rest { tick, .. }
             | Self::Fall { tick, .. }
+            | Self::AdmitAnatomy { tick, .. }
+            | Self::ReconcileAnatomy { tick, .. }
+            | Self::AttachItem { tick, .. }
+            | Self::DetachItem { tick, .. }
             | Self::Wait { tick, .. } => *tick,
         }
     }
@@ -88,6 +118,10 @@ impl GameIntent {
             | Self::Eat { subject, .. }
             | Self::Rest { subject, .. }
             | Self::Fall { subject, .. }
+            | Self::AdmitAnatomy { subject, .. }
+            | Self::ReconcileAnatomy { subject, .. }
+            | Self::AttachItem { subject, .. }
+            | Self::DetachItem { subject, .. }
             | Self::Wait { subject, .. } => *subject,
         }
     }
@@ -101,6 +135,34 @@ pub enum DeathCause {
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum GameEvent {
+    AnatomyReconciled {
+        tick: Tick,
+        subject: SubjectId,
+        from_revision: BodyRevisionId,
+        revision: BodyRevisionId,
+    },
+    ItemAttached {
+        tick: Tick,
+        subject: SubjectId,
+        item: ItemId,
+        part: mesocosm_core::PartId,
+    },
+    ItemDetached {
+        tick: Tick,
+        subject: SubjectId,
+        item: ItemId,
+    },
+    ItemReleased {
+        tick: Tick,
+        subject: SubjectId,
+        item: ItemId,
+        at: [i32; 3],
+    },
+    AnatomyAdmitted {
+        tick: Tick,
+        subject: SubjectId,
+        revision: BodyRevisionId,
+    },
     Generated {
         tick: Tick,
         subject: SubjectId,
@@ -178,6 +240,7 @@ pub enum GameError {
     Movement(MovementError),
     Body(BodyError),
     Item(ItemError),
+    Anatomy(AnatomyError),
     WrongTick { expected: Tick, actual: Tick },
     StateDiverged { saved: u64, restored: u64 },
     VersionDiverged { saved: u32, current: u32 },
@@ -206,5 +269,11 @@ impl From<BodyError> for GameError {
 impl From<ItemError> for GameError {
     fn from(error: ItemError) -> Self {
         Self::Item(error)
+    }
+}
+
+impl From<AnatomyError> for GameError {
+    fn from(error: AnatomyError) -> Self {
+        Self::Anatomy(error)
     }
 }

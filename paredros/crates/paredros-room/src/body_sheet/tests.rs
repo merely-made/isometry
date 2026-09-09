@@ -33,6 +33,7 @@ fn selection_is_view_local_and_life_change_resets_it() {
         .collect::<Vec<_>>();
     let mut view = SheetView::default();
     view.select_life(&lives, 2);
+    view.key(&lives, SheetKey::TogglePartsView);
     view.click(&lives, [30., LIST_TOP + ROW_HEIGHT + 1.]);
     assert!(lives[2].sheet.parts[view.part].severed);
     view.key(&lives, SheetKey::SwitchFocus);
@@ -83,10 +84,21 @@ fn clicks_outside_rows_do_not_select_or_clear_details() {
     let lives = lives();
     let mut view = SheetView::default();
     view.detail_scroll = 1;
-    for point in [[30., 170.], [30., 650.], [380., 600.], [30., 600.]] {
+    for point in [[30., 160.], [30., 680.], [380., 600.], [30., 600.]] {
         view.click(&lives, point);
         assert_eq!(view.part, 0);
         assert_eq!(view.focus, Focus::Part);
         assert_eq!(view.detail_scroll, 1);
     }
+}
+
+#[test]
+fn diagram_is_default_and_heading_or_key_keeps_the_list_available() {
+    let lives = lives();
+    let mut view = SheetView::default();
+    assert!(view.parts_view);
+    view.key(&lives, SheetKey::TogglePartsView);
+    assert!(!view.parts_view);
+    view.click(&lives, [PART_X + 4., 176.]);
+    assert!(view.parts_view);
 }

@@ -1,19 +1,26 @@
 // Copyright 2026 Mark Alan Boykin
 // SPDX-License-Identifier: MPL-2.0
 
-//! Read-only native presentation for the authored subject-sheet scenario.
+//! Native body presentation: authored comparison and live equipment session.
 //!
-//! This owns view-local selection and scrolling only. The `SubjectSheet`
-//! projection remains caller supplied, and none of the controls are game verbs.
+//! Comparison selection is view-local. Equipment commands are dispatched by
+//! the host to GameState; both presentations consume derived sheets.
 
 use netrender::Scene;
 mod text;
 use text::Text;
 mod details;
+mod schematic;
 #[cfg(test)]
 mod tests;
 mod view;
 pub use view::{Focus, LifeSheet, SheetView};
+mod equipment_session;
+mod equipment_store;
+pub use equipment_store::{load_equipment, save_equipment};
+mod equipment_view;
+pub use equipment_session::EquipmentSession;
+pub use equipment_view::{EquipmentCommand, EquipmentView};
 
 pub const LOGICAL_SIZE: [u32; 2] = [1280, 720];
 const ROW_HEIGHT: f32 = 30.;
@@ -48,6 +55,7 @@ impl SheetView {
                 };
                 self.detail_scroll = 0;
             },
+            SheetKey::TogglePartsView => self.parts_view = !self.parts_view,
             SheetKey::Up => match self.focus {
                 Focus::Part => self.part = self.part.saturating_sub(1),
                 Focus::Action => self.action = self.action.saturating_sub(1),
@@ -70,6 +78,21 @@ impl SheetView {
         }
         if (24. ..330.).contains(&point[0]) && (80. ..122.).contains(&point[1]) {
             self.select_life(lives, ((point[0] - 24.) / 102.).floor() as usize);
+            return;
+        }
+        if (PART_X..ACTION_X - 12.).contains(&point[0]) && (162. ..200.).contains(&point[1]) {
+            self.parts_view = !self.parts_view;
+            return;
+        }
+        if self.parts_view
+            && (schematic::LEFT..schematic::RIGHT).contains(&point[0])
+            && (schematic::TOP..schematic::BOTTOM).contains(&point[1])
+        {
+            if let Some(part) = schematic::hit(&lives[self.life].sheet.parts, point) {
+                self.focus = Focus::Part;
+                self.part = part;
+                self.detail_scroll = 0;
+            }
             return;
         }
         if !(LIST_TOP..LIST_BOTTOM).contains(&point[1]) {
@@ -145,6 +168,7 @@ pub enum SheetKey {
     SwitchFocus,
     Up,
     Down,
+    TogglePartsView,
 }
 
 pub struct Hud {
@@ -177,7 +201,7 @@ impl Hud {
         );
         self.text.label(
             &mut scene,
-            "Read-only comparison. It does not select a player body or change any fact.",
+            "Read-only comparison. C returns to live equipment; comparing does not switch player bodies.",
             [27., 51.],
             17.,
             [0.72, 0.80, 0.84, 1.],
@@ -219,8 +243,18 @@ impl Hud {
             [0.95, 0.78, 0.42, 1.],
             880.,
         );
-        self.text
-            .label(&mut scene, "PARTS", [PART_X, 173.], 18., ink, 300.);
+        self.text.label(
+            &mut scene,
+            if view.parts_view {
+                "PARTS / DIAGRAM [click or L: list]"
+            } else {
+                "PARTS / LIST [click or L: diagram]"
+            },
+            [PART_X, 173.],
+            16.,
+            ink,
+            320.,
+        );
         self.text.label(
             &mut scene,
             "ACTION BINDINGS",
@@ -231,45 +265,49 @@ impl Hud {
         );
         self.text
             .label(&mut scene, "INSPECTION", [DETAIL_X, 173.], 18., ink, 500.);
-        for (index, part) in life.sheet.parts.iter().enumerate() {
-            let y = LIST_TOP + index as f32 * ROW_HEIGHT - view.scroll;
-            if !(LIST_TOP..LIST_BOTTOM - ROW_HEIGHT).contains(&y) {
-                continue;
-            }
-            let selected = view.focus == Focus::Part && index == view.part;
-            let sourced = view.focus == Focus::Action
-                && life.sheet.actions.get(view.action).is_some_and(|action| {
-                    action
-                        .sources
-                        .iter()
-                        .any(|source| *source == paredros_world::SourceQuery::Part(part.id))
-                });
-            if selected || sourced {
-                scene.push_rect(
-                    PART_X - 5.,
-                    y - 3.,
-                    ACTION_X - 17.,
-                    y + 23.,
-                    if selected {
-                        [0.16, 0.38, 0.42, 1.]
+        if view.parts_view {
+            schematic::draw(&mut scene, life, view, &mut self.text, ink);
+        } else {
+            for (index, part) in life.sheet.parts.iter().enumerate() {
+                let y = LIST_TOP + index as f32 * ROW_HEIGHT - view.scroll;
+                if !(LIST_TOP..LIST_BOTTOM - ROW_HEIGHT).contains(&y) {
+                    continue;
+                }
+                let selected = view.focus == Focus::Part && index == view.part;
+                let sourced = view.focus == Focus::Action
+                    && life.sheet.actions.get(view.action).is_some_and(|action| {
+                        action
+                            .sources
+                            .iter()
+                            .any(|source| *source == paredros_world::SourceQuery::Part(part.id))
+                    });
+                if selected || sourced {
+                    scene.push_rect(
+                        PART_X - 5.,
+                        y - 3.,
+                        ACTION_X - 17.,
+                        y + 23.,
+                        if selected {
+                            [0.16, 0.38, 0.42, 1.]
+                        } else {
+                            [0.12, 0.24, 0.28, 1.]
+                        },
+                    );
+                }
+                let state = if part.severed { "SEVERED" } else { "living" };
+                self.text.label(
+                    &mut scene,
+                    &format!("{}  {}", part.name, state),
+                    [PART_X, y],
+                    16.,
+                    if part.severed {
+                        [1., 0.56, 0.48, 1.]
                     } else {
-                        [0.12, 0.24, 0.28, 1.]
+                        ink
                     },
+                    300.,
                 );
             }
-            let state = if part.severed { "SEVERED" } else { "living" };
-            self.text.label(
-                &mut scene,
-                &format!("{}  {}", part.name, state),
-                [PART_X, y],
-                16.,
-                if part.severed {
-                    [1., 0.56, 0.48, 1.]
-                } else {
-                    ink
-                },
-                300.,
-            );
         }
         for (index, action) in life.sheet.actions.iter().enumerate() {
             let y = LIST_TOP + index as f32 * ROW_HEIGHT - view.scroll;
@@ -322,7 +360,7 @@ impl Hud {
             );
         }
         self.details(&mut scene, life, view, ink);
-        self.text.label(&mut scene, "1/2/3 compare lives  |  Tab change list  |  arrows select  |  wheel list/detail scroll  |  PgUp/PgDn inspect  |  Esc quit", [27., 690.], 16., ink, 1200.);
+        self.text.label(&mut scene, "1/2/3 compare lives  |  Tab change list  |  L diagram/list  |  arrows select  |  wheel list/detail scroll  |  PgUp/PgDn inspect  |  Esc quit", [27., 690.], 16., ink, 1200.);
         scene
     }
 

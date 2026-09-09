@@ -9,7 +9,7 @@ edition = "2024"
 # rest of the wing rather than taking a separate permissive grant.
 license = "MPL-2.0"
 description = "The wing's identity facts: the continuing person, the body worn, the roles held, and who the player is currently being."
-repository = "https://github.com/merely-made/paredros"
+repository = "https://github.com/merely-made/isometry"
 publish = false
 
 # Deliberately dependency-free apart from serde. Both of the game's owners

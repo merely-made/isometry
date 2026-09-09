@@ -22,6 +22,9 @@ pub struct SheetView {
     pub focus: Focus,
     pub scroll: f32,
     pub detail_scroll: usize,
+    /// The diagram is the default. The text list remains available for dense
+    /// comparison and keyboard users.
+    pub parts_view: bool,
 }
 
 impl Default for SheetView {
@@ -33,6 +36,7 @@ impl Default for SheetView {
             focus: Focus::Part,
             scroll: 0.,
             detail_scroll: 0,
+            parts_view: true,
         }
     }
 }

@@ -74,6 +74,12 @@ foundation receipts, while the 2026-08-13 fundamental-layer ledger now owns
 future ordering. The founding plan remains the charter with its phase section
 superseded.
 
+The local `paredros-world::Session` foundation (2026-09-09) composes one
+`GameState` with historically validated control and existing-life succession.
+Its versioned save supports configurable archive limits; full contact,
+autonomous/social coordination, outsider arrival and host integration remain
+open. See `design_docs/2026-09-09_functional_loops_plan.md` for current lanes.
+
 The `crossing` binary (2026-09-05) is the dry damaged-crossing contact
 fixture: two restartable body presets, board carrying, tethering, brace,
 timed strikes, impairment/recovery, and a readable shared-device HUD.
@@ -112,9 +118,10 @@ architecture in the sibling repo at
 - **succession**: play continuing through another subject after death. An
   existing connected creature and a newly generated outsider are both valid.
 - **fili**: lineage across worlds. Not event history.
-- **tulpa**: the legend and memorial organ — persistence through memory when
-  no one carries the line. Proposed, **not yet inscribed in mere's lexicon**;
-  treat as provisional.
+- **hagiograph**: the legend and memorial organ, named 2026-09-02. Its Mere
+  crate is currently a reservation; Paredros's memory/remembrance plan scopes
+  its first consumer. Older documents used `tulpa` for this meaning.
+- **tulpa**: Gemot's federated adapter-training lane; not the memorial organ.
 
 Do not coin new names for these concepts mid-session. Naming rounds are
 deliberate here: candidates get crates.io, game, studio, and trademark checks

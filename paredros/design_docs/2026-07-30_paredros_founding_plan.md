@@ -438,6 +438,16 @@ The default answers: what can I do, what am I carrying, what changed, and why?
 Deeper anatomy and provenance are available on inspection. Use ordinary words
 for missing requirements rather than exposing internal predicate names.
 
+The body schematic is the primary navigation surface: derive it from actual
+part arrangement and attachments rather than a humanoid paper-doll template.
+A labelled exploded view can separate overlapping parts; distinguish that
+display spacing from physical anatomy. Lost parts keep inspectable outlines,
+and incorporated parts expose their provenance. Retain a named list alternative
+for precision and keyboard access. Equipment compatibility comes from anatomy
+and attachment requirements, including bindings spanning several parts; drawn
+slots never create compatibility rules. Interior/cutaway readings can follow
+when admitted organ and containment facts support them.
+
 - **Body:** select a part to inspect condition, functions, support/supply links,
   attachments, and competing uses. Distinguish inherited potential from current
   expression. Keep a stable named part list alongside the spatial view so

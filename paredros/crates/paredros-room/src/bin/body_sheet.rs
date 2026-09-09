@@ -1,7 +1,7 @@
 // Copyright 2026 Mark Alan Boykin
 // SPDX-License-Identifier: MPL-2.0
 
-//! Native, read-only host for the authored three-lives Body/Actions sheet.
+//! Native live equipment host with a separate authored comparison mode.
 
 use std::env;
 use std::path::PathBuf;
@@ -9,6 +9,7 @@ use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use netrender::{Compositor, PresentedFrame, Scene, SurfaceKey};
+use paredros_room::body_sheet::{EquipmentCommand, EquipmentSession, EquipmentView};
 use paredros_room::body_sheet::{Hud, LOGICAL_SIZE, LifeSheet, SheetKey, SheetView};
 use paredros_room::gpu::{self, Composer, MASTER_FORMAT};
 use paredros_world::fixtures::three_lives as fixture;
@@ -19,6 +20,8 @@ use winit::event::{ElementState, KeyEvent, MouseScrollDelta, WindowEvent};
 use winit::event_loop::{ActiveEventLoop, ControlFlow, EventLoop};
 use winit::keyboard::{KeyCode, PhysicalKey};
 use winit::window::{Window, WindowId};
+#[path = "body_sheet/persistence_smoke.rs"]
+mod persistence_smoke;
 
 fn main() {
     let event_loop = EventLoop::new().expect("winit event loop");
@@ -39,6 +42,12 @@ struct App {
     captured: usize,
     cursor: Option<PhysicalPosition<f64>>,
     capture_root: PathBuf,
+    equipment: EquipmentSession,
+    equipment_view: EquipmentView,
+    comparison: bool,
+    equipment_smoke: bool,
+    save_directory: PathBuf,
+    persistence_smoke: bool,
 }
 struct Live {
     window: Arc<Window>,
@@ -57,7 +66,7 @@ impl App {
             view.focus = paredros_room::body_sheet::Focus::Action;
             view.action = 2;
         }
-        Self {
+        let mut app = Self {
             instance: wgpu::Instance::new(
                 wgpu::InstanceDescriptor::new_without_display_handle_from_env(),
             ),
@@ -66,6 +75,19 @@ impl App {
             live: None,
             smoke,
             captured: 0,
+            equipment: EquipmentSession::new().expect("equipment session"),
+            equipment_view: EquipmentView::default(),
+            comparison: smoke && env::var_os("PAREDROS_EQUIPMENT_SMOKE").is_none(),
+            equipment_smoke: env::var_os("PAREDROS_EQUIPMENT_SMOKE").is_some(),
+            persistence_smoke: env::var_os("PAREDROS_EQUIPMENT_PERSIST_SMOKE").is_some(),
+            save_directory: env::var_os("PAREDROS_EQUIPMENT_SAVES")
+                .map(PathBuf::from)
+                .unwrap_or_else(|| {
+                    env::var_os("LOCALAPPDATA")
+                        .map(PathBuf::from)
+                        .unwrap_or_else(|| PathBuf::from("saves"))
+                        .join("Merely/Paredros/equipment")
+                }),
             cursor: None,
             capture_root: env::var_os("PAREDROS_BODY_SHEET_OUTPUT")
                 .map(PathBuf::from)
@@ -77,7 +99,11 @@ impl App {
                         .expect("clock")
                         .as_millis()
                 )),
+        };
+        if app.persistence_smoke {
+            persistence_smoke::prepare(&mut app);
         }
+        app
     }
     fn redraw(&self) {
         if let Some(live) = &self.live {
@@ -88,7 +114,16 @@ impl App {
         let Some(live) = self.live.as_mut() else {
             return;
         };
-        let scene = live.hud.scene(&self.lives, &self.view);
+        let scene = if self.comparison {
+            live.hud.scene(&self.lives, &self.view)
+        } else {
+            live.hud.equipment_scene(
+                &self.equipment.sheet(),
+                &self.equipment.items(),
+                &self.equipment_view,
+                self.equipment.status(),
+            )
+        };
         let master = render(&live.composer, &scene);
         match live.surface.get_current_texture() {
             wgpu::CurrentSurfaceTexture::Success(frame)
@@ -112,27 +147,88 @@ impl App {
                 eprintln!("body sheet surface acquisition validation error")
             },
         }
-        if self.smoke {
+        if self.persistence_smoke {
+            persistence_smoke::capture(live, &master, &self.capture_root);
+            event_loop.exit();
+        } else if self.equipment_smoke && !self.comparison {
+            let capture = live.composer.capture(&master);
+            assert!(
+                !capture.is_trivial(),
+                "equipment smoke rendered a trivial frame"
+            );
+            let name = [
+                "equipment_carried",
+                "equipment_attached",
+                "equipment_detached",
+            ][self.captured];
+            let path = self.capture_root.join(format!("{name}.png"));
+            capture.write_png(&path).expect("equipment capture");
+            println!("Equipment capture: {}", path.display());
+            self.captured += 1;
+            if self.captured == 1 {
+                self.equipment_view.part = 1;
+                self.equipment_command(EquipmentCommand::Attach);
+                assert_eq!(
+                    self.equipment
+                        .game()
+                        .attachments(self.equipment.subject())
+                        .len(),
+                    1
+                );
+            } else if self.captured == 2 {
+                self.equipment_command(EquipmentCommand::Detach);
+                assert!(
+                    self.equipment
+                        .game()
+                        .attachments(self.equipment.subject())
+                        .is_empty()
+                );
+            } else {
+                let game = self.equipment.game();
+                assert_eq!(
+                    paredros_world::GameState::restore(&game.save().unwrap()).unwrap(),
+                    *game
+                );
+                event_loop.exit();
+            }
+            self.redraw();
+        } else if self.smoke {
             let capture = live.composer.capture(&master);
             assert!(
                 !capture.is_trivial(),
                 "body sheet smoke rendered a trivial frame"
             );
-            let name = self.lives[self.view.life]
-                .label
-                .replace(' ', "_")
-                .to_lowercase();
+            let name = [
+                "sedge_harness",
+                "tremor_untrained",
+                "mend_lost_limb",
+                "mend_symbiont",
+                "mend_adhesion",
+                "mend_parts_list",
+            ][self.captured];
             let path = self.capture_root.join(format!("{name}.png"));
             capture.write_png(&path).expect("body sheet capture");
             println!("Body sheet capture: {}", path.display());
             self.captured += 1;
-            if self.captured < self.lives.len() {
-                self.view.select_life(&self.lives, self.captured);
+            if self.captured < 6 {
+                self.view.select_life(&self.lives, self.captured.min(2));
                 if self.captured == 1 {
                     self.view.focus = paredros_room::body_sheet::Focus::Action;
                     self.view.action = 0;
-                } else {
+                } else if self.captured == 2 {
                     self.view.part = 1;
+                } else if self.captured == 3 {
+                    self.view.part = self.lives[2]
+                        .sheet
+                        .parts
+                        .iter()
+                        .position(|part| part.id.0 == 7)
+                        .expect("fixture symbiont");
+                } else if self.captured == 4 {
+                    self.view.focus = paredros_room::body_sheet::Focus::Action;
+                    self.view.action = 1;
+                } else {
+                    self.view.key(&self.lives, SheetKey::TogglePartsView);
                 }
                 self.redraw();
             } else {
@@ -147,12 +243,35 @@ impl App {
         let PhysicalKey::Code(code) = event.physical_key else {
             return;
         };
+        if code == KeyCode::KeyC {
+            self.comparison = !self.comparison;
+            self.redraw();
+            return;
+        }
+        if !self.comparison {
+            match code {
+                KeyCode::Escape => loop_.exit(),
+                KeyCode::KeyE => self.equipment_command(EquipmentCommand::Attach),
+                KeyCode::KeyD => self.equipment_command(EquipmentCommand::Detach),
+                KeyCode::F5 => self.equipment_command(EquipmentCommand::Save),
+                KeyCode::F9 => self.equipment_command(EquipmentCommand::Load),
+                KeyCode::KeyL => self.equipment_view.parts_view = !self.equipment_view.parts_view,
+                KeyCode::ArrowUp => self.equipment_view.step_part(&self.equipment.sheet(), -1),
+                KeyCode::ArrowDown => self.equipment_view.step_part(&self.equipment.sheet(), 1),
+                KeyCode::ArrowLeft => self.equipment_view.step_item(&self.equipment.items(), -1),
+                KeyCode::ArrowRight => self.equipment_view.step_item(&self.equipment.items(), 1),
+                _ => return,
+            }
+            self.redraw();
+            return;
+        }
         match code {
             KeyCode::Escape => loop_.exit(),
             KeyCode::Digit1 => self.view.select_life(&self.lives, 0),
             KeyCode::Digit2 => self.view.select_life(&self.lives, 1),
             KeyCode::Digit3 => self.view.select_life(&self.lives, 2),
             KeyCode::Tab => self.view.key(&self.lives, SheetKey::SwitchFocus),
+            KeyCode::KeyL => self.view.key(&self.lives, SheetKey::TogglePartsView),
             KeyCode::ArrowUp => self.view.key(&self.lives, SheetKey::Up),
             KeyCode::ArrowDown => self.view.key(&self.lives, SheetKey::Down),
             KeyCode::PageUp => self.view.scroll_detail_by(&self.lives, -12),
@@ -160,6 +279,45 @@ impl App {
             _ => return,
         };
         self.redraw();
+    }
+    fn equipment_command(&mut self, command: EquipmentCommand) {
+        if matches!(command, EquipmentCommand::Save | EquipmentCommand::Load) {
+            let result = match command {
+                EquipmentCommand::Save => self
+                    .equipment
+                    .save_bytes()
+                    .and_then(|bytes| {
+                        paredros_room::body_sheet::save_equipment(&self.save_directory, &bytes)
+                    })
+                    .map(|path| format!("Saved {}", path.display())),
+                EquipmentCommand::Load => paredros_room::body_sheet::load_equipment(
+                    &self.save_directory,
+                )
+                .and_then(|(path, bytes)| {
+                    self.equipment.load_bytes(&bytes)?;
+                    self.equipment_view = EquipmentView::default();
+                    Ok(format!("Loaded {}", path.display()))
+                }),
+                _ => unreachable!(),
+            };
+            self.equipment
+                .set_status(result.unwrap_or_else(|error| format!("{command:?} failed: {error}")));
+            return;
+        }
+        let items = self.equipment.items();
+        let Some(item) = items.get(self.equipment_view.item) else {
+            return;
+        };
+        match command {
+            EquipmentCommand::Attach => {
+                let sheet = self.equipment.sheet();
+                if let Some(part) = sheet.parts.get(self.equipment_view.part) {
+                    self.equipment.attach(item.id, part.id);
+                }
+            },
+            EquipmentCommand::Detach => self.equipment.detach(item.id),
+            EquipmentCommand::Save | EquipmentCommand::Load => unreachable!(),
+        }
     }
 }
 impl ApplicationHandler for App {
@@ -218,12 +376,23 @@ impl ApplicationHandler for App {
                 ..
             } => {
                 if let (Some(cursor), Some(live)) = (self.cursor, self.live.as_ref()) {
-                    self.view
-                        .click(&self.lives, logical_point(cursor, live.window.inner_size()));
+                    let point = logical_point(cursor, live.window.inner_size());
+                    if self.comparison {
+                        self.view.click(&self.lives, point);
+                    } else if let Some(command) = self.equipment_view.click(
+                        &self.equipment.sheet(),
+                        &self.equipment.items(),
+                        point,
+                    ) {
+                        self.equipment_command(command);
+                    }
                     self.redraw();
                 }
             },
             WindowEvent::MouseWheel { delta, .. } => {
+                if !self.comparison {
+                    return;
+                }
                 let detail = self
                     .cursor
                     .zip(self.live.as_ref())
@@ -321,7 +490,76 @@ fn render(composer: &Composer, scene: &Scene) -> wgpu::Texture {
 mod tests {
     use super::*;
     #[test]
+    fn host_load_restores_saved_items_and_failed_load_preserves_selection() {
+        let mut app = App::new(false);
+        app.save_directory = env::temp_dir().join(format!(
+            "paredros-host-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        app.equipment_view.part = 2;
+        app.equipment_command(EquipmentCommand::Attach);
+        let saved = app.equipment.game().clone();
+        app.equipment_command(EquipmentCommand::Save);
+        assert!(app.equipment.status().starts_with("Saved "));
+        app.equipment_command(EquipmentCommand::Detach);
+        app.equipment_command(EquipmentCommand::Load);
+        assert_eq!(app.equipment.game(), &saved);
+        assert_eq!(app.equipment_view, EquipmentView::default());
+        app.equipment_view.part = 3;
+        let selected = app.equipment_view.clone();
+        let corrupt =
+            paredros_room::body_sheet::save_equipment(&app.save_directory, b"bad").unwrap();
+        app.equipment_command(EquipmentCommand::Load);
+        assert_eq!(app.equipment.game(), &saved);
+        assert_eq!(app.equipment_view, selected);
+        assert!(app.equipment.status().starts_with("Load failed:"));
+        std::fs::remove_file(corrupt).unwrap();
+        for entry in std::fs::read_dir(&app.save_directory).unwrap() {
+            std::fs::remove_file(entry.unwrap().path()).unwrap();
+        }
+        std::fs::remove_dir(&app.save_directory).unwrap();
+    }
+
+    #[test]
+    fn host_dispatches_selected_ids_and_comparison_does_not_change_the_live_subject() {
+        let mut app = App::new(false);
+        app.equipment_view.part = 2;
+        app.equipment_view.item = 1;
+        let subject = app.equipment.subject();
+        let part = app.equipment.sheet().parts[2].id;
+        let item = app.equipment.items()[1].id;
+        app.equipment_command(EquipmentCommand::Attach);
+        let attachment = app.equipment.game().attachments(subject)[0];
+        assert_eq!(attachment.item, item);
+        assert_eq!(attachment.part, part);
+        let before = app.equipment.game().clone();
+        app.comparison = true;
+        app.view.select_life(&app.lives, 2);
+        assert_eq!(app.equipment.game(), &before);
+        app.comparison = false;
+        app.equipment_command(EquipmentCommand::Detach);
+        assert!(app.equipment.game().attachments(subject).is_empty());
+        assert_eq!(app.equipment.subject(), subject);
+        let game = app.equipment.game();
+        assert_eq!(
+            paredros_world::GameState::restore(&game.save().unwrap()).unwrap(),
+            *game
+        );
+    }
+
+    #[test]
     fn logical_points_scale_and_guard_zero() {
+        assert_eq!(
+            logical_point(
+                PhysicalPosition::new(320., 180.),
+                PhysicalSize::new(640, 360)
+            ),
+            [640., 360.]
+        );
         assert_eq!(
             logical_point(
                 PhysicalPosition::new(640., 360.),

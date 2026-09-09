@@ -1,9 +1,9 @@
 # Paredros Execution Plan (2026-08-07)
 
-**Status: in progress (2026-09-06); F0-F2 closed, F3 active, F3a landed.**
+**Status: in progress (2026-09-09); F0-F2 closed, F3 active, F3a landed.**
 The dry crossing contact fixture is implemented alongside F3 design. The
-borg three-lives/action-query slice is implemented locally; the wider embodied
-encounter and graphical character sheet remain proposed.
+borg three-lives/action-query and graphical body/equipment sheet are implemented
+locally; the wider joined embodied session remains proposed.
 S0-S3 remain landed foundation receipts, with their stated headed judgments
 still open. They do not define a required entourage, sortie loop, or camera.
 **R4 was decided and executed
@@ -16,6 +16,15 @@ persistent generated world; allies are contingent; control changes through
 death, an explicit world event, or an optional player rule; culture has
 pointable causes; free roster control remains forbidden. Its phase section is
 superseded by this plan.
+
+**Functional-loop direction, 2026-09-09:** the
+[functional loops and wiring plan](2026-09-09_functional_loops_plan.md) owns
+the next cross-system implementation lanes. F0-F8 remain semantic milestones;
+a curated crossing or other authored encounter is not a prerequisite. Its
+companion plans scope [world conditions](2026-09-09_world_conditions_plan.md)
+and [memory and remembrance](2026-09-09_memory_and_remembrance_plan.md), including
+Hagiograph. The crossing's wider encounter draft below is optional content,
+not the implementation sequence for these subsystems.
 
 **The wing question, in this vessel** (founding record, ruled 2026-08-07):
 Paredros asks whether a **community remains itself as control, bodies, and
@@ -681,6 +690,9 @@ observation/report/norm chain remain F3b work.
 
 #### F3b1 — A consequential answer, design proposal (2026-09-05)
 
+The concrete implementation and bounded-memory stages now live in
+[memory and remembrance](2026-09-09_memory_and_remembrance_plan.md).
+
 Join observer-owned beliefs to a judgment under an explicit norm revision,
 then derive that observer's standing and an answer with its complete support
 chain. `Relations::derive` currently reads objective deeds directly; the new
@@ -869,7 +881,7 @@ Ownership mapped for this slice:
 | --- | --- |
 | Continuing subject and body revision | `paredros-identity::{SubjectId, BodyRevisionId}`; the query must reject mismatched subjects and stale revision references. |
 | Addressable anatomy and loss | Mesocosm `BodyDocument`/`PartId`; severed parts retain their addresses. Paredros `Body` has not yet joined this document to its numeric profile. |
-| Item identity and possession | `paredros-world::Items`; current possession is whole-subject `Carried(SubjectId)`, so attachment/function facts are caller-supplied query inputs until an equipment transition owns them. |
+| Item identity and possession | `paredros-world::Items` owns carriage and now dressing attachments addressed by subject/part through `GameState`. Harness/line attachments and supplied functions in the three-lives query remain caller-supplied fixture inputs. |
 | Technique meaning and availability | Paredros-owned read-only query over explicit learned facts, source functions, occupancy, support, and resource limits. Mesocosm's ecological capability enum stays unchanged. |
 | Authored lives and dated transmission | Example/test fixture data. A fixture source check does not implement generated world history or player-relative memory. |
 
@@ -908,6 +920,78 @@ details remain accessible, and native captures show the keeper, untrained
 surveyor and injured repairer correctly. Editable equipment, learning,
 authoritative anatomy admission and action execution stay outside this slice.
 
+**Body schematic follow-up, implemented locally 2026-09-06:** replaces the default part
+list with a selectable derived diagram, retaining the list as an alternate
+view. `PartRow` projects attachment parent, body-space bounds and provenance
+from Mesocosm's existing body transforms. The room owns the exploded screen
+layout and hit testing. This is an anatomical schematic, not a resolved voxel
+surface or an equipment-slot registry. Done when all three authored bodies
+render, Mend's lost limb and incorporated symbiont can be selected and explained,
+action sources highlight the diagram, and keyboard/list navigation survives.
+Test rotated/nested transforms and view-local selection; inspect native frames.
+Equipment compatibility, multi-part wearing, internal cutaways and mutable
+equipment remain later work, governed by admitted facts rather than drawn slots.
+
+**Equipment prerequisite, implemented locally 2026-09-06:** `GameState` owns
+summary body condition and item carriage; it does not yet own the detailed
+`BodyDocument` shown by the three-lives inspector. Admit a validated immutable
+anatomy snapshot through `GameIntent::AdmitAnatomy`, tied to a living named
+subject's exact body revision, before enabling equipment mutations. Keep the
+record inside `GameState` and its existing genesis-plus-intents replay rather
+than persisting an editable copy of `SubjectSheet`. A historical lookup keeps
+stale records visible; `current_anatomy` refuses stale revisions. Replacement,
+anatomy/condition reconciliation, item attachment admission and equip/unequip UI
+were follow-ups at this prerequisite gate; the next local slice below owns
+reconciliation and dressing attachment. This initial admission does not change the summary body's
+mass, condition, capabilities or generated origin, nor resolve volume contents.
+Done when malformed/duplicate/stale/unknown/dead admissions fail atomically,
+valid provenance and lost parts survive save/replay, and legacy version 1
+game saves reject explicitly under the version 2 grammar.
+
+**Dressing attachment and reconciliation, local implementation 2026-09-06:**
+`GameState` now accepts revision-addressed `AttachItem`, `DetachItem`, and
+`ReconcileAnatomy` intents. The first binding rule permits an owned dressing on
+a living admitted part. Attached items remain carried and count toward mass
+once. Stale anatomy blocks attachment but permits detachment. Reconciliation
+explicitly acknowledges an advanced body revision and names any lost parts;
+it does not infer detailed wounds from summary damage. Lost descendants retain
+their anatomical IDs and provenance, and their attached items return to the
+actor's world position in deterministic item order. An empty loss list explicitly
+acknowledges unchanged anatomy. Invalid requests leave state and history intact.
+`attachments` is a read-only projection, including whether the anatomy is current.
+Existing Rest may consume an attached dressing under its existing whole-body
+recovery rule; part-specific healing is not implemented. World save grammar 3
+rejects versions 1 and 2. Native equip controls are covered by the follow-up
+below; harness/line compatibility, ability grants, regeneration, and
+summary/anatomy mass unification remain open.
+
+**Live equipment sheet, implemented locally 2026-09-07:** start the native inspector in
+a one-subject equipment session with generated-world dressing items and an
+explicitly authored, admitted body. Project parts from its `GameState` anatomy
+and display owned item locations. Part/item selection stays local; attach and
+detach controls dispatch game intents and redraw from accepted facts. Keep C
+as a clearly labelled authored comparison mode, never a player-body switch.
+Done when click and keyboard controls agree, failures leave state intact,
+attachment and detachment survive replay, and native captures show both states.
+This session is a wiring probe, not procedural anatomy generation or the joined
+crossing adventure. It has no automatic disk-save workflow or technique grants.
+
+**Equipment persistence, automated verification complete 2026-09-08:** F5/Save publishes a new
+immutable game replay snapshot; F9/Load explicitly restores the newest saved
+session. Default storage is `%LOCALAPPDATA%/Merely/Paredros/equipment`, overridden
+by `PAREDROS_EQUIPMENT_SAVES` (relative `saves/Merely/Paredros/equipment` fallback
+when LOCALAPPDATA is absent). No startup auto-load or exit auto-save. Failed reads,
+decode, replay or session-profile validation must leave the current game and
+selection intact. Newest corrupt saves report failure rather than silently
+loading an older one. Publication links a fully synced pending file into a new
+name; filesystems without hard-link support report failure. Pending files are
+ignored on load. Done when a fresh session can restore attachments from disk,
+old saves remain unchanged, failures are atomic, and native controls show the
+saved and restored result. This remains a host-local probe storage policy.
+The 107-test and two-process rendered receipt below close automated verification;
+physical mouse/keyboard save/load acceptance remains open because the native
+control helper timed out.
+
 The dry crossing remains a useful contact fixture. Mark's play feedback found
 that the held plank could leave the player stuck in the gap and that the blue
 structure's purpose was unclear. The 2026-09-06 narrow fix separates release
@@ -920,6 +1004,10 @@ Earlier automated route checks do not override that feedback.
 Charge and inhabitants are deferred while the borg design is explored.
 
 ### Embodied prototype alongside F3: proposed 2026-09-05
+
+**2026-09-09 scope clarification:** this remains an optional reusable fixture.
+The [functional-loop lanes](2026-09-09_functional_loops_plan.md) develop the
+underlying systems without requiring this encounter or its curated sequence.
 
 The [founding plan's player-experience proposal](2026-07-30_paredros_founding_plan.md#player-experience-body-place-and-other-lives)
 owns action feel, progression, world differences, and the player-facing
@@ -1242,6 +1330,36 @@ play, and subjective traversal acceptance remain unclaimed.
 
 ## 6. Findings
 
+- **2026-09-07, native equipment join:** `EquipmentSession` owns one GameState
+  while `EquipmentView` stores presentation row indices. The host resolves the
+  selected rows to actual part/item IDs before dispatch. Generated item IDs
+  need not start at zero; confusing their IDs with rows selected the wrong item.
+  The live sheet reads admitted anatomy and owned items, without importing the
+  comparison fixture's learned techniques or harness facts. The current session
+  exposes only attach/detach; joining injury/death later requires a fallible or
+  historical anatomy presentation instead of its current-anatomy invariant.
+
+- **2026-09-06, attachment ownership:** an item has one location, including
+  `Attached { subject, part }`; carriage queries include attachments rather
+  than copying them into a second inventory. The anatomy owner validates and
+  replaces a snapshot before the item owner releases affected attachments.
+  `GameState` performs all fallible checks first and records both effects in
+  one accepted transition. Attachment views do not refresh stale records or
+  grant techniques. Explicit detachment remains possible while anatomy is stale.
+
+- **2026-09-06, equipment admission prerequisite:** `Bodies` contains summary
+  condition/profile facts, while the native schematic consumes an authored
+  `BodyDocument`. Treating the latter as an editable inventory authority would
+  bypass `GameState` replay. The new anatomy record is an admitted immutable
+  snapshot at one subject revision, not a replacement for summary physics or
+  a license to infer equipment capabilities. Injury/recovery can make it stale;
+  `current_anatomy` rejects that mismatch while historical inspection retains
+  the record. The first admission profile limits part count and coordinates
+  for bounded validation, checks total mass overflow and tombstone coherence,
+  and leaves volume resolution, genotype validation and imported-history trust
+  outside this gate. Snapshot reconciliation must precede equipping after a
+  revision change. The native three-lives inspector remains read-only.
+
 - **2026-09-06:** the three-lives query reuses subject/revision and anatomical
   part identities without changing Mesocosm's ecological capability enum.
   Anatomy presence, function, and situational viability need separate checks.
@@ -1412,6 +1530,182 @@ play, and subjective traversal acceptance remain unclaimed.
   target.
 
 ## 7. Progress
+
+- **2026-09-09: controlled-session persistence foundation.** J1a in the
+  [functional-loop plan](2026-09-09_functional_loops_plan.md) adds one owned
+  `GameState` with historically validated control cuts, death and existing-life
+  succession, versioned save/restore and configurable archive limits. The
+  world library plus session-boundary gate passed 35 + 3 tests. No contact,
+  autonomy, social eligibility, outsider or host-save join is claimed. The
+  save-growth example recorded 123,905 bytes after 10,000 equipment cycles with
+  unchanged physical state and exact restore; multi-year storage acceptance
+  remains open. Plans now include coordinated multi-limb attacks, strike-quality
+  prior art, independent surgery and a proposed sympathetic-charge magic slice.
+
+- **2026-09-09: functional-loop lanes and safe body inspection.** The new
+  [wiring plan](2026-09-09_functional_loops_plan.md) records dependencies for
+  session authority, injury/directional combat, building, persistence and
+  continuation, with companion world-condition and memory/Hagiograph plans.
+  J0 is implemented locally in the equipment sheet: stale and dead anatomy
+  remains inspectable, reasons are displayed together, and authoritative
+  attachment refusal remains intact. Four added tests bring the focused
+  `paredros-room --lib body_sheet` gate to 24 passing tests. General injury
+  input, crossing integration, adventure saves and physical UI acceptance
+  remain open. Existing body/equipment WIP is preserved and uncommitted.
+
+- **2026-09-08: equipment persistence automated gate passed.** Using
+  `CARGO_HOME=C:/Users/mark_/Code/cargo-homes/paredros-save-check-20260908`, the
+  combined command passed **107 tests**:
+  `cargo test -p paredros-world -p paredros-room --lib --bin body_sheet --bin crossing --test equipment --test anatomy_admission --test f1_state --test f2_simulation --test three_lives --test crossing --test contact --test contact_actions --locked --offline -j 2 --target-dir target-contact`.
+  This includes six new persistence tests covering bounded buttons, immutable
+  publication, fresh-session disk replay, corrupt/version/foreign/stale rejection,
+  and failed-load selection preservation. After checking available memory, Root
+  increased the private build from one to two workers; the resumed cold build
+  completed in 29m14s. The native binary also passed the explicit locked/offline
+  build with the same cache and target directory. Existing unused Vello patch
+  and room dead-code warnings remain.
+  Added the small `bin/body_sheet/persistence_smoke.rs` receipt helper:
+  `PAREDROS_EQUIPMENT_PERSIST_SMOKE=save` attaches and saves, captures, and exits;
+  `load` starts fresh, loads via the same host command, asserts the restored
+  attachment on part 1, captures, and exits. It requires an explicit
+  `PAREDROS_EQUIPMENT_SAVES` directory and does not simulate mouse input.
+  Both independent app launches exited successfully. Reviewed captures:
+  `testing/equipment-persistence/run-1788911337963/captures/run-1788913472181/persistence_save.png`
+  and `testing/equipment-persistence/run-1788911337963/captures/run-1788913514981/persistence_load.png`.
+  The saved file's SHA-256 remained
+  `113A3B457CD3ED8D96706E2DDDB7FEB333FB7287E90B32DE815BFED29637A0E3`
+  across loading. Only the dedicated verification directory received a save.
+  Save/load status now wraps in the header rather than clipping at the footer.
+  The computer-use helper's window listing timed out on initial call, retry,
+  and reset/retry, so these are composited-frame and two-process receipts, not
+  physical desktop input/surface acceptance. That manual check remains open.
+  Formatting and diff checks pass; source files remain under 600 lines. Work
+  remains local and uncommitted. General adventure persistence, injury/death
+  presentation, attachment badges, and the crossing/GameState join remain later
+  work; this gate does not broaden the fixed equipment-session profile.
+
+- **2026-09-08: isolated persistence verification build.** The shared-cache
+  retry again waited on other active Cargo jobs; Root interrupted only its own
+  waiting command. A private cache at
+  `C:/Users/mark_/Code/cargo-homes/paredros-save-check-20260908` was seeded with
+  package archives, registry index and Git objects (all copy passes reported
+  zero failures). Set `CARGO_HOME` to this directory and use the existing
+  combined command with `--locked --offline -j 1 --target-dir target-contact`.
+  The private run populated checkouts, passed dependency resolution and began
+  compiling without the shared-cache lock. Verification is still pending;
+  this is not a passing-test or native receipt. The earlier, interrupted broad
+  copy remains at `cargo-homes/paredros-equipment-20260908` and is not the active
+  cache. No user saves or game-source files changed in this verification pass.
+
+- **2026-09-07: explicit equipment saves implemented; verification blocked.**
+  Terra added temporary replay/profile validation and session byte APIs; Luna
+  added Save/F5 and Load/F9 buttons. Root added immutable file publication,
+  the configurable directory, host dispatch, failure-preserving selection, and
+  disk/host regression tests. Review corrected a duplicate test-module name and
+  made the foreign-session test use a valid recomputed replay hash. Formatting
+  and `git diff --check` pass. Read-only review found no additional data-loss
+  or failed-load mutation issue. The previous 101-test receipt does not cover
+  these changes. The combined offline gate first lacked the pinned rust-gpu
+  checkout; an online locked retry fetched it, then rebuilt dependencies and
+  a raw-window-handle compiler process exited with 0xffffffff and no Rust
+  diagnostic. A serial offline retry remained blocked on the shared package
+  cache while other project builds were active. Root interrupted only its own
+  waiting command. No native save/load or passing test receipt exists yet.
+  Resume the same combined gate with `-j 1`, build `body_sheet`, then verify
+  attach/save/close/reopen/load in a dedicated save directory. No user saves
+  have been written by this pass. Source remains local and uncommitted.
+
+- **2026-09-07: native live equipment controls.** Terra implemented the owned
+  session; Luna supplied the view; Root integrated host mode/dispatch, corrected
+  row/ID selection, removed item filtering that could desynchronize host rows,
+  and added bounded-click and host regression tests. The default window now
+  shows Keeper with two generated-world dressings and admitted authored anatomy.
+  Clicking parts/items and Attach/Detach, or using E/D, changes GameState through
+  its existing intents. Up/Down selects parts; Left/Right selects items; L toggles
+  diagram/list. C enters/leaves authored comparison without changing the subject.
+  The final combined gate passed **101 tests**, eight more than the prior gate:
+  `cargo test -p paredros-world -p paredros-room --lib --bin body_sheet --bin crossing --test equipment --test anatomy_admission --test f1_state --test f2_simulation --test three_lives --test crossing --test contact --test contact_actions --locked --offline -j 2 --target-dir target-contact`.
+  The native bin also built with `cargo build -p paredros-room --bin body_sheet
+  --locked --offline -j 2 --target-dir target-contact`. A direct identity-crate
+  dependency was added to the host; the ignored local Cargo.lock was updated.
+  `PAREDROS_EQUIPMENT_SMOKE=1` produced three reviewed 1280x720 captures in
+  `testing/body_sheet/run-1788766069347/`: `equipment_carried.png`,
+  `equipment_attached.png`, and `equipment_detached.png`. The smoke dispatches
+  real attach/detach intents and verifies final replay. A separate native
+  computer-use check selected limb 1, attached/detached using both mouse and
+  keyboard, and verified attachment survived C comparison and return.
+  Targeted formatting and diff checks passed; source modules stay below 600
+  lines. Existing Vello patch and room dead-code warnings remain. Work is local
+  and uncommitted. The session stays in memory and restarts on launch; disk-save
+  controls, joining the crossing life, general gear compatibility, attachment
+  badges on the diagram, and injury/death presentation remain follow-ups.
+
+- **2026-09-06: owned dressing attachments and anatomy reconciliation.**
+  Terra supplied atomic anatomy reconciliation; Luna supplied item attachment,
+  detachment and release. Root joined the intents/events to `GameState`, added
+  the read-only attachment projection and five integration scenarios, and
+  corrected stale-error polarity and a new inventory-count test expectation.
+  The combined gate passed **93 tests**, including nine new owner unit tests
+  and five equipment integrations, with F1/F2 replay and prior room/crossing
+  checks retained:
+  `cargo test -p paredros-world -p paredros-room --lib --bin body_sheet --bin crossing --test equipment --test anatomy_admission --test f1_state --test f2_simulation --test three_lives --test crossing --test contact --test contact_actions --locked --offline -j 2 --target-dir target-contact`.
+  Save version 3 rejects versions 1 and 2. No existing save files were changed.
+  Existing unused-Vello-patch and room dead-code warnings remain. A subagent
+  cleanup interrupted the first combined run; the restarted final run completed
+  successfully. Targeted formatting and `git diff --check` passed. All changed
+  source modules remain below 600 lines. This is local, uncommitted work;
+  the native inspector remains authored/read-only with no new headed receipt.
+  Next: project admitted body and owned attachments into the paper doll, then
+  dispatch attach/detach through these intents and refresh from accepted state.
+  Preserve the authored comparison mode as such. UI labels can follow once
+  this wiring works; harness/line and technique grants need their own rules.
+
+- **2026-09-06: durable anatomy admission prerequisite.** Terra implemented
+  the bounded `Anatomies` validator/record owner; Luna supplied integration
+  tests. Root joined `AdmitAnatomy` and `AnatomyAdmitted` to `GameState`, boxed
+  the rare document payload so ordinary movement intents stay small, added
+  current-revision checking, repaired/strengthened test cases, and added
+  two-subject isolation coverage. The initial regression gate passed 67 tests,
+  including F1 state and F2 simulation replay. The final combined admission
+  gate passed 79 tests: six new integration tests and four validator unit tests,
+  with both inspector/crossing binaries and the existing regression suites.
+  A fixture-helper Option/Result mismatch was corrected before this final run.
+  Reproduce with:
+  `cargo test -p paredros-world -p paredros-room --lib --bin body_sheet --bin crossing --test anatomy_admission --test f1_state --test f2_simulation --test three_lives --test crossing --test contact --test contact_actions --locked --offline -j 2 --target-dir target-contact`.
+  `GAME_STATE_VERSION` is now 2. Version 1 records reject explicitly; no
+  migration is supplied and no existing save files were modified or deleted.
+  This supplies a durable snapshot admission path, not editable equipment,
+  automatic detailed anatomy generation, trusted provenance verification, or
+  a condition/anatomy reconciliation policy. The native inspector remains
+  authored and read-only. Changes remain local and uncommitted.
+
+- **2026-09-06: selectable body schematic.** Luna extended the read-only part
+  rows with parent, bounds and provenance using `BodyDocument::place`; Terra
+  added native diagram/list navigation, parent links, injury/incorporation
+  markers, provenance inspection, and source highlighting. Root replaced the
+  initial side-column collision layout after visual review: it read as a node
+  chart rather than anatomy. The revised isometric projection uses all eight
+  corners, keeps radial placement and relative box sizes, and separates nearby
+  shapes for selection. L or the left heading toggles the named list.
+  The first combined gate passed 61 tests, including literal nested-rotation
+  and noncentral-pivot bounds, malformed attachment termination, preserved lost
+  parts/donor provenance, diagram hit targets and large-body scaling. The same
+  61-test gate passed again after the radial-layout revision. Native smoke
+  exited successfully; root visually reviewed all six 1280x720 captures under
+  `Code/testing/paredros/body_schematic/run-1788746060163/`: `sedge_harness.png`,
+  `tremor_untrained.png`, `mend_lost_limb.png`, `mend_symbiont.png`,
+  `mend_adhesion.png`, and `mend_parts_list.png`. These verify rendered states;
+  physical mouse/keyboard usability still needs player acceptance. Reproduce
+  with the combined command in the native inspector receipt below, then run
+  `target-contact/debug/body_sheet.exe` with `PAREDROS_BODY_SHEET_SMOKE=1` and
+  an optional `PAREDROS_BODY_SHEET_OUTPUT` directory. Smoke now captures six
+  states, including list fallback. The separate world-only build was canceled
+  after feature-specific dependency rebuilds; the combined gate is the receipt.
+  This is still a bounds schematic: original voxel surfaces are unresolved,
+  dense arbitrary anatomies need further layout acceptance, and the list remains
+  the precision fallback. Multi-part equipment editing and interior layers
+  are not implemented by this slice. No durable facts or fixture anatomy changed.
+  Changes are local and uncommitted, atop the previous slice's `47361ae`.
 
 - **2026-09-06: native Body/Actions inspector.** Luna supplied the read-only
   `SubjectSheet` projection and shared fixture home; Terra supplied the native

@@ -1,0 +1,5 @@
+pairs,intents,serialized_save_bytes,save_ms,restore_ms,restored_equality
+0,4,407,0.620,9.739,true
+100,204,1485,0.581,9.463,true
+1000,2004,12284,1.048,10.345,true
+10000,20004,123905,3.454,15.731,true

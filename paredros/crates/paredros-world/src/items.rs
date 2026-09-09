@@ -8,6 +8,7 @@
 
 use std::collections::BTreeMap;
 
+use mesocosm_core::PartId;
 use paredros_identity::SubjectId;
 use serde::{Deserialize, Serialize};
 
@@ -37,6 +38,7 @@ impl ItemKind {
 pub enum ItemLocation {
     At([i32; 3]),
     Carried(SubjectId),
+    Attached { subject: SubjectId, part: PartId },
     Consumed,
 }
 
@@ -112,9 +114,14 @@ impl Items {
     }
 
     pub fn carried_by(&self, subject: SubjectId) -> impl Iterator<Item = &Item> {
-        self.items
-            .values()
-            .filter(move |item| item.location == ItemLocation::Carried(subject))
+        self.items.values().filter(move |item| {
+            matches!(
+                item.location,
+                ItemLocation::Carried(owner)
+                    | ItemLocation::Attached { subject: owner, .. }
+                    if owner == subject
+            )
+        })
     }
 
     pub fn carried_mass_mg(&self, subject: SubjectId) -> u32 {
@@ -127,6 +134,58 @@ impl Items {
         let item = self.items.get_mut(&id).ok_or(ItemError::Missing(id))?;
         item.location = ItemLocation::Carried(subject);
         Ok(())
+    }
+
+    pub(crate) fn attach(
+        &mut self,
+        id: ItemId,
+        subject: SubjectId,
+        part: PartId,
+    ) -> Result<(), ItemError> {
+        let item = self.items.get_mut(&id).ok_or(ItemError::Missing(id))?;
+        match item.location {
+            ItemLocation::Carried(owner) if owner == subject => {},
+            ItemLocation::Attached { .. } => return Err(ItemError::AlreadyAttached(id)),
+            _ => return Err(ItemError::NotCarried(id, subject)),
+        }
+        if item.kind != ItemKind::Dressing {
+            return Err(ItemError::WrongKind(id, item.kind));
+        }
+        item.location = ItemLocation::Attached { subject, part };
+        Ok(())
+    }
+
+    pub(crate) fn detach(&mut self, id: ItemId, subject: SubjectId) -> Result<(), ItemError> {
+        let item = self.items.get_mut(&id).ok_or(ItemError::Missing(id))?;
+        match item.location {
+            ItemLocation::Attached { subject: owner, .. } if owner == subject => {
+                item.location = ItemLocation::Carried(subject);
+                Ok(())
+            },
+            _ => Err(ItemError::NotCarried(id, subject)),
+        }
+    }
+
+    pub(crate) fn release_attached(
+        &mut self,
+        subject: SubjectId,
+        severed: &[PartId],
+        at: [i32; 3],
+    ) -> Vec<ItemId> {
+        let mut released = Vec::new();
+        for item in self.items.values_mut() {
+            if let ItemLocation::Attached {
+                subject: owner,
+                part,
+            } = item.location
+            {
+                if owner == subject && severed.contains(&part) {
+                    released.push(item.id);
+                    item.location = ItemLocation::At(at);
+                }
+            }
+        }
+        released
     }
 
     pub(crate) fn consume(&mut self, id: ItemId) -> Result<(), ItemError> {
@@ -142,5 +201,123 @@ pub enum ItemError {
     NotHere(ItemId),
     NotCarried(ItemId, SubjectId),
     WrongKind(ItemId, ItemKind),
+    AlreadyAttached(ItemId),
     OverCapacity { capacity_mg: u32, attempted_mg: u32 },
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const ACTOR: SubjectId = SubjectId(7);
+    const OTHER: SubjectId = SubjectId(8);
+
+    fn items() -> Items {
+        Items {
+            items: BTreeMap::from([
+                (
+                    ItemId(1),
+                    Item {
+                        id: ItemId(1),
+                        kind: ItemKind::Dressing,
+                        location: ItemLocation::Carried(ACTOR),
+                    },
+                ),
+                (
+                    ItemId(2),
+                    Item {
+                        id: ItemId(2),
+                        kind: ItemKind::Dressing,
+                        location: ItemLocation::Carried(ACTOR),
+                    },
+                ),
+                (
+                    ItemId(3),
+                    Item {
+                        id: ItemId(3),
+                        kind: ItemKind::Food,
+                        location: ItemLocation::Carried(ACTOR),
+                    },
+                ),
+                (
+                    ItemId(4),
+                    Item {
+                        id: ItemId(4),
+                        kind: ItemKind::Dressing,
+                        location: ItemLocation::Carried(ACTOR),
+                    },
+                ),
+            ]),
+        }
+    }
+
+    #[test]
+    fn attached_items_are_carried_once_and_mass_is_exact() {
+        let mut items = items();
+        items.attach(ItemId(1), ACTOR, PartId(2)).unwrap();
+        assert_eq!(items.carried_by(ACTOR).count(), 4);
+        assert_eq!(items.carried_mass_mg(ACTOR), 550);
+    }
+
+    #[test]
+    fn attachment_rejects_wrong_kind_and_wrong_owner_atomically() {
+        let mut items = items();
+        assert_eq!(
+            items.attach(ItemId(3), ACTOR, PartId(1)),
+            Err(ItemError::WrongKind(ItemId(3), ItemKind::Food))
+        );
+        assert_eq!(
+            items.get(ItemId(3)).unwrap().location,
+            ItemLocation::Carried(ACTOR)
+        );
+        assert_eq!(
+            items.attach(ItemId(1), OTHER, PartId(1)),
+            Err(ItemError::NotCarried(ItemId(1), OTHER))
+        );
+        assert_eq!(
+            items.get(ItemId(1)).unwrap().location,
+            ItemLocation::Carried(ACTOR)
+        );
+        items.attach(ItemId(1), ACTOR, PartId(1)).unwrap();
+        assert_eq!(
+            items.attach(ItemId(1), ACTOR, PartId(2)),
+            Err(ItemError::AlreadyAttached(ItemId(1)))
+        );
+    }
+
+    #[test]
+    fn detach_requires_same_owner_and_returns_to_carried() {
+        let mut items = items();
+        items.attach(ItemId(1), ACTOR, PartId(1)).unwrap();
+        assert_eq!(
+            items.detach(ItemId(1), OTHER),
+            Err(ItemError::NotCarried(ItemId(1), OTHER))
+        );
+        items.detach(ItemId(1), ACTOR).unwrap();
+        assert_eq!(
+            items.get(ItemId(1)).unwrap().location,
+            ItemLocation::Carried(ACTOR)
+        );
+    }
+
+    #[test]
+    fn release_is_deterministic_and_consume_clears_attachment() {
+        let mut items = items();
+        items.attach(ItemId(2), ACTOR, PartId(4)).unwrap();
+        items.attach(ItemId(1), ACTOR, PartId(4)).unwrap();
+        assert_eq!(
+            items.release_attached(ACTOR, &[PartId(4)], [9, 8, 7]),
+            vec![ItemId(1), ItemId(2)]
+        );
+        assert_eq!(
+            items.get(ItemId(1)).unwrap().location,
+            ItemLocation::At([9, 8, 7])
+        );
+        items.attach(ItemId(4), ACTOR, PartId(1)).unwrap();
+        items.consume(ItemId(4)).unwrap();
+        assert_eq!(
+            items.get(ItemId(4)).unwrap().location,
+            ItemLocation::Consumed
+        );
+    }
 }

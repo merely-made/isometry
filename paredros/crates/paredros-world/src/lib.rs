@@ -24,14 +24,17 @@
 //! durable goals, and [`Simulation`] advances every living subject without a
 //! player, camera, or observer entering the scheduling contract.
 
+mod anatomy;
 mod bodies;
 mod contact;
+mod equipment;
 pub mod fixtures;
 mod items;
 mod movement;
 mod navigation;
 mod population;
 mod projects;
+mod session;
 mod simulation;
 mod simulation_record;
 mod sites;
@@ -41,6 +44,10 @@ mod technique;
 mod transitions;
 mod world;
 
+pub use anatomy::{
+    Anatomies, AnatomyError, AnatomyRecord, MAX_ANATOMY_COORDINATE, MAX_ANATOMY_PARTS,
+    MAX_ANATOMY_WORLD_COORDINATE,
+};
 pub use bodies::{
     Bodies, Body, BodyError, BodyProfile, MAX_NEED, MOBILITY_WOUND, Name, Needs, SAFE_FALL,
 };
@@ -49,6 +56,7 @@ pub use contact::{
     ContactError, ContactSave, ContactWorld, FIXED_DT_SECONDS, HeldInput, Impairment, Input,
     InputFrame, MAX_RECORDED_FRAMES, MovableBoard, Position, TriggeredInput,
 };
+pub use equipment::AttachmentView;
 pub use items::{Item, ItemError, ItemId, ItemKind, ItemLocation, Items};
 pub use movement::{Movement, MovementError, MovementEvent, MovementIntent, MovementSave};
 pub use navigation::{Navigation, NavigationError};
@@ -59,6 +67,10 @@ pub use population::{
 pub use projects::{
     Project, ProjectError, ProjectEvent, ProjectGoal, ProjectId, ProjectIntent, ProjectSave,
     ProjectStatus, Projects,
+};
+pub use session::{
+    MAX_CONTROL_INTENTS, MAX_GAME_INTENTS, MAX_SESSION_BYTES, SESSION_VERSION, Session,
+    SessionError, SessionLimits, SessionSave,
 };
 pub use simulation::{Decision, LifeReport, Pursuit, Simulation, SimulationError};
 pub use simulation_record::{SIMULATION_VERSION, SimulationSave};

@@ -14,8 +14,8 @@ use serde::{Deserialize, Serialize};
 use crate::bodies::{Bodies, BodyError};
 use crate::items::{ItemError, ItemKind, ItemLocation, Items};
 use crate::{
-    DeathCause, GAME_STATE_VERSION, GameError, GameEvent, GameIntent, GameSave, Movement,
-    MovementError, MovementEvent, World,
+    Anatomies, AnatomyError, AnatomyRecord, DeathCause, GAME_STATE_VERSION, GameError, GameEvent,
+    GameIntent, GameSave, Movement, MovementError, MovementEvent, World,
 };
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -23,6 +23,7 @@ pub struct GameState {
     world: World,
     movement: Movement,
     bodies: Bodies,
+    anatomies: Anatomies,
     items: Items,
     intents: Vec<GameIntent>,
     events: Vec<GameEvent>,
@@ -35,6 +36,7 @@ impl GameState {
             world,
             movement: Movement::new(),
             bodies: Bodies::new(),
+            anatomies: Anatomies::default(),
             items,
             intents: Vec::new(),
             events: Vec::new(),
@@ -55,6 +57,33 @@ impl GameState {
 
     pub fn items(&self) -> &Items {
         &self.items
+    }
+
+    /// Historical admitted snapshots, including ones made stale by injury.
+    pub fn anatomies(&self) -> &Anatomies {
+        &self.anatomies
+    }
+
+    /// Detailed anatomy may support a current action only at its admitted revision.
+    pub fn current_anatomy(&self, subject: SubjectId) -> Result<&AnatomyRecord, GameError> {
+        self.living(subject)?;
+        let record = self
+            .anatomies
+            .get(subject)
+            .ok_or(AnatomyError::Missing(subject))?;
+        let current = self
+            .bodies
+            .get(subject)
+            .expect("validated subject")
+            .revision;
+        if record.revision != current {
+            return Err(AnatomyError::StaleRevision {
+                known: record.revision,
+                current,
+            }
+            .into());
+        }
+        Ok(record)
     }
 
     pub fn intents(&self) -> &[GameIntent] {
@@ -122,6 +151,119 @@ impl GameState {
         let tick = intent.tick();
         let subject = intent.subject();
         let mut events = match &intent {
+            GameIntent::AttachItem {
+                item,
+                part,
+                revision,
+                ..
+            } => {
+                let record = self.current_anatomy(subject)?;
+                if record.revision != *revision {
+                    return Err(AnatomyError::StaleRevision {
+                        known: *revision,
+                        current: record.revision,
+                    }
+                    .into());
+                }
+                let target = record
+                    .document
+                    .part(*part)
+                    .ok_or(AnatomyError::MissingPart(*part))?;
+                if target.severed {
+                    return Err(AnatomyError::SeveredPart(*part).into());
+                }
+                self.items.attach(*item, subject, *part)?;
+                vec![GameEvent::ItemAttached {
+                    tick,
+                    subject,
+                    item: *item,
+                    part: *part,
+                }]
+            },
+            GameIntent::DetachItem { item, .. } => {
+                self.living(subject)?;
+                self.items.detach(*item, subject)?;
+                vec![GameEvent::ItemDetached {
+                    tick,
+                    subject,
+                    item: *item,
+                }]
+            },
+            GameIntent::ReconcileAnatomy {
+                from_revision,
+                revision,
+                severed_parts,
+                ..
+            } => {
+                self.living(subject)?;
+                let current = self
+                    .bodies
+                    .get(subject)
+                    .expect("validated subject")
+                    .revision;
+                if current != *revision {
+                    return Err(AnatomyError::StaleRevision {
+                        known: *revision,
+                        current,
+                    }
+                    .into());
+                }
+                // Validate all fallible inputs before either owner changes.
+                let at = self
+                    .movement
+                    .position(subject)
+                    .ok_or(MovementError::MissingSubject(subject))?;
+                self.anatomies
+                    .reconcile(subject, *from_revision, *revision, severed_parts)?;
+                let lost: Vec<_> = self
+                    .anatomies
+                    .get(subject)
+                    .expect("reconciled snapshot")
+                    .document
+                    .parts
+                    .iter()
+                    .filter(|part| part.severed)
+                    .map(|part| part.id)
+                    .collect();
+                let released = self.items.release_attached(subject, &lost, at);
+                let mut events = vec![GameEvent::AnatomyReconciled {
+                    tick,
+                    subject,
+                    from_revision: *from_revision,
+                    revision: *revision,
+                }];
+                events.extend(released.into_iter().map(|item| GameEvent::ItemReleased {
+                    tick,
+                    subject,
+                    item,
+                    at,
+                }));
+                events
+            },
+            GameIntent::AdmitAnatomy {
+                revision, document, ..
+            } => {
+                self.living(subject)?;
+                let current = self
+                    .bodies
+                    .get(subject)
+                    .expect("validated subject")
+                    .revision;
+                if *revision != current {
+                    return Err(AnatomyError::StaleRevision {
+                        known: *revision,
+                        current,
+                    }
+                    .into());
+                }
+                self.anatomies
+                    .admit(subject, *revision, document.as_ref().clone())?;
+                vec![GameEvent::AnatomyAdmitted {
+                    tick,
+                    subject,
+                    revision: *revision,
+                }]
+            },
             GameIntent::Generate { body_seed, at, .. } => {
                 if self.bodies.get(subject).is_some() {
                     return Err(BodyError::SubjectExists(subject).into());

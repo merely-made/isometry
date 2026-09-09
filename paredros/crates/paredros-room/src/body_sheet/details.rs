@@ -3,6 +3,8 @@
 
 //! Stable text rows for the inspection viewport.
 
+use mesocosm_core::Origin;
+
 use super::{Focus, LifeSheet, SheetView};
 
 pub(super) fn detail_lines(life: &LifeSheet, view: &SheetView) -> Vec<String> {
@@ -43,6 +45,22 @@ fn part_lines(life: &LifeSheet, view: &SheetView) -> Vec<String> {
     } else {
         "State: living."
     }));
+    match &part.provenance.origin {
+        Origin::Founding => lines.push("Provenance: founding body.".into()),
+        Origin::Incorporated {
+            from_species,
+            from_part,
+        } => lines.extend(wrap(&format!(
+            "Provenance: incorporated from species {} part {} at epoch {}.",
+            from_species.0, from_part.0, part.provenance.epoch
+        ))),
+    }
+    lines.push(format!(
+        "Attachment: {}",
+        part.parent
+            .map(|id| format!("part {}", id.0))
+            .unwrap_or_else(|| "root".into())
+    ));
     if part.capabilities.is_empty() {
         lines.push("No action capability projection for this part.".into());
     }

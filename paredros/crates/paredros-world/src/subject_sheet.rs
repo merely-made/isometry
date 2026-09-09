@@ -5,7 +5,7 @@
 //! This module owns labels and row shape only. `arrest_fall` evaluates
 //! availability; callers remain responsible for admitting the supplied facts.
 
-use mesocosm_core::{BodyDocument, PartId};
+use mesocosm_core::{Aabb, BodyDocument, PartId, Provenance};
 use paredros_identity::{BodyRevisionId, SubjectId};
 
 use crate::{
@@ -33,6 +33,12 @@ pub struct PartRow {
     pub id: PartId,
     pub name: String,
     pub severed: bool,
+    /// Parent in the body graph. This remains present for severed parts so a
+    /// read-only inspection can explain where the part was attached.
+    pub parent: Option<PartId>,
+    /// World/body-space bounds derived through `BodyDocument::place`.
+    pub bounds: Option<Aabb>,
+    pub provenance: Provenance,
     pub capabilities: Vec<CapabilityRow>,
 }
 
@@ -107,6 +113,9 @@ impl SubjectSheet {
                     .map(|(_, name)| (*name).to_owned())
                     .unwrap_or_else(|| format!("part {}", part.id.0)),
                 severed: part.severed,
+                parent: part.attachment.map(|attachment| attachment.parent),
+                bounds: part_bounds(input.body, part.id),
+                provenance: part.provenance.clone(),
                 capabilities: input
                     .inputs
                     .part_capabilities
@@ -158,6 +167,39 @@ impl SubjectSheet {
                 .collect(),
         }
     }
+}
+
+/// Derive a part's body-space AABB from its transformed local corners. The
+/// core owns pivot, yaw, and nested attachment arithmetic; this projection
+/// only enumerates the eight corners of the authored box.
+fn part_bounds(body: &BodyDocument, id: PartId) -> Option<Aabb> {
+    let part = body.part(id)?;
+    let extent = [
+        part.half_extent[0].checked_mul(2)?,
+        part.half_extent[1].checked_mul(2)?,
+        part.half_extent[2].checked_mul(2)?,
+    ];
+    let mut corners = (0..8).map(|mask| {
+        body.place(
+            id,
+            [
+                if mask & 1 == 0 { 0 } else { extent[0] },
+                if mask & 2 == 0 { 0 } else { extent[1] },
+                if mask & 4 == 0 { 0 } else { extent[2] },
+            ],
+        )
+    });
+    let first = corners.next()??;
+    let mut min = first;
+    let mut max = first;
+    for corner in corners {
+        let corner = corner?;
+        for axis in 0..3 {
+            min[axis] = min[axis].min(corner[axis]);
+            max[axis] = max[axis].max(corner[axis]);
+        }
+    }
+    Some(Aabb { min, max })
 }
 
 fn equipment_for(sources: &[SourceQuery], equipment: &[EquipmentProjection]) -> Vec<EquipmentRow> {
@@ -224,6 +266,7 @@ fn binding_label(blocker: &BindingBlocker) -> String {
 mod tests {
     use super::*;
     use crate::fixtures::three_lives as fixture;
+    use mesocosm_core::{Attachment, Origin, SpeciesId, VolumeRef, Yaw};
 
     fn sheet(
         life: &fixture::Life,
@@ -316,5 +359,156 @@ mod tests {
                 .any(|line| line.contains("has not been learned"))
         );
         assert!(projected.actions.iter().all(|action| !action.available));
+    }
+
+    #[test]
+    fn bounds_follow_nested_rotated_attachments() {
+        let mut body = BodyDocument::new(SpeciesId(1), VolumeRef::from_tag(1), 1, [2, 1, 2]);
+        let child = body
+            .attach(
+                VolumeRef::from_tag(2),
+                1,
+                [1, 2, 1],
+                Attachment {
+                    parent: body.root,
+                    offset: [3, 0, 0],
+                    yaw: Yaw::Quarter,
+                },
+                Provenance::founding(),
+            )
+            .unwrap();
+        let grandchild = body
+            .attach(
+                VolumeRef::from_tag(3),
+                1,
+                [1, 1, 2],
+                Attachment {
+                    parent: child,
+                    offset: [0, 0, 4],
+                    yaw: Yaw::Half,
+                },
+                Provenance::founding(),
+            )
+            .unwrap();
+
+        assert_eq!(
+            part_bounds(&body, child),
+            Some(Aabb {
+                min: [2, -2, -1],
+                max: [4, 2, 1]
+            })
+        );
+        assert_eq!(
+            part_bounds(&body, grandchild),
+            Some(Aabb {
+                min: [5, -1, -1],
+                max: [9, 1, 1]
+            })
+        );
+    }
+
+    #[test]
+    fn severed_and_incorporated_parts_keep_geometry_and_provenance() {
+        let lives = fixture::three_lives();
+        let projected = sheet(&lives[2], None, lives[2].revision);
+        let severed = projected
+            .parts
+            .iter()
+            .find(|part| part.id == PartId(1))
+            .unwrap();
+        assert!(severed.severed);
+        assert_eq!(severed.parent, Some(lives[2].body.root));
+        assert!(severed.bounds.is_some());
+
+        let symbiont = projected
+            .parts
+            .iter()
+            .find(|part| part.id == PartId(7))
+            .unwrap();
+        assert_eq!(symbiont.parent, Some(lives[2].body.root));
+        assert_eq!(symbiont.bounds, part_bounds(&lives[2].body, PartId(7)));
+        assert_eq!(
+            symbiont.provenance.origin,
+            Origin::Incorporated {
+                from_species: SpeciesId(72),
+                from_part: PartId(0),
+            }
+        );
+        assert_eq!(symbiont.provenance.epoch, 114);
+    }
+
+    #[test]
+    fn geometry_projection_does_not_mutate_body() {
+        let lives = fixture::three_lives();
+        let before = lives[2].body.clone();
+        let projected = sheet(&lives[2], None, lives[2].revision);
+        assert_eq!(lives[2].body, before);
+        assert_eq!(projected.parts.len(), before.parts.len());
+    }
+
+    #[test]
+    fn malformed_attachment_chains_have_no_geometry_and_terminate() {
+        let mut missing_parent =
+            BodyDocument::new(SpeciesId(1), VolumeRef::from_tag(1), 1, [1, 1, 1]);
+        let child = missing_parent
+            .attach(
+                VolumeRef::from_tag(2),
+                1,
+                [1, 1, 1],
+                Attachment {
+                    parent: missing_parent.root,
+                    offset: [0, 0, 0],
+                    yaw: Yaw::Zero,
+                },
+                Provenance::founding(),
+            )
+            .unwrap();
+        missing_parent.parts[child.0 as usize].attachment = Some(Attachment {
+            parent: PartId(99),
+            offset: [0, 0, 0],
+            yaw: Yaw::Zero,
+        });
+        assert_eq!(part_bounds(&missing_parent, child), None);
+
+        let mut cycle = missing_parent.clone();
+        cycle.parts[cycle.root.0 as usize].attachment = Some(Attachment {
+            parent: child,
+            offset: [0, 0, 0],
+            yaw: Yaw::Zero,
+        });
+        cycle.parts[child.0 as usize].attachment = Some(Attachment {
+            parent: cycle.root,
+            offset: [0, 0, 0],
+            yaw: Yaw::Zero,
+        });
+        assert_eq!(part_bounds(&cycle, cycle.root), None);
+        assert_eq!(part_bounds(&cycle, child), None);
+    }
+
+    #[test]
+    fn bounds_use_an_authored_noncentral_pivot() {
+        let mut body = BodyDocument::new(SpeciesId(1), VolumeRef::from_tag(1), 1, [2, 1, 2]);
+        let child = body
+            .attach(
+                VolumeRef::from_tag(2),
+                1,
+                [1, 1, 1],
+                Attachment {
+                    parent: body.root,
+                    offset: [3, 0, 0],
+                    yaw: Yaw::Quarter,
+                },
+                Provenance::founding(),
+            )
+            .unwrap();
+        body.parts[child.0 as usize].pivot = [0, 1, 0];
+
+        assert_eq!(
+            part_bounds(&body, child),
+            Some(Aabb {
+                min: [3, -1, -2],
+                max: [5, 1, 0]
+            })
+        );
     }
 }

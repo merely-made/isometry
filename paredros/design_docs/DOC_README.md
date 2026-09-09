@@ -30,7 +30,23 @@ any other index and is updated in the same session as any doc change.
 
 ## Active docs
 
-**Current design focus, 2026-09-06:** the founding plan's
+**Implementation direction, 2026-09-09:** build connected functional systems;
+the crossing is an optional fixture. The following plans own the next wiring
+dependencies while the execution plan retains F0-F8 semantic milestones:
+
+- [Functional loops and wiring](2026-09-09_functional_loops_plan.md): session
+  authority, injury and directional combat, building, saves and continuation;
+  bounded J0 body-sheet safety and J1a controlled-session persistence implemented
+  locally; J1a passes 35 library + 3 integration tests. Full host/contact join open.
+- [World conditions and authored laws](2026-09-09_world_conditions_plan.md):
+  independent skill/risk surgery, causal composition, proposed stored charge and
+  sympathetic coupling, and explicitly scoped rules adapters; planned.
+- [Memory and remembrance](2026-09-09_memory_and_remembrance_plan.md):
+  observer-relative answers, personal preferences, bounded recall, durable
+  history, checkpoint/retention strategy and Hagiograph; planned, with a measured
+  20,004-intent equipment-history save baseline.
+
+**Current design focus, 2026-09-08:** the founding plan's
 [borg generation and character-sheet proposal](2026-07-30_paredros_founding_plan.md#borg-generation-techniques-and-the-character-sheet)
 specifies classless capabilities, historically transmitted traditions,
 alternative anatomical technique bindings, deliberate learning, and inventory
@@ -39,7 +55,23 @@ example and read-only technique query, now implemented locally and covered by
 the combined 43-test gate, using existing subject/revision and
 part addresses. A separate native read-only Body/Actions inspector is now
 implemented locally with a combined 52-test gate; durable equipment/learning
-remain later joins. The execution plan
+remain later joins. A bounds-derived, selectable body schematic with a retained
+list alternative is now implemented locally with 61 focused tests and six
+visually reviewed native captures. Durable, revision-addressed anatomy admission
+is implemented locally with a 79-test gate; the authored comparison remains
+read-only. Reconciliation and dressing attachment are implemented locally
+with a combined 93-test gate. The native live-equipment join now passes
+101 combined tests plus three reviewed native captures and a mouse/keyboard
+check: a fixed named subject, admitted anatomy and owned dressings, with
+attach/detach intents and a separate authored comparison mode. This is
+still a wiring probe rather than the joined adventure. Explicit immutable
+Save/F5 and latest-save Load/F9 now pass 107 combined tests and a two-process
+save/reopen/load check with reviewed composited captures. The private Cargo
+cache bypassed shared-cache contention. Physical save/load input acceptance
+remains open because the computer-use helper timed out. Startup and exit do
+not automatically load or save. `PAREDROS_EQUIPMENT_SAVES` selects storage.
+World saves use version 3 and explicitly reject versions 1 and 2.
+The execution plan
 records the independent G/release crossing
 fix and unresolved presentation feedback. Charge and
 inhabitants are deferred during this design pass. Historical entry and

@@ -4,7 +4,7 @@ version = "0.0.1"
 edition = "2024"
 license = "MPL-2.0"
 description = "S3, the joint receipt: one sortie and return, where willingness and embodiment meet."
-repository = "https://github.com/merely-made/paredros"
+repository = "https://github.com/merely-made/isometry"
 publish = false
 
 # The one crate allowed to read both owners. The execution plan's two-owners

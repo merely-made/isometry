@@ -24,10 +24,10 @@
 //!
 //! [`places`]: mesocosm_core::places
 
+pub mod body_sheet;
 #[cfg(feature = "r1-proof")]
 mod brick;
 pub mod crossing;
-pub mod body_sheet;
 pub mod frame_health;
 pub mod gpu;
 pub mod probe;
