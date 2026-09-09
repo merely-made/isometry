@@ -96,6 +96,32 @@ predicted; `Account::Soil` and `Account::Substance` reconcile per channel over
 a full run; the named decay rule is one function with one caller; the tick
 budget receipt is inside the 10 t/s wall at the current population.
 
+**TG2a accounting foundation, 2026-09-09.** `mesocosm-core::matter` supplies
+fixed four-channel stocks, checked arithmetic, deterministic proportional
+splits, typed account receipts and a candidate column-transport kernel.
+The reconciliation law is per-account, per-channel balance change equals
+transfers plus explicitly declared conversion deltas. Nis kinds record
+provenance rather than indestructible chemical species: a named conversion
+can change the channel while conserving total milligrams exactly.
+
+The instrument's candidate rules are soil synthesis into producer tissue,
+digestion into declared tissue or an untyped metabolized reserve, and completed
+mineralization into soil. Reserve erasure is a working accounting contract to
+review at live integration. A retained dietary contribution or graft uses an
+unchanged typed transfer; digestion does not require converting the whole meal.
+TG3 still owns the actual recipes and the part mosaic's retained mix. Death
+alone does not change a material kind.
+
+The standalone `typed_matter_receipt` example checks independently stated
+balances, a serialized receipt replay, and a deliberately substituted channel
+whose total mass still passes. It also compares the four-channel kernel with
+incumbent scalar Soil transport at 129 by 129 columns. The kernel retains no
+world state. Live Soil, body mass, reserves, snapshots and grammar revision 1
+are unchanged; this is neither the full-run TG2 receipt nor a full-tick budget
+measurement. Next, replace storage at the existing owners and carry typed
+stocks through accepted mutations, with scruple on the existing part mosaic.
+Do not introduce a parallel composition authority.
+
 ### TG3: scruple per part
 
 Composition gets its two ruled layers. The **lineage layer** declares what nis
@@ -213,6 +239,28 @@ beginning body types; start investigating a beginning set of traits.
 
 ## Findings
 
+- **2026-09-09, TG2a accounting and transport:** the release instrument keeps
+  101 mg across synthesis, graft, digestion to reserve and mineralization;
+  independent expected balances reconcile and postcard receipt replay is exact.
+  Replacing the graft's remaining 10 mg of producer nis with consumer nis
+  preserves the scalar total and fails with `BalanceMismatch` at that part.
+  The 129-by-129 transport probe warms both implementations, alternates order,
+  and records nine samples of 100 passes. Median per-pass times are 0.471 ms
+  for four channels and 0.733 ms for incumbent scalar Soil on this machine.
+  Every channel total is exact; the untyped channel matches incumbent Soil
+  after every sampled run. Stored column payload grows from 8 to 32 bytes
+  (130 to 520 KiB for 16,641 columns), plus temporary transport scratch.
+  This measures two different implementations, not a general claim that four
+  channels are cheaper. It admits the kernel for live integration; full TG2,
+  TG3, the population tick budget and visible dietary composition remain open.
+  Validation: 497 tests pass across the core library and the existing flows,
+  matter and replay targets, with one existing ignored test. This includes 16
+  new accounting/transport tests, the four-seed 4,000-tick scalar conservation
+  run and shipping-population conservation. Scoped formatting and diff checks
+  pass; all added source files remain below 600 lines. The pre-existing
+  `organism/kingdom.rs` unused-mut warning remains.
+  Local receipt: `Code/testing/mesocosm/tg2a_receipt.json`. Reproduce with
+  `cargo run -p mesocosm-core --release --example typed_matter_receipt -- <output.json>`.
 - **2026-09-05, TG1 acceptance:** 956 tests pass across eight packages, with
   zero failures and two existing ignored tests, using the latest result for
   each target. The native inspector, four-turn habitat, ordinary burrow walk
