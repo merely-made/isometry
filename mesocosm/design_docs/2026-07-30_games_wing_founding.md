@@ -191,6 +191,37 @@ What the frame decides, and why it is here rather than only in the review:
   deliberately *not* shared as a library: one grammar, sovereign evaluators
   per vessel, per the general model's evaluator rule.
 
+### Isometry as an umbrella home (2026-09-09 discussion)
+
+**Historical discussion, accepted later on 2026-09-09.** See the [completed consolidation](../../design_docs/2026-09-09_games_wing_consolidation_plan.md) for the current layout. The discussion below records its rationale. Mark was considering Isometry as
+the repository home for Mesocosm and Paredros to make interdependency easier,
+and explicitly welcomes use of all three projects. Distinguish repository
+organization, library dependency direction, and product runtime integration.
+One repository can contain three independently runnable applications and
+shared game-domain libraries without requiring one running world instance.
+
+The live dependency shape already includes direct Paredros dependencies on
+Mesocosm core, mesh, render and optional lens crates. Isometry separately owns
+a bounded generator runtime, typed proposals, campaign item state and system
+plugins that should be assessed for reuse before recreating equivalent
+machinery. A common home would permit atomic consumer/producer changes and
+coordinated dependency pins. Shared code must still have an acyclic dependency
+graph; co-location alone cannot remove a semantic ownership conflict.
+
+Discussion recommendation: an Isometry repository and, if dependency
+resolution permits, one Cargo workspace with separately runnable products,
+focused build targets, common dependency selection, and one wing doc index.
+Keep existing package identities during a possible move. Game-specific
+reusable code can be evaluated for a shared home there; generic platform
+machinery continues to belong to Mere/Genet. The older categorical constraints
+above are subject to this renewed discussion, rather than a veto on sharing
+a mechanism that now has compatible consumers.
+
+Migration would first inventory concurrent work, source histories, root
+patches, dependency pins, package metadata and build profiles, then preserve
+them during relocation and verify each application. This discussion performs
+no move, dependency rewrite, runtime merger or license change.
+
 ### The invariant is care granularity, not person purity
 
 **Relaxed 2026-07-30, at Mark's prompting, and this correction matters.** The

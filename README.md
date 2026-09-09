@@ -10,10 +10,9 @@ Additional arguments are passed to Cargo, for example `-p mesocosm-core --lib`.
 On other platforms, run Cargo from the corresponding product directory;
 tabletop-only local overrides can be supplied with Cargo's `--config` option.
 
-Existing Windows checkout paths are local junctions into this repository.
-When starting from those old paths, use `./build.ps1 <cargo arguments>` in the
-product directory, or enter its canonical directory under Isometry. Bare
-Cargo retains the old junction spelling and can misresolve relative paths.
+Use the canonical product directories under Isometry. The former standalone
+checkout paths have been retired; each product's `build.ps1` also forwards
+to the root dispatcher.
 
 A pixel-art isometric virtual tabletop. One player preps maps and hosts; the
 group joins peer-to-peer and plays in turns. GBA-tactics look (2:1 diamond

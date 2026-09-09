@@ -9,6 +9,12 @@ owns world substrate, and the
 [mesocosm founding plan](2026-07-30_mesocosm_founding_plan.md), which owns
 the epoch loop.
 
+**Scoping update, 2026-09-09:** §7.1 documents multiple interacting
+fantastical systems and procedural variation across worlds. §7.2 records
+the subsequent open discussion of body/item grammars, magic anatomy,
+operator composition, vows, curation, and SRD adjudication. These broaden
+the candidate space without settling a spec or scheduling implementation.
+
 **Implementation status, 2026-08-07 (audit-corrected wording): E0-E4
 implementation slices landed and workspace-green; acceptance gates
 open.** E0 allometry, E1 anatomy-derived feeding and
@@ -106,7 +112,37 @@ trademark checks happens separately, if ever.
   correspondence join table); humoral theory (a 2-axis product space);
   Paracelsian doctrine of signatures; hermetic correspondences.
 
-### 1.2 The cautionary source
+### 1.2 Magic-system comparison (2026-09-09 research pass)
+
+This pass compares mechanisms for the §7.1 discussion. Source descriptions
+below are distinguished from proposed wing adaptations. Published tabletop
+rules, released digital systems, fiction, and development reports establish
+different kinds of evidence; none alone proves a procedural world generator.
+
+| Prior art and source | What the source establishes | Proposed lesson for the wing |
+| --- | --- | --- |
+| [Ars Magica, publisher overview](https://atlas-games.com/product_tables/AG0215) and [rules briefing](https://www.atlas-games.com/pdf_storage/ArMcheatsheet.pdf) | Techniques and Forms combine actions and subjects; the older briefing explains spontaneous casting with effect guidelines and storyguide judgment | A language for expressing intent and discovering combinations. Explicitly implement supported meanings; the tabletop referee's interpretation is not a computational mechanism. The briefing is historical, not a current-edition RAW receipt |
+| [RuneQuest magic rules](https://rqwiki.chaosium.com/rules/magic.html) | Spirit magic draws on personal magic points and uses a focus; Rune magic invokes a deity through cult access, sacrifice, and Rune points | Coexisting traditions can have different sources, relationships, replenishment and obligations, even where outcomes overlap. Culture can determine practical access without merely renaming spells |
+| [Noita, developer description and FAQ](https://noitagame.com/) | Crafted spells affect simulated materials, including simplified reactions, electricity and thermodynamics | Magic participates in terrain and material consequences. One effect can provide attack, excavation, escape or an environmental hazard. This establishes world interaction, not generation of different physical laws per run |
+| [Hex Casting, versioned project manual](https://hexcasting.hexxy.media/v/0.10.3/1.0/en_us/) | Pattern sequences manipulate a stack of information and invoke effects | Powerful reference for explicit spell composition and inspecting intermediate results. A programming interface is one optional practice; it need not be the player's universal means of casting |
+| [Book of Hours, developer overview](https://weatherfactory.biz/book-of-hours/) and [released crafting changes](https://weatherfactory.biz/coseley-release/) | Occult books, learning, visitors and writing histories structure play; release notes document crafting helpers and persistent memories | Knowledge and history can be useful magical objects. Investigate the full recipe semantics separately before claiming a general correspondence engine; these pages establish the narrower implemented features |
+| [Mistborn, author's account](https://faq.brandonsanderson.com/knowledge-base/how-did-you-come-up-with-the-magic-system-2/) and [interaction example](https://www.brandonsanderson.com/blogs/blog/annotation-mistborn-2-chapter-twelve) | Separately conceived systems were brought together; the author identifies interactions between pushing/pulling and changing one's weight | A few shared physical variables can connect distinct systems deeply. This is literary design evidence, not a playable balance receipt |
+| [GURPS Thaumatology, publisher preview](https://dtrpg-public-files.s3.us-east-2.amazonaws.com/custom_previews/12199/224852.pdf) | A toolkit covering alternative frameworks, including Path/Book and symbol magic | Useful comparison vocabulary for world profiles. Framework breadth does not establish that all variants share one evaluator or compose automatically |
+| [Dwarf Fortress, Bay 12 development log](https://bay12games.com/dwarves/index.html), 2026-03-31 entry | Development report describes generated magical forces, earlier civilizations with different access, and varied magical laboratories | Closest direct procedural-world research direction here: connect cosmology, history, practice and machinery. Treat as development evidence, not a released full myth-and-magic acceptance result |
+
+The earlier empty-field finding above records an August search outcome, not
+proof that relevant work does not exist. Bay 12's concrete development reports
+deserve follow-up beyond the older myth-generation transcript. This pass does
+not settle the existing Qud, Dominions, or full Book of Hours recipe debts.
+
+For the next discussion, use three comparisons: **grammar versus physical
+interaction** (Ars Magica/Hex Casting/Noita), **different sources and social
+access** (RuneQuest), and **interlocking systems across history**
+(Mistborn/Dwarf Fortress). These can coexist. A practical design question is
+whether two ways to produce heat also differ in their supply, skill, equipment,
+social commitments, and counterplay.
+
+### 1.3 The cautionary source
 
 Raph Koster's own account of Ultima Online: the simulated ecology was cut
 in beta for **performance and maintainer comprehension**, after being
@@ -332,8 +368,8 @@ usefully, existing hooks here.
   act at a distance. Formally, an edge in a provenance graph. Hook:
   **every incorporated part already carries `Provenance`.**
 
-The alignment is lucky rather than clever, and it means sympathetic magic
-is nearly free here.
+The alignment supplies useful inputs for sympathetic magic; link semantics,
+costs, transmission, severance, and discovery still require implementation.
 
 ### 6.1 Kleptoplasty past biology
 
@@ -428,10 +464,438 @@ Technique x Form is then a matrix, and per the precluded-pairs rule **a
 given world fills only some cells**. Which cells exist is that world's
 magical character. A closed-form cost function over the parameter vector
 (Morrowind's spellmaker is the worked example; Angband's power budget is
-the learned-distribution variant) keeps a generated space balanced without
-hand tuning.
+the learned-distribution variant) can price candidates. Balance still needs
+interaction sampling and playtesting; pricing alone cannot establish it.
 
 ---
+
+### 7.1 Procedural systems across worlds (2026-09-09 scoping)
+
+**Status: discussion scope, documentation only.** Mark wants several deep,
+interacting fantastical systems, with different realizations across worlds.
+The earlier impossible-ecology direction remains a useful starting family;
+it does not exclude deliberate magic, ritual, or spellcraft from this session.
+The charge-and-sympathetic-link example in
+`paredros/design_docs/2026-09-09_world_conditions_plan.md` is one candidate,
+not the universal model or a selected implementation gate.
+
+The earlier claims that sympathetic magic is nearly free, that a cost formula
+ensures balance, and that an effect vector cheaply supplies discovery are too
+strong. Existing provenance is a useful input, not a remote-action mechanic.
+Costs need interaction testing; discovery needs evidence, experiments, and
+people who can retain and communicate what they learn.
+
+#### What generation changes
+
+Separate five choices so a world can vary one without accidentally changing
+the others:
+
+| Choice | Generated or authored variation | Consequence |
+| --- | --- | --- |
+| Causal rules | What can change what, through which relationships | A severed part carries influence in one world; only a voluntarily given part does in another |
+| Limits | Capacity, range, delays, costs, failure, exceptions | Distance, elapsed time, or broken consent can interrupt the same route |
+| Embodiment | Which bodies, materials, places, seasons, and tools realize a rule | The route might require a living organ, constructed resonator, or seasonal mineral |
+| Practice and knowledge | Learned methods, institutions, claims, disagreements, access | A public craft, guarded lineage practice, and misunderstood natural event can arise from the same law |
+| Presentation | Names, shapes, sounds, gestures, visible traces | Distinct aesthetics can preserve the same mechanics |
+
+Presentation variation is worthwhile. It is insufficient by itself to deliver
+structurally different worlds. Conversely, every world need not invent new
+physics: recognizable laws help players transfer knowledge, with local
+exceptions discovered through play. Expose world-creation choices for families,
+degree of causal variation, rarity, discoverability, and simulation budget.
+Exact ruleset profiles pin their procedures; procedural adaptation is a
+separate, honestly labelled mode.
+
+#### Candidate families to discuss together
+
+These are design alternatives and combinations, not an adopted taxonomy.
+
+| Family | Persistent state and means of action | Limits and counterplay |
+| --- | --- | --- |
+| Material flows and fields | Accumulate, store, conduct, transform, and release a quantity | Supply, leakage, capacity, overload, insulation, competing uses |
+| Sympathy and correspondence | Establish or exploit a typed relation between particular subjects | Provenance or matching criteria, link cost, range, severance, interference |
+| Living transformations | Cultivate organs, exchange tissue, induce developmental processes | Viability, host compatibility, upkeep, recovery, ecological supply |
+| Names, memory, and vows | Explicit rules read an identity, remembered fact, or recorded commitment | Who can establish it, what counts as fulfilment, forgetting, release, disputed knowledge |
+| Agents and bargains | An independently acting being grants an effect or changes its behaviour | Consent, interests, ability to perform, obligation, refusal, retaliation |
+| Place and time anomalies | A locality changes routes, rates, recurrence, or available transformations | Boundaries, entry and exit, recurrence conditions, detectable traces |
+
+Surgery and ordinary grafting stay useful without fantastical permission.
+Supernatural transformation adds a particular law, not a global exemption
+from anatomy. Extra-arm combat similarly comes from usable anatomy: additional
+punches have their own bindings, timing, contacts, costs, and recovery while
+sharing balance and attention. The functional-loop and world-conditions plans
+in Paredros own those action details.
+
+#### How deep systems combine
+
+Begin with authored causal mechanisms and generate their selection,
+parameters, embodiments, and a sparse set of explicit couplings. A coupling
+declares which output one system supplies as another's input, with units or
+typed facts, delay, cost, authority, and failure behaviour. Shared words such
+as "energy" or "memory" do not establish compatibility. A more expressive
+rule-synthesis grammar is a later option, once these mechanisms show which
+combinations are useful and explainable.
+
+For example, a world might grow organs that store storm charge. A voluntarily
+given fragment establishes a sympathetic route, and a maintained vow permits
+that route to carry charge. This joins living transformation, a material
+account, a relation, and a commitment. The recipient's overload limit still
+applies. Breaking the vow closes the route; it does not delete stored charge.
+A second world may support the same charge machinery through constructed
+resonators and vibration, with neither vow nor biological donor. Those worlds
+share one mechanism but require different bodies, buildings, practices, and
+social arrangements.
+
+Not every family needs to combine with every other. Generate a few legible
+connections, including antagonisms and tradeoffs. An ecosystem, settlement,
+or character should be able to exploit a rule in several ways: tools, shelter,
+travel, care, conflict, and livelihood. Spell lists can emerge as learned
+techniques over these systems rather than exhaust their uses.
+
+#### Generation and persistence obligations
+
+A proposed world must supply witnesses that its selected mechanisms can
+actually occur: reachable resources and conditions, feasible carriers,
+affordable actions, and observable consequences. Validate missing inputs,
+unaccounted creation, inaccessible prerequisites, runaway feedback, and
+dominant combinations. Time-stepped feedback is allowed; bound work per step
+and make instability an explicit possible world behaviour. These checks
+establish coherence, not guaranteed fun or balance.
+
+Persist the instantiated law revision and generated bindings, not just a seed
+that a future generator may interpret differently. Discovery remains distinct
+from truth: claims can be incomplete or wrong, and characters' interests can
+change how they interpret an event. Hagiograph retains significant history;
+ordinary personal recall also needs its own bounded retention policy.
+If a law consumes memory, define exactly which authoritative record it reads.
+Cache eviction or archival compaction must not accidentally cast a spell,
+erase a vow, release a debt, or revive a dead subject.
+
+Long-lived worlds need restorable checkpoints, a bounded recent event tail,
+retained consequential evidence, and measured growth with population and
+exploration. Persistent changes can grow reasonably; endlessly duplicated
+replay records need not. Paredros's memory-and-remembrance plan owns its
+proposed save/recall retention work; its small save-growth receipt is not a
+multi-year world capacity result.
+
+#### Research lanes, then implementation lanes
+
+1. **Mechanisms and prior art:** compare working causal families, player
+   discovery, and interactions from primary sources. Revisit the verification
+   debts below before treating older research summaries as established facts.
+   Done when examples distinguish implemented mechanics from announced ideas
+   and identify a reusable mechanism rather than a setting to imitate.
+2. **World composition:** describe contrasting worlds using overlapping
+   families, including a concrete coupling, ordinary uses, failure and
+   counterplay. Done when differences can be explained through causes,
+   embodiment, practice, and presentation independently.
+3. **Authority and growth:** map each candidate state to the existing world,
+   body, terrain, knowledge, and save owners. Done when a change has one owner,
+   discoverable consequences, and a retention policy preserving active causes.
+
+Only then promote bounded Luna/Terra implementation lanes by owner. A first
+functional loop can establish generation, action, consequence, discovery,
+and restoration without requiring a curated scene. The useful proof is that
+systems interact consistently and remain playable; scene production is not
+the acceptance gate. Open discussion: which families deserve the first mix,
+how radically laws vary, and how much ordinary inhabitants already know.
+
+### 7.2 Body plans, magic anatomy, operators, and items (2026-09-09 discussion)
+
+**Status: open discussion, not a spec. Nothing in this section is settled.**
+This records Mark's proposed synthesis following the prior-art discussion.
+The phrase "settled framing" in the submitted notes describes their working
+aura framing; the explicit open-discussion status governs this record. The
+following proposals do not silently replace existing implemented semantics.
+
+#### Proposal: body generation and curation
+
+Body plans are samples from a clade-rooted grammar: symmetry axis,
+segmentation rule, segment count, regional contents, and attachment vocabulary.
+A flat catalogue of 100-200 plans is the wrong organizing structure. Curated
+defaults are worked examples and modder documentation, tentatively about 20
+per category, chosen for different grammatical cases rather than zoological
+completeness. Curation displaces generation; the generator fills open choices
+and admitted results persist rather than being rerolled each run.
+
+Separate three axes: form grammar, organ systems (including magic anatomy),
+and scale. The proposed scale examples are germ, bug, house cat, horse,
+elephant, island turtle, and planetoid. Fauna/flora/myco, micro/macro,
+chimerism, psionics and divinity must not be sibling categories. Chimerism is
+structural incorporation made heritable: the seam must reconcile local axes,
+segment counts, and attachments. Psionic capability can have a physical
+substrate that is findable, excisable, susceptible to disease, and valuable.
+Dorohedoro's devil core is a submitted inspiration, not a verified mechanics
+source. Divine descent need not imply an organ or a deity supplying power.
+
+Generate before completing a catalogue. Inspect roughly 50 outputs for
+creature legibility and noise, then curate deliberate gaps. Repeat for items.
+The current axial recipe already supplies a starting grammar; this proposal
+does not mean discarding it and beginning from zero. See the phenotype plan's
+"The axial generator" and ProcessDef plan's developmental anatomy join.
+
+**Live check:** `crates/mesocosm-core/src/world/generation/body_plan.rs`
+already has Axial and Branched selectors. Branched arranges axial tagmata in
+a tree; it is not yet an indeterminate growth or fungal reconnection grammar.
+`src/body.rs` supplies parts with stable identity, mass, geometry and local
+attachment frames. These are concrete shared-substrate candidates, not an
+existing item generator.
+
+**Review:** curate both unreachable cases and representative generated
+examples that teach the grammar. Spread the first inspection across declared
+dimensions; 50 similar axial samples cannot validate branching or chimerism.
+Replacing a default before realization is distinct from revising an existing
+inhabited world. Later curation must target an explicit revision or an open
+generation choice rather than overwrite persisted consequences silently.
+
+#### Proposal: aura location and flow
+
+External aura, internal aura, core, and generation suggest strip, penetrate,
+excise, and interrupt as counterplay. These are useful encounters, not a
+mandatory four-part taxonomy. Candidate embodiments include distributed
+nodes, multiple cores, conducting/protective dermis (including fantastical
+fire, ice, or wind behaviour), clothing, tools, resonance, and entered bodily
+states with readable tells and interruption opportunities.
+
+Sample site, distribution, boundary and gating, with three initial binaries:
+concentrated/distributed, interior/exterior, continuous/gated. Ordinary
+critters are proposed as low-magnitude draws rather than a separate system.
+
+**Review: the eight combinations are not eight complete topologies.** They
+describe distribution and activity; connectivity, direction, source, storage,
+and transport still matter. Core, dermis and state machine are overlapping
+descriptions, so there are not literally four empty cells left by those names.
+Possible examples, not proposed classes:
+
+| Distribution | Location | Activity | Example |
+| --- | --- | --- | --- |
+| Concentrated | Interior | Continuous | An organ maintaining an internal field |
+| Concentrated | Interior | Gated | A gland discharging during a particular breath |
+| Concentrated | Exterior | Continuous | A persistent orbiting focus |
+| Concentrated | Exterior | Gated | A temporary focus formed beyond a horn |
+| Distributed | Interior | Continuous | Conducting tissue throughout a body |
+| Distributed | Interior | Gated | Nodes synchronized only in a trance |
+| Distributed | Exterior | Continuous | An enveloping mantle or living garment |
+| Distributed | Exterior | Gated | A skin-wide discharge during a defensive state |
+
+Generation, storage, distribution and gating can reside in different parts.
+Removing a source might stop recharge while leaving a stored field intact.
+Penetrating the boundary need not disable the whole network. Local laws also
+need to distinguish "available at negligible magnitude" from "absent or
+impossible here"; the former must not silently make aura universal.
+
+#### Proposal: operator composition
+
+Generation supplies substances and bearers; operators describe possible
+changes. These ten are the submitted vocabulary, not a closed final algebra:
+
+| Operator | Proposed role |
+| --- | --- |
+| Strengthen | Charge or improve an existing capacity |
+| Transform | Change aura into other forms, including elemental effects |
+| Instantiate | Create a thing with specified qualities |
+| Project | Apply an operation at range |
+| Puppet | Control operation or behaviour rather than intrinsic properties |
+| Subtract | Drain, nullify, or produce absence; an ecological counter-role |
+| Bind | Establish links, shared damage, collective sensing or hive relations |
+| Store | Persist aura in an object or place: relics, curses, haunted ground |
+| Second-order | Modify the cost or availability of another operator |
+| Raise | Establish a persistent developing subject whose form records training and which can outlive its maker |
+
+Examples: Transform + Project yields an elemental projectile; Instantiate +
+Puppet yields a remote construct; Store + Bind yields a relic linking holders.
+Abilities are sampled chains, with curated examples still admitted. Nen
+supplies the inspiration for the first five and aptitude falloff; the
+transferable proposal is distance-dependent costs, not mandatory adoption of
+its category list. Native aptitude may be a ring position or a point in a
+generated graph. Nen beasts and PSO mags inspire Raise. Training conditions
+may be authored, generated, or derived from play history. FMA's exchange and
+contact with the totality, JJK's vows and cursed energy, and Destiny's granted
+immortality and embodied planets are research leads, not verified claims in
+this document.
+
+**Review: distinguish roles within the vocabulary.** Transform changes state;
+Project modifies a route; Store changes persistence; Raise introduces a
+subject's lifecycle; second-order effects modify admitted operations. They can
+compose without having identical input/output shapes. Each composition needs
+typed targets, resources, duration, output, and declared failure. Establish
+whether Store preserves fuel, a procedure, a binding, or all three. Observation
+and sensing need an explicit account too: reading aura cannot remain a free
+UI privilege outside the operators or ordinary senses.
+
+Potential restrictions for second-order generation: explicit writable
+parameters, modification-depth bounds, per-step execution budgets, and no
+self-disabling validator or implicit resource creation. A creature unable to
+use magic can be valid. A world whose required lifecycles or starting actions
+are impossible is a different failure. Test feasibility of intended roles,
+not a universal requirement that everyone retain magical powers.
+
+#### Proposal: vows, alignment, and persistent identity
+
+Divine alignment changes aura and unalignment reverts it; aura can expose
+present or past affiliation. Breaking a vow carries oathbreaker costs unless
+released by the patron, with a release/breach condition potentially granting
+unique power. The submitted model proposes one vow operator with satisfaction
+and breach clauses differentiated by patron disposition.
+
+**Review:** keep creation, fulfilment, breach, release, and amendment as
+distinct events within that one contract. Patron disposition can select a
+consequence without turning release into an accidental breach. A patron's
+judgment needs a declared evaluation time, rather than retroactively changing
+an old event. Present alignment can revert while a historical trace persists;
+whether that trace is physically detectable, merely recorded, or erased is a
+world rule. A fulfilled condition grants power only through a declared source
+and effect. Sentient patron decisions need not be reducible to a numeric sign.
+
+#### Proposal: items use the same expressive foundations
+
+Items have form grammar (hilt, blade, haft, socket and attachment sites),
+material systems supplied by their world, and scale from needle to siege
+engine to a god's discarded tooth. Local ore and fabrication make material
+provenance an ecological fact. Curated items displace generated ones.
+
+Store is proposed as the enchantment mechanism: an operator chain with a gate
+persists in a form. Store-capable creatures consequently supply smithing and
+cursing roles. Raise extends to developing objects, such as weapons changed
+by use. Provenance records maker, materials and deeds; Hagiograph makes
+legendary craft consequential rather than assigning a rarity tier.
+
+The user's lean is one grammar rather than two, with golems and familiars as
+boundary cases. **Review alternative:** one composable part/attachment
+language, with multiple construction and growth productions and explicit
+facets for agency, metabolism, repair, reproduction and development. A
+body/object boolean cannot express a living weapon, an inert corpse, or an
+autonomous constructed body cleanly. This preserves a common representation
+without forcing a sword through axial animal development. Shared syntax
+does not make all material or operator combinations admissible in every world.
+
+Enchantment may also be a continuing external Bind or an intrinsically active
+material. If Store becomes the umbrella, it should preserve these distinct
+dependencies. Generating a stored chain still needs a feasible carrier, fuel,
+capacity, gating, and effects; an arbitrary sampled chain is not yet a usable
+item. Power decay belongs to the process governing that stored state;
+forgetting belongs to knowledge retention. One must not happen implicitly
+because the other is compacted. If remembrance fuels an item, explicitly
+couple those accounts.
+
+Length of history is not significance: repeated trivial use must not mint a
+legend. Prefer consequential retained evidence and declared developmental
+triggers. Raise needs stable identity and development; biological reproduction
+or genealogical lineage can remain optional for an individual raised object.
+
+#### Proposal: SRD adjudication over geometric anatomy
+
+Target the D&D SRD with all its playable ancestries available by default.
+Underneath, retain geometric targeting, targeted growth, optional physical
+collision, and to-hit that can be independent of actual intersection. Organ
+hits arise from called shots or incidental hitbox location. The accepted
+tradeoff in the discussion is two descriptions of an event for swappable
+rules and adjustable weight on player execution. Defaults remain open.
+
+**Source check and scope:** the [official SRD page](https://www.dndbeyond.com/srd)
+lists content exclusions; "every ancestry" must name a pinned SRD roster,
+not all D&D publications. The [5.2.1 rules](https://media.dndbeyond.com/compendium-images/srd/5.2/SRD_CC_v5.2.1.pdf)
+provide attacks, AC, damage, critical hits, and abstract hit points, not a
+general geometric strike-quality or organ-injury rule. Called shots and
+incidental organ consequences require an explicitly labelled extension.
+The adapter version is not chosen by this note.
+
+Two descriptions should yield one committed result. Preserve targeting and
+contact evidence separately from the rules verdict; declare how a
+non-intersecting successful attack selects an anatomical site. Exact SRD play
+must not acquire extra organ disabilities or death thresholds from the
+geometry layer. A hybrid can deliberately do so. Similarly, base SRD item
+stats need an explicit equipment-profile mapping, not an inferred formula
+from material and shape alone.
+
+#### Questions retained for discussion
+
+- Default weight of geometry versus SRD adjudication, and the anatomy policy
+  when to-hit succeeds without an intersection.
+- Whether roughly 20 examples is useful outside fauna; what grammar coverage
+  the first 50 inspected outputs actually exercise.
+- Graft seam reconciliation across local axes, attachments and resource flow;
+  how a somatic graft becomes a heritable developmental rule.
+  A candidate seam preserves each subtree's local axes, supplies a boundary
+  attachment frame, and explicitly reconnects compatible functional ports.
+  It need not force both bodies into one global symmetry or segment count.
+- Whether plant and fungal development need branching, fusion, modular and
+  indeterminate growth productions alongside segmentation.
+- Continuous dimensions versus mechanical scale thresholds and named bands.
+- Aura distribution/location/gating examples above, plus connectivity and
+  the possibility of absent aura.
+- Ring versus generated aptitude graph, including directed distance and how
+  learned abilities behave when an aptitude changes.
+- Bounds on second-order operations and feasibility checks for intended roles.
+- Authored, sampled, or history-derived Raise conditions and resulting agency.
+- One grammar or several productions sharing materials, operators, identity
+  and part attachment; the user's current lean remains one grammar.
+- Stored-aura decay, historical retention, and any explicit coupling between
+  remembrance and continued power.
+
+### 7.3 Missing generators (2026-09-09 discussion inventory)
+
+**Status: proposed decomposition, not eight approved subsystems.** These are
+missing responsibilities relative to §7.2; some extend existing generators.
+The user broadly agreed with the previous review, without resolving every
+open question or adopting a final architecture.
+
+Live reads for this inventory: `mesocosm-core/src/world/generation.rs`
+already samples constrained bodies and habitat, with admission/rejection
+records, and `axis` supplies recipes, archetypes, branch layouts and appendage
+chains. `process.rs` and `process/registry.rs` implement a small concrete
+process vocabulary and its allocation admission. In Paredros, `src/items.rs`
+places Food, Dressing and Scrap at world sites; it is not an item-form
+constructor. `src/technique.rs` explains ArrestFall with body/equipment
+implementations; it is not a generated technique grammar. These are scoped
+code findings, not a whole-wing absence proof.
+
+**Cross-wing correction, same discussion:** Mark explicitly reaffirmed that
+Mesocosm and Isometry are available for reuse and development. Isometry already
+has a bounded generator runner (`isometry-system::GeneratorRuntime`), typed
+proposals for items, NPCs, maps, world facts, storylets and campaigns
+(`isometry-campaign/src/generator.rs`), and host preview/commit wiring
+(`isometry-genet/src/generators.rs`). Its campaign items also carry
+system-interpreted material, enchantment, curse and origin modifiers.
+The inventory below describes additional semantic depth; it is not a request
+to rebuild that hosting, proposal, or item machinery inside Paredros.
+Isometry's `WorldLaw` stores pack vocabulary; its presence alone does not
+implement the proposed anatomy/operator semantics.
+
+| Generator responsibility | Produces | Missing breadth |
+| --- | --- | --- |
+| Form and growth structure | Part arrangements, attachment sites, and rules for changing them | Extend axial/branched recipes with indeterminate branching, fusion, object assembly and chimeric boundaries; account for continuous dimensions and scale thresholds |
+| Substances and sources | World-admitted material properties, carriers, transformations, and where supplies occur | Connect useful properties to available sources and processes rather than independently randomizing ore, organ and enchantment labels; typed matter storage is only part of this |
+| World laws and relationships | Admitted causal families, couplings, compatibility, exceptions, costs and ranges | Instantiate a coherent local rule set, including whether aura exists; initially compose supported mechanisms rather than synthesize arbitrary new execution semantics |
+| Functional anatomy | Allocation and connections between sources, stores, conductors, gates, actuators and senses | Generate a working internal network with capacity, bottlenecks, redundancy and failure; include functional adapters at grafts and item attachments |
+| Techniques and aptitude | Supported operator compositions, their body/tool bindings, commitment and execution conditions, and aptitude costs | Generate feasible actions for actual bearers; include sensing, counterplay and interrupted outcomes. Cost-distance topology is an input here, not necessarily another subsystem |
+| Development and training | Maturation, repair, acquisition, Raise conditions, and changes to growing items or companions | Generate future developmental possibilities tied to available experiences; actual growth follows recorded play, not fabricated accomplishments |
+| Practices and institutions | Craft traditions, teaching, ritual procedures, bargains, prohibitions and beliefs about magic | Produce different ways people access and understand real mechanisms; accepted contracts and patron decisions belong to the social runtime |
+| Evidence and historical expression | Discoverable traces, demonstrations, texts, scars, ruins, memorial forms and interpretations | Project admitted causes and significant history into things people can encounter; legends and rumors can disagree with truth, with that difference represented explicitly |
+
+Items and creatures can consume the same responsibilities in different
+combinations. An object needs a form and materials; enchantment may add an
+operation, store or external relation. A raised object additionally needs
+development and possibly agency. There need not be a separate enchantment
+table or an independently generated legendary rarity value.
+
+Not every generated rule needs a unique visual language. Generate readable
+presentation from function: source/gate activity supplies tells, routes supply
+traces, and failures leave evidence. World style and cultural interpretation
+can vary those signals while preserving a learnable relationship to causes.
+
+**Required machinery, not further generators:** execution, typed composition
+validation, capacity/reachability checks, replay/persistence, and curation
+precedence. They decide whether candidates work and preserve accepted results.
+Seed independence, rule versions and explicit revision targets prevent later
+curation or generator changes from rewriting an inhabited world silently.
+
+Suggested first investigation joins form, functional anatomy and technique
+generation under a small authored rule set. Sample a bearer with a supply,
+route, gate, sense and effect; then inspect what happens when a relevant part
+is cut, replaced or attached to an item. This tests structural breadth and
+functional consequences before attempting generated cosmologies. Sample both
+critter and constructed forms early; a large catalogue can follow.
 
 ## 8. Discovery as the delivery vehicle (proposed)
 
@@ -695,6 +1159,18 @@ in §6-§9 is built on the details:
   navigable 2D effect space.
 
 ## Progress
+
+- **2026-09-09, body/operator discussion:** §7.2 preserves the submitted
+  proposal and open questions, with review notes distinguished from it.
+  Verified current Axial/Branched generation and part attachment seams;
+  checked the SRD roster and adjudication boundary against official sources.
+  No implementation or default-weighting decision.
+
+- **2026-09-09:** §7.1 records the renewed procedural-system scoping:
+  distinct causal families, explicit couplings, world variation through
+  laws/embodiment/practice/presentation, discovery and retention obligations,
+  and research lanes preceding owner-specific implementation. Corrected
+  earlier cheapness and automatic-balance claims. Documentation only.
 
 - **2026-08-06:** founded. Ecological half scheduled as E0-E4; fantastical
   half proposed as F0-F5 pending a ruling. Prior-art ledger and

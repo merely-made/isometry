@@ -4,7 +4,7 @@ version = "0.0.1"
 edition = "2024"
 license = "MPL-2.0"
 description = "Mesocosm's body renderer: turns meshed bodies into frames on wgpu. Headless-first, so 'the part is visible' is a test rather than an opinion."
-repository = "https://github.com/merely-made/mesocosm"
+repository = "https://github.com/merely-made/isometry"
 publish = false
 
 # wgpu is declared once, at the workspace root, so this workspace cannot end up

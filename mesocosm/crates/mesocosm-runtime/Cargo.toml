@@ -4,7 +4,7 @@ version = "0.0.1"
 edition = "2024"
 license = "MPL-2.0"
 description = "Mesocosm's host-neutral runtime: fixed-timestep driving, intent queueing, and trace replay over mesocosm-core. No windowing, no graphics."
-repository = "https://github.com/merely-made/mesocosm"
+repository = "https://github.com/merely-made/isometry"
 publish = false
 
 # The extraction candidate named in the body pipeline plan. It sits between

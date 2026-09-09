@@ -4,7 +4,7 @@ version = "0.0.1"
 edition = "2024"
 license = "MPL-2.0"
 description = "The biosphere lens probe: a fullscreen heightfield raymarch plus a parametric grade stage. Terrain in, two souls out."
-repository = "https://github.com/merely-made/mesocosm"
+repository = "https://github.com/merely-made/isometry"
 publish = false
 
 [features]

@@ -9,7 +9,7 @@ edition = "2024"
 # generic: the schema names this game's roles and seeding rule.
 license = "MPL-2.0"
 description = "Mesocosm's pack door: discovery, admission and lowering of data-only process packs into the core's ruleset. Later, the Piccolo authoring host."
-repository = "https://github.com/merely-made/mesocosm"
+repository = "https://github.com/merely-made/isometry"
 publish = false
 
 # **The dependency runs one way.** This crate may depend on mesocosm-core;

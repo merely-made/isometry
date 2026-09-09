@@ -5,7 +5,7 @@ version = "0.0.1"
 edition = "2024"
 license = "MPL-2.0"
 description = "Mesocosm's windowed host: a winit window and wgpu surface driving the core through the shared runtime. Owns the loop and the device, never a rule."
-repository = "https://github.com/merely-made/mesocosm"
+repository = "https://github.com/merely-made/isometry"
 publish = false
 
 # The host. It owns the window, the device, and the frame loop, and it holds

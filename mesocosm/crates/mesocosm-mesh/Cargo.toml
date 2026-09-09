@@ -4,7 +4,7 @@ version = "0.0.1"
 edition = "2024"
 license = "MPL-2.0"
 description = "Turns a Mesocosm body document into geometry: per-part greedy voxel meshing plus rigid placement. Headless and deterministic, with no GPU dependency."
-repository = "https://github.com/merely-made/mesocosm"
+repository = "https://github.com/merely-made/isometry"
 publish = false
 
 # A projection, not a renderer. It produces quads in integer voxel space; a
