@@ -1,5 +1,20 @@
 # Isometry
 
+This repository is also home to [Mesocosm](mesocosm/README.md) and
+[Paredros](paredros/README.md). The three products retain their package names
+and separate Cargo workspaces. Start with the [wing documentation index](design_docs/DOC_README.md).
+
+From this directory, select a product with `./scripts/wing.ps1 isometry test`,
+`./scripts/wing.ps1 mesocosm test`, or `./scripts/wing.ps1 paredros test`.
+Additional arguments are passed to Cargo, for example `-p mesocosm-core --lib`.
+On other platforms, run Cargo from the corresponding product directory;
+tabletop-only local overrides can be supplied with Cargo's `--config` option.
+
+Existing Windows checkout paths are local junctions into this repository.
+When starting from those old paths, use `./build.ps1 <cargo arguments>` in the
+product directory, or enter its canonical directory under Isometry. Bare
+Cargo retains the old junction spelling and can misresolve relative paths.
+
 A pixel-art isometric virtual tabletop. One player preps maps and hosts; the
 group joins peer-to-peer and plays in turns. GBA-tactics look (2:1 diamond
 tiles, sculpted elevation, integer-scaled pixels) with voxel-sourced

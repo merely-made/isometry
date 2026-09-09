@@ -1,5 +1,9 @@
 # Paredros
 
+Paredros now lives in the [Isometry umbrella repository](../README.md), under
+`paredros/`. It retains its own Cargo workspace and package names. See the
+[wing index](../design_docs/DOC_README.md) for all three products.
+
 A second-person action RPG in a persistent generated world.
 
 You name one creature and ordinarily inhabit that life until it dies. Other

@@ -1,5 +1,12 @@
 # CLAUDE.md — Paredros Repository Role
 
+**Repository location, 2026-09-09:** this product now lives in Isometry's
+`paredros/` directory, with its existing Cargo workspace and package names.
+Read `../CLAUDE.md` for umbrella guidance. The root repository index is
+`../design_docs/DOC_README.md`. Shared wing design is now in the sibling
+`../mesocosm/design_docs/` inside the same repository. Git operations affect
+the whole umbrella; preserve other products' WIP and stage intended paths.
+
 This file defines how Claude Code should behave in this repository. Read it
 first when starting any session.
 

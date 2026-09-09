@@ -1,5 +1,12 @@
 # CLAUDE.md — Mesocosm Repository Role
 
+**Repository location, 2026-09-09:** this product now lives in Isometry's
+`mesocosm/` directory, with its existing Cargo workspace and package names.
+Read `../CLAUDE.md` for umbrella guidance. The root repository index is
+`../design_docs/DOC_README.md`; this product's local index remains below.
+Git operations from here affect the whole Isometry repository. Preserve
+other products' WIP and stage only the intended paths.
+
 This file defines how Claude Code should behave in this repository. Read it
 first when starting any session.
 

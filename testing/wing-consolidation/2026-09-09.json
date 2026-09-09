@@ -1,0 +1,30 @@
+{
+  "date": "2026-09-09",
+  "scope": "Local repository consolidation; preserved working-tree tests",
+  "import_commit": "20d044f6cd11e0cdd55b359400f35c808bf73d3b",
+  "source_heads": {
+    "isometry": "243c0dd78dc096212a5fff960b8c098c791b6124",
+    "mesocosm": "284eb6584a688706dd9125b5f0e3b26ab61e75a7",
+    "paredros": "47361ae94680261233f5ad7de9e7c3e7ae828777"
+  },
+  "verified_source_file_counts": { "mesocosm": 414, "paredros": 144 },
+  "workspace_members": { "isometry": 8, "mesocosm": 9, "paredros": 6 },
+  "external_manifest_paths_rebased": 14,
+  "repaired_mesocosm_linked_worktrees": 4,
+  "tests": [
+    { "workspace": "isometry", "package": "isometry-core", "selection": "--lib", "passed": 58, "ignored": 0 },
+    { "workspace": "mesocosm", "package": "mesocosm-core", "selection": "--lib", "passed": 479, "ignored": 1 },
+    { "workspace": "paredros", "package": "paredros-world", "selection": "--lib --test session_boundaries", "passed": 38, "ignored": 0 },
+    { "workspace": "paredros", "package": "paredros-room", "selection": "--lib body_sheet", "passed": 24, "ignored": 0 }
+  ],
+  "total_passed": 599,
+  "total_ignored": 1,
+  "notes": [
+    "Cargo metadata verified from each canonical workspace and both old-path build.ps1 entry points.",
+    "Pre-existing WIP remains uncommitted; tests include it.",
+    "Original source checkouts, ignored files, Git bundles, hashes and diffs are preserved in the local archive.",
+    "Mesocosm's ordinary Cargo cache succeeded after the Paredros cache stalled resolving the larger workspace.",
+    "Bare Cargo from an old junction path is not supported; use build.ps1 or the canonical path.",
+    "No headed, GPU runtime, or physical input acceptance claimed."
+  ]
+}

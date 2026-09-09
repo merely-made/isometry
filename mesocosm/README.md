@@ -1,5 +1,9 @@
 # Mesocosm
 
+Mesocosm now lives in the [Isometry umbrella repository](../README.md), under
+`mesocosm/`. It retains its own Cargo workspace and package names. See the
+[wing index](../design_docs/DOC_README.md) for all three products.
+
 A first-person game of lineages.
 
 You are a critter in an enclosed mid-scale ecosystem. You grow only by

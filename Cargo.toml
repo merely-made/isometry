@@ -10,7 +10,7 @@ members = [
     "crates/isometry-system",
     "crates/isometry-voxel",
 ]
-exclude = ["crates/isometry-runtime"]
+exclude = ["crates/isometry-runtime", "mesocosm", "paredros"]
 
 [workspace.package]
 edition = "2021"

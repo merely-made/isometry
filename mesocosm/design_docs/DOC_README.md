@@ -1,5 +1,9 @@
 # design_docs Index
 
+**Location, 2026-09-09:** Mesocosm's product document catalogue within the
+[Isometry wing index](../../design_docs/DOC_README.md). Shared wing documents
+remain here, once, and all three products are now in the same Git repository.
+
 Canonical index for `design_docs/`. Per DOC_POLICY §5, this file wins over
 any other index and is updated in the same session as any doc change.
 

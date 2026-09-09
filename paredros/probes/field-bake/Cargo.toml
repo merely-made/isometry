@@ -11,9 +11,9 @@ publish = false
 
 [patch.crates-io]
 spirv-std = { git = "https://github.com/rust-gpu/rust-gpu.git", rev = "05b34493ce661dccd6694cf58afc13e3c8f7a7e0" }
-craballoc = { path = "../../../../crates/crabslab/crates/craballoc" }
-crabslab = { path = "../../../../crates/crabslab/crates/crabslab" }
-cubecl-wgpu = { path = "../../../mere/support/patches/cubecl-wgpu" }
+craballoc = { path = "../../../../../crates/crabslab/crates/craballoc" }
+crabslab = { path = "../../../../../crates/crabslab/crates/crabslab" }
+cubecl-wgpu = { path = "../../../../mere/support/patches/cubecl-wgpu" }
 vello = { git = "https://github.com/mark-ik/vello.git", branch = "mark-ik/wgpu-30" }
 
 [profile.dev]
@@ -24,9 +24,9 @@ burn-tensor = { version = "0.21", default-features = false, features = ["std"] }
 burn-wgpu = { version = "0.21", default-features = false, features = ["std"] }
 bytemuck = "1"
 cubecl = { version = "0.10", features = ["wgpu"] }
-netrender = { path = "../../../netrender/netrender" }
+netrender = { path = "../../../../netrender/netrender" }
 png = "0.17"
-renderling = { path = "../../../../crates/renderling/crates/renderling" }
+renderling = { path = "../../../../../crates/renderling/crates/renderling" }
 wgpu = { version = "30", default-features = false, features = [
     "dx12",
     "vulkan",

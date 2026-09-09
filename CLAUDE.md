@@ -1,5 +1,22 @@
 # CLAUDE.md — Isometry Repository Role
 
+## Umbrella repository (2026-09-09)
+
+This Git repository contains three products. The tabletop uses the root Cargo
+workspace; Mesocosm uses `mesocosm/`; Paredros uses `paredros/`. Read each
+product's `CLAUDE.md` before editing it. Package names and licenses remain
+unchanged. Build workspaces remain separate to preserve source/patch policy.
+`design_docs/DOC_README.md` is the wing entry index and links product indexes.
+Shared wing design currently lives in `mesocosm/design_docs/` within this repo.
+
+Use `./scripts/wing.ps1 isometry <cargo arguments>` (or mesocosm/paredros) to
+select a product. Tabletop-only machine overrides live in the ignored
+`.cargo/tabletop-local.toml`, supplied explicitly by that command. Do not put
+product-specific patches in `.cargo/config.toml`: children inherit it.
+Direct Cargo commands from product directories also work without local
+tabletop overrides. Product runtime separation does not prohibit shared
+libraries or atomic changes across products.
+
 This file defines how Claude Code should behave in this repository. Read
 it first when starting any session.
 

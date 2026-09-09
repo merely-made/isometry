@@ -27,8 +27,8 @@ publish = false
 
 [patch.crates-io]
 spirv-std = { git = "https://github.com/rust-gpu/rust-gpu.git", rev = "05b34493ce661dccd6694cf58afc13e3c8f7a7e0" }
-craballoc = { path = "../../../../crates/crabslab/crates/craballoc" }
-crabslab = { path = "../../../../crates/crabslab/crates/crabslab" }
+craballoc = { path = "../../../../../crates/crabslab/crates/craballoc" }
+crabslab = { path = "../../../../../crates/crabslab/crates/crabslab" }
 
 # The probe builds a lot of shader and rasterizer code; an unoptimized
 # debug build renders slowly enough to misread as a hang.
@@ -36,8 +36,8 @@ crabslab = { path = "../../../../crates/crabslab/crates/crabslab" }
 opt-level = 1
 
 [dependencies]
-netrender = { path = "../../../netrender/netrender" }
-renderling = { path = "../../../../crates/renderling/crates/renderling" }
+netrender = { path = "../../../../netrender/netrender" }
+renderling = { path = "../../../../../crates/renderling/crates/renderling" }
 wgpu = { version = "30", default-features = false, features = [
     "dx12",
     "vulkan",

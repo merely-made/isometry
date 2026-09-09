@@ -13,4 +13,5 @@ Thumbs.db
 # Machine-local cargo overrides (source-specific [patch] to local genet
 # checkouts, the mere pattern). Never committed.
 .cargo/config.toml
+.cargo/tabletop-local.toml
 /maps/

@@ -1,5 +1,18 @@
 # design_docs Index
 
+## Games wing entry points
+
+This is the canonical repository entry index. The tabletop documents remain
+here; [Mesocosm's product index](../mesocosm/design_docs/DOC_README.md) and
+[Paredros's product index](../paredros/design_docs/DOC_README.md) retain their
+local document catalogues. Shared wing design lives once in the imported
+[founding record](../mesocosm/design_docs/2026-07-30_games_wing_founding.md),
+with [magic and generator discussions](../mesocosm/design_docs/2026-08-06_general_model_plan.md).
+
+- [Games wing consolidation](2026-09-09_games_wing_consolidation_plan.md):
+  history-preserving repository import, source/worktree preservation, separate
+  build workspaces, and verification receipts.
+
 Canonical index for `design_docs/`. Per DOC_POLICY §5, this file wins over
 any other index and is updated in the same session as any doc change.
 
