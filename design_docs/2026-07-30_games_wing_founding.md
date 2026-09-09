@@ -5,9 +5,13 @@ architecture, laws, and vocabulary for Mesocosm, Paredros, and Isometry.
 Vessel-specific design lives in each repo's own founding plan. This document
 is cited by `paredros/design_docs/` and should be cited rather than copied.
 
-Everything here was ruled in conversation on 2026-07-29 and 2026-07-30.
-Claims about the existing stack were verified against code and docs on those
-dates; each is marked where it matters.
+The initial record was ruled in conversation on 2026-07-29 and 2026-07-30;
+later amendments carry their own dates. Claims about the existing stack are
+historical to their stated verification dates. **Amended 2026-09-09:** the
+influence set now incorporates Mark's `game_tastes.md` and follow-up discussion,
+including ordinary-item development and co-op as a core taste in every vessel.
+The taste record distinguishes endorsed directions from exploratory mechanics;
+it does not report implementation or replace domain plans' validation gates.
 
 ---
 
@@ -265,8 +269,10 @@ by the care-granularity rule; each still has to pass the three guardrails.
   board-to-text narration already exist there; one figure moving through the
   world is a shift that repo is nearly built for. Still gated behind
   Isometry's own render-lane ruling.
-- **Asymmetric co-op** (all three), and this is the largest unlock. Co-op is
-  deferred in every vessel and has never been designed. Asymmetric co-op is
+- **Asymmetric co-op** (all three), and this is the largest unlock. The original
+  implementation deferral did not remove co-op from the design. **Clarified
+  2026-09-09:** co-op is critical to every vessel; concrete session shapes and
+  their validation remain vessel-owned (see §8, question 7). Asymmetric co-op is
   *inherently* multi-person — one player embodied, one strategic — so a strict
   grammar makes it unbuildable. Under the care rule it is the obvious shape,
   and it is the shared-burden friction the influence set started from (the
@@ -415,13 +421,202 @@ damageable material history recognizable through its own lens.
 Gotcha Force, RimWorld, Phantasy Star Online, Mount & Blade, Zelda: Four
 Swords, FF Crystal Chronicles, XCOM 2, Caves of Qud, Vagante, Tactics Ogre:
 The Knight of Lodis, FFTA, Fire Emblem (GBA), Kenshi, Helldivers 2,
-Bethesda/Obsidian TES + Fallout, Destiny.
+Bethesda/Obsidian TES + Fallout, Destiny 1 and 2, Rain World, Armored Core 6,
+Clone Drone in the Danger Zone, Rogue Legacy, Cataclysm: Dark Days Ahead,
+Breath of the Wild, Majora's Mask, Balatro, Dwarf Fortress, and Barony.
+RimWorld includes world-state mods such as RimWar. Disco Elysium is the
+strongest worldbuilding reference in Mark's September discussion. Sword Hero
+is an anticipated combat influence, rather than a claim of a completed game.
 
 Six through-lines run through nearly all of it, and they are the wing's
 design spine: the roster is the protagonist; sortie and return, with the
 loot reveal ritualized at home; the body is a build surface and damage is
 subtraction; the world runs without you; co-op with friction rather than
 merely shared targets; and a toybox surface over merciless systems.
+
+#### Game tastes, integrated 2026-09-09
+
+Source: Mark's `game_tastes.md`, supplied for integration, and the accompanying
+September 9 conversation. This is an intentionally plural taste record. A
+preference can belong more strongly to one vessel, and the list remains open
+to revision. These are design motivations, not a checklist requiring every
+game to implement every influence. Specific examples below are exploratory
+unless explicitly recorded as endorsed.
+
+**Skill, chance, and discovering rules.** Mount & Blade supplies the explicit
+preference for perfect timing and skill-based action: spacing, directional
+control, reading an opponent, and committing at the right moment. That pleasure
+coexists with preparation, configurable builds, and long stretches of
+simulation. Sword Hero's combat is an especially interesting anticipated
+reference for those reasons; its [official alpha roadmap](https://www.swordherogame.com/alpharoadmap)
+describes directional attacks, parrying, and distinct weapon types.
+
+The source's preference for meaningful randomness over formula-predictable
+outcomes is refined by the Balatro example: **learn dependable rules that
+produce surprising outcomes**. Random inputs can coexist with predictable
+rhythm and resolution. Watching a card/joker combination play out confirms or
+corrects the player's mental model, improving the next round's decisions.
+There is skill both in execution and in arranging the conditions under which
+chance operates. If a mechanic is a lottery, give the player its knobs and
+levers. Pool selection, retaining a result, trading opportunities, and changing
+the frequency of an interaction are possible controls, not a chosen gacha
+implementation. Gacha remains an influence under this qualification.
+
+Hidden rules and initially unclear consequences are welcome. Vagante is a
+reference for communicating some mechanics while leaving others obscured by
+omission. Observable consequences must still give the player something to
+investigate; discovery and legibility can coexist.
+
+**Development, collection, and attachment.** World and procedural generation,
+customizable items and characters, learned skills/techniques/abilities, magic,
+and fantastical elements all remain central tastes. A run should encounter
+new variables while some invested build or lineage continues. The PSO mag is
+a specific reference: a companion develops alongside you and empowers you.
+Collection includes finding unfamiliar equipment or a companion worth keeping,
+as well as deliberately pursuing a particular find.
+
+Failures are tolerable when successes are meaningfully, procedurally unique.
+XCOM 2's soldiers and roster are Mark's example even though that attachment is
+not primarily item crafting. Starting differences, chosen development,
+survived events, and a particular role among companions can make a success
+distinctive. Mere numerical rarity does not supply all of that.
+
+**Endorsed explicitly on 2026-09-09: ordinary items can develop.** Do not
+reserve meaningful development for equipment above a rarity threshold. A
+common sword can become irreplaceably *your sword* through development and
+history. Rarity may change the kinds of development available, rather than
+making everything before a threshold disposable. Developing synergies between
+items is a promising direction; those relationships should create choices
+without making equipment changes feel like punishment. The specific growth
+rules, rarity effects, and synergy mechanics remain open. This is a design
+direction, not evidence that the current item records implement progression.
+
+**Time, failure, and control.** Real time with pause is a preferred starting
+point where the game supports it. Plans can continue until an alert calls for
+manual attention, as in RimWorld; long unattended stretches can leave room to
+think, as in Kenshi. Turn-based and stepwise movement are also welcome, with
+CDDA as a reference. Each vessel retains its own pace and input model; this
+preference does not change Isometry's turn-based brief or impose pause on a
+shared session. Where practical, expose pace, alerts, and assistance as settings.
+
+Things die and stay dead in the played history. Continuing while wounded and
+transferring to another body are pleasures in their own right, with Clone Drone
+as a reference. The weight of death scales with investment: losing a long-played
+tabletop character and ending a Mesocosm run need different emotional weight.
+
+**Material, traversal, and place.** Isometric views, pixel art, and voxel art
+are tastes; each vessel's camera ruling remains distinct. Destructibility is
+especially important, with construction and destruction understood as changes
+to the same material system, consistent with the Voxatron reference above.
+Terrain can offer routes, hazards, and opportunities that become legible through
+experience. Mark points to Isometry's surface effects and Breath of the Wild
+as things to learn from when making hostile environments playable.
+
+Exploratory examples: rain changes footing, equipment changes crossing options,
+and a fire can endanger one route while clearing another. The interest is in
+learning relationships and eventually feeling at home in an initially hostile
+place. This does not record those examples as shipped surface mechanics or
+choose a shared environmental evaluator.
+
+**Atmosphere, dialogue, and culture.** Vagante, Dwarf Fortress, Barony, CDDA,
+and Rain World carry a strong atmosphere; Disco Elysium is the worldbuilding
+bar. Ruins, melancholy, strangeness, beauty, comedy, and ordinary life beside
+the cosmic are useful dimensions to explore rather than a prescribed mood.
+The world should feel alive and also, in Mark's words, **mechanically and
+constitutionally aware of itself**.
+
+That opens a design question about inhabitants whose explanations, customs,
+institutions, and disagreements affect events. An illustrative small case is
+a sacred forest whose inhabitants recognize trespass, disagree about exceptions,
+grant permission, and remember violations. Dialogue expresses those relations
+and beliefs; generating more dialogue alone would not establish them. A custom
+interpreted differently by several people is a concrete candidate for exploring
+this ambition. Fictional institutions remain game rules; gemot's platform
+constitution does not become their simulation authority.
+
+**World memory, gods, and factions.** Decisions should reemerge in the world;
+the Nemesis system is a floor for the ambition. Unprecedented actions,
+legendary deeds and craft, and interesting people deserve remembrance.
+Ecologies, individuals, history, and acting factions make a living world;
+Oblivion and Skyrim are counterexamples for this particular ambition in Mark's
+taste record, despite other Bethesda influences above.
+
+Scale can include an island turtle, Galactus in the sky, or Majora's moon:
+beings may be unreachable yet aware of you, and gods need not all manifest.
+A critter naming itself, becoming a god, and gathering influence is a desired
+possibility. Critters, gods, and characters have complicated relationships.
+Critters are generally individuals rather than species representatives, with
+intelligent fungus the stated exception; gods are individuals, sometimes
+friends, rarely a proper faction. Character interactions carry faction weight.
+The quality of a companion's work can depend on their relationship to you.
+
+A faction is the act of forming a group, not simply an alignment label. A party
+already counts. Factions can be authored; gods and named individuals can create
+the occasion for one. Group types differ by capabilities and situation, such
+as maintaining a base, holding bordered territory, or being bound to a biome
+like dryads in a forest, rather than headcount alone. Party to base to polity
+is a Paredros ambition; it would overextend Mesocosm's care for a lineage.
+
+**Sound effects first; music responsive to play.** FX matter more to Mark than
+a soundtrack. Material, footing, impact, damage, distance, and threats are
+candidate distinctions worth hearing. A gentle chiptune/ambient track that
+registers the character's footsteps is an exploratory musical direction.
+One possible arrangement gives the footfall immediate material feedback and
+lets a quieter musical response follow musical timing. Sound and music levels
+and the strength of event-driven musical responses should be configurable.
+
+[Firewheel](https://crates.io/crates/firewheel) is a candidate audio foundation,
+not a selected wing-wide composition system. Its audio graph and custom effects
+can support event-driven audio, while games own the meaning of their events
+and the choice of response. `hocket/Cargo.toml` already declares Firewheel
+(checked 2026-09-09); inspect that consumer before introducing another audio
+runtime. This observation does not establish game integration or an adaptive
+score. See the [upstream project](https://github.com/BillyDM/firewheel).
+
+**Co-op is critical to every game.** Mark explicitly reaffirmed this for the
+whole wing on 2026-09-09. Helping someone, complementary abilities, rescuing a
+disastrous expedition, shared discovery, and accidentally making things worse
+together belong to the desired experience. The pitch remains: "I didn't know
+that could happen." §8's session questions concern how each game achieves this;
+the old blanket "deferred to last" wording is superseded as design priority.
+This sets product direction without asserting a new implementation order or
+completed netcode.
+
+**Shared history and control over data.** Preserve the source's ambition for
+one public, data-oriented world on the Mere/moot, Hagiograph, and Codicil
+substrate. Read "shared world state" through §1 and §4: shared history and
+portable facts with vessel-owned running rules. Worlds generate already
+living; play displaces generated content and can enrich other games. Any game,
+any order, any supported epoch remains the direction. History is git-like:
+play can branch, contradictions can persist as divergent myths, and choosing
+canon is an explicit act under the world's policy rather than destructive
+automatic merging.
+
+The world should be inspectable as an ordinary Mere moot, with saves browsable
+and shareable outside a game. Public formats let other people build games
+against that history; code/documentation licensing follows the current
+`LICENSES.md` MPL-2.0 scope. Modding should reach an item's smallest meaningful
+parts. Players should be able to transfer a sword between their characters and
+edit its description, rarity, and nature in worlds they control. Cross-game
+and cross-era portability preserves the item and its provenance even when a
+recipient cannot enact its mechanics; grants and local interpretation still
+apply in shared worlds. Generation formulas, analysis methods, and bespoke
+world operations are particularly interesting mod contributions.
+
+**Where these directions meet current work.** Vessel mechanics and receipts
+stay in their domain plans. Mesocosm's
+[playable ecology plan](2026-08-31_playable_ecology_plan.md) owns embodied
+discovery and lineage development. Paredros's
+`paredros/design_docs/2026-09-09_functional_loops_plan.md`,
+`paredros/design_docs/2026-09-09_world_conditions_plan.md`, and
+`paredros/design_docs/2026-09-09_memory_and_remembrance_plan.md` are locally
+drafted planning locations, inspected 2026-09-09, for action loops, environmental
+laws, and remembered social consequences respectively; they are not completion
+receipts for this taste record. Isometry's own rulesets decide item and surface
+consequences. Shared
+identity and history do not require a wing-wide combat, item-growth, or culture
+evaluator. The [vessel briefs](2026-08-18_vessel_briefs_and_presentation.md)
+retain the distinct game and presentation directions.
 
 ---
 
@@ -989,7 +1184,10 @@ Carried forward deliberately. Each needs a ruling before the work it gates.
    beside it, not on it.
 6. **Attachment-creep levers.** Relationship drift the player cannot
    influence reads as random punishment (the Darkest Dungeon 2 lesson).
-7. **Co-op**, deferred to last in every vessel, but no longer shapeless.
+7. **Co-op**, critical to every vessel (**priority clarified 2026-09-09**).
+   The earlier blanket "deferred to last" is superseded as design priority;
+   each vessel's current plan still owns implementation order and acceptance.
+   The following is the historical design exploration, not a netcode receipt.
    Two concrete shapes now exist: **asymmetric co-op** (one player embodied,
    one strategic), which the care-granularity relaxation made buildable and
    which is the natural home for the shared-burden friction the influence set
@@ -1014,11 +1212,12 @@ Carried forward deliberately. Each needs a ruling before the work it gates.
    recorded in the body pipeline plan §R0, and it is the piece with a deadline
    because it is nearly free to design in and brutal to retrofit.
 
-   Two structural gifts: the epoch loop's **adaptation phase is turn-based and
-   therefore trivially co-op-able**, so only the epoch half needs the hard
-   machinery; and asymmetric co-op is free in this model, since the strategic
-   player is simply another input stream. One API rule regardless of
-   implementation: **co-op must not appear in a game core's API at all.**
+   The epoch loop's **adaptation phase is turn-based**, which offers a useful
+   coordination boundary but still needs agreement and conflict rules.
+   Asymmetric co-op can use separately attributed input streams; roles,
+   permissions, timing, and disagreement still require design. One API rule
+   regardless of implementation: **co-op must not appear in a game core's API
+   at all.**
 
    Mesocosm now supplies the first concrete same-lineage conflict rule. Two
    writers may propose adaptation from one parent revision. Explicit agreement
@@ -1032,7 +1231,7 @@ Carried forward deliberately. Each needs a ruling before the work it gates.
    is a large-mutable-state profile; cross-platform float determinism is the
    classic killer; and Tangle itself is web-only, TypeScript-hosted, and last
    pushed July 2024, so the *technique* is the transferable part rather than
-   the library. Still deferred; no longer unexplored.
+   the library. Implementation acceptance remains vessel-specific.
 8. **The constellation boundary.** Two vessels are named. A colony game or
    strategy game as further vessels is not ruled in; vessels earn existence
    by shipping.

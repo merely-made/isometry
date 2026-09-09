@@ -10,6 +10,10 @@ any other index and is updated in the same session as any doc change.
   consistency. This wing's founding record was corrected once already for
   trusting a stale index line over the plan it indexed.
 - Plans carry done-conditions, not time estimates.
+- The wing founding record's **Game tastes, integrated 2026-09-09** section
+  owns the shared influence/preferences record. Preserve the distinction
+  between endorsed directions, exploratory mechanics, and verified features;
+  each vessel interprets the tastes through its own rules and care granularity.
 - `PROJECT_DESCRIPTION.md` is maintainer-owned; surface contradictions, do
   not edit unasked.
 - The substrate/system split is load-bearing across the whole wing: one
@@ -45,6 +49,14 @@ each vessel at any supported historical point, with characteristic eras rather
 than stage locks. Its accompanying proposal distinguishes biological, cultural,
 individual, and material inheritance, and branches past entry without rewriting
 played futures. These are design directions, not completed history-entry APIs.
+
+Its [2026-09-09 game tastes](2026-07-30_games_wing_founding.md#game-tastes-integrated-2026-09-09)
+integrate Mark's supplied list and follow-up: skill with controllable chance,
+ordinary-item development, procedural attachment, traversal, culture and world
+memory, FX-first audio, co-op in every vessel, and control over portable data.
+Ordinary items developing into personally significant equipment is explicitly
+endorsed; rarity-gated development is not the baseline. Co-op's former blanket
+deferral is superseded as design priority, with implementation gates kept local.
 
 | Doc | What it is |
 | --- | ---------- |
