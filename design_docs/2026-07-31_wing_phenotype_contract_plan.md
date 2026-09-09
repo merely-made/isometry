@@ -980,6 +980,58 @@ The biological rules and palette remain unchanged. This advances the local
 world/body experiment; PE4 world rules, TG6 persistence, historical entry and
 cross-vessel interpretation retain their own acceptance gates.
 
+### Trial evidence and recent habitat comparisons (2026-09-09)
+
+The next local diagnostic slice reads accepted flows and life-cycle records
+from the disposable trial. Feeding and soil uptake are separate intake sources;
+reserve before/after is reported directly. Being alive with no recorded intake
+does not by itself establish a sustainable habitat. Food incompatibility,
+blocked access or predation must not be inferred merely from neighbour counts
+or a population decrease. Report only what the recorded facts establish.
+
+Idle is an explicit controller choice. The existing 30-tick grace period holds
+movement before ordinary locomotion resumes; feeding and upkeep remain
+active throughout. The earlier 32-tick trial barely samples autonomous movement. Trial length is a local inspection setting, independent
+of the generated starting request and entry state. Recent comparisons must
+hold the same development descriptor and body criteria, use equal observation
+windows, and exclude stale worker results. These readings neither modify the
+biological rules nor automatically choose a habitat for the player.
+
+The native creator defaults to 128 ticks; `O` cycles 32, 64 and 128.
+Changing the duration clears comparisons so every visible row uses the same
+window. `D` switches current details and the three most recent distinct
+completed habitats. Repeated requests replace their result, releasing or
+changing the held body clears history, and stale worker results never enter
+it. Every row carries habitat criteria and trial evidence; Enter always starts
+the current request at tick zero. Comparison history and duration remain local
+inspection state; saving criteria persists only the current generated start.
+The CLI's existing observation JSON now carries the same evidence, and its
+terminal report includes the concise trial summary.
+
+Verification: 17 focused core generation tests and 16 native creator tests
+pass. Coverage includes real feeding and soil uptake, a living no-intake
+case, unchanged/repeatable entry, equal-window comparison reset, stale result
+rejection, latest-result deduplication, and current-habitat entry. Deaths count
+an initially living or trial-born individual once across `Died`/`Returned`;
+returning an origin corpse does not count as another death. Predation amounts
+come from recorded predation meals and do not alone establish the cause of a
+later death. Formatting and the changed-file 600-line ceiling pass.
+
+Headed comparison/details views fit 960x600. Three habitats, a duration change,
+entry and a 24-action replay pass; the final hash is `c5d4c40364fae16f`.
+The previous habitat recording still replays to `25f08b64e7c50c9f`.
+Artifacts live under `Code/testing/mesocosm/trial_evidence/`.
+The 120-population seed-7 report records one consumer taking 270 mg of food,
+losing 1,035 mg to recorded predation, and ending dead; the decomposer remains
+alive with zero recorded intake and reserve falling from 800 to 416 mg.
+These are bounded observations under unchanged rules, not persistence claims.
+
+The next playable integration belongs to the phenotype plan's VB4a clearing
+and burrow continuation: ordinary family interactions, readable causes at the
+place of action, and a paired reserve-assistance diagnosis. This bounded
+creator trial does not replace the played scene or its reproduction window.
+TG2/TG3 follow that playable acceptance; TG6 retains its full-roster gate.
+
 ### Research and its consequences
 
 Primary sources checked 2026-09-07. These inform the proposed design; they are

@@ -375,3 +375,95 @@ fn refused_held_habitat_cannot_enter_and_keeps_saved_body() {
     );
     assert_eq!(host.runtime.state_hash(), original);
 }
+
+#[test]
+fn held_body_comparison_records_completed_current_habitats_only() {
+    let mut host = opened(Request::default());
+    ready(&mut host);
+    host.run_action("l");
+    host.run_action("h");
+    ready(&mut host);
+    assert_eq!(host.creator.as_ref().unwrap().comparison_count(), 1);
+    assert!(host.creator.as_ref().unwrap().observation.is_some());
+
+    for key in ["n", "f", "p"] {
+        host.run_action(key);
+        ready(&mut host);
+    }
+    let creator = host.creator.as_ref().unwrap();
+    assert_eq!(creator.comparison_count(), 3);
+    assert!(
+        creator.comparison.trials().iter().all(|trial| trial
+            .observation
+            .evidence
+            .summary()
+            .contains("idle"))
+    );
+}
+
+#[test]
+fn rapid_habitat_changes_keep_only_the_latest_completed_result() {
+    let mut host = opened(Request::default());
+    ready(&mut host);
+    host.run_action("h");
+    ready(&mut host);
+    let before = host.creator.as_ref().unwrap().comparison_count();
+    host.run_action("n");
+    host.run_action("f");
+    let requested = host.creator.as_ref().unwrap().request.clone();
+    ready(&mut host);
+    let creator = host.creator.as_ref().unwrap();
+    assert_eq!(creator.comparison_count(), before + 1);
+    assert!(creator.comparison.trials().iter().any(|trial| {
+        trial.key.seed == requested.seed
+            && trial.key.place == requested.place
+            && trial.key.soil_pattern == requested.soil_pattern
+    }));
+}
+
+#[test]
+fn comparison_is_presentation_only_and_enter_uses_current_habitat() {
+    let mut host = opened(Request::default());
+    ready(&mut host);
+    host.run_action("h");
+    ready(&mut host);
+    let expected = state_hash(host.creator.as_ref().unwrap().world());
+    let count = host.creator.as_ref().unwrap().comparison_count();
+    host.run_action("d");
+    assert!(host.creator.as_ref().unwrap().comparison_view());
+    assert_eq!(host.creator.as_ref().unwrap().comparison_count(), count);
+    assert_eq!(state_hash(host.creator.as_ref().unwrap().world()), expected);
+    host.run_action("enter");
+    assert!(host.creator.is_none());
+    assert_eq!(host.runtime.state_hash(), expected);
+}
+
+#[test]
+fn trial_length_change_clears_and_same_length_regeneration_deduplicates() {
+    let mut host = opened(Request::default());
+    ready(&mut host);
+    host.run_action("h");
+    ready(&mut host);
+    assert_eq!(host.creator.as_ref().unwrap().comparison_count(), 1);
+    assert_eq!(host.creator.as_ref().unwrap().trial_ticks, 128);
+    host.run_action("o");
+    assert_eq!(host.creator.as_ref().unwrap().comparison_count(), 0);
+    ready(&mut host);
+    assert_eq!(host.creator.as_ref().unwrap().comparison_count(), 1);
+    assert_eq!(host.creator.as_ref().unwrap().trial_ticks, 32);
+    host.creator.as_mut().unwrap().regenerate();
+    ready(&mut host);
+    assert_eq!(host.creator.as_ref().unwrap().comparison_count(), 1);
+}
+
+#[test]
+fn releasing_held_body_clears_comparison_history() {
+    let mut host = opened(Request::default());
+    ready(&mut host);
+    host.run_action("h");
+    ready(&mut host);
+    assert_eq!(host.creator.as_ref().unwrap().comparison_count(), 1);
+    host.run_action("h");
+    assert_eq!(host.creator.as_ref().unwrap().comparison_count(), 0);
+    assert!(!host.creator.as_ref().unwrap().comparison_view());
+}

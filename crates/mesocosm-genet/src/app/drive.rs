@@ -251,6 +251,17 @@ impl Automatable for Host {
             fields: [
                 ("creator", yes_no(self.creator.is_some())),
                 (
+                    "creator-comparisons",
+                    self.creator
+                        .as_ref()
+                        .map_or(0, |c| c.comparison_count())
+                        .to_string(),
+                ),
+                (
+                    "creator-comparison-view",
+                    yes_no(self.creator.as_ref().is_some_and(|c| c.comparison_view())),
+                ),
+                (
                     "creator-pending",
                     yes_no(self.creator.as_ref().is_some_and(|c| c.pending)),
                 ),

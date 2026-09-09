@@ -2233,6 +2233,28 @@ explicitly; natural encounter and reproduction timing remain separate evidence.
 The relative control receives no intervention; compare its treatment against
 the same elapsed ecology rather than expecting ordinary upkeep to stop.
 
+**Next integration target, 2026-09-09: playable clearing and burrow.**
+The authored family receipt above proves transitions; the next acceptance is
+whether the enclosure and ordinary interactions make that sequence legible.
+Frame the surface, entrance and chamber at shallow depth across quarter turns,
+then find and inspect tissue, consume or graft it through the menus, express a
+discovery, revise the lineage and observe offspring. Show accepted causes at
+the place of action. A recorded playthrough must replay exactly and retain
+explicit labels for origin assistance and developer-only actions.
+
+Pair the assisted origin with the same scene and choices after removing the
+parent's reserve assistance. `World::family_practice` currently sets the parent
+reserve to 100,000 mg before its authored births; the paired experiment must
+name the point and amount removed and reconcile that origin difference.
+It must distinguish reserve assistance from authored family history, carrion
+placement, intake declarations and prior discovery evidence. Removing one does
+not make the whole origin unassisted. Record survival/reproduction blockers
+before changing balance. The creator's bounded trial evidence supports local
+diagnosis, but does not replace this played scene or its longer birth window.
+
+TG2/TG3 and their typed appearance join follow this playable acceptance;
+full-roster performance acceptance measures the resulting intended experience.
+
 **VB4b, typed extension.** Add diet-driven tissue appearance only after TG2/TG3 supply reconciled typed
 accounts and actual scruple. A visual mix is a deterministic projection of
 that part's mix, not an independently accumulated diet counter or random

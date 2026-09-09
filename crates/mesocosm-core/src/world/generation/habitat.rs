@@ -68,6 +68,8 @@ pub struct Observation {
     pub compatible_nearby: u32,
     pub matter_before_mg: u64,
     pub matter_after_mg: u64,
+    /// Accepted flow and life-cycle records from this disposable trial.
+    pub evidence: TrialEvidence,
 }
 
 impl Prepared {
@@ -113,9 +115,18 @@ impl Prepared {
         };
         let before = census(&world);
         let matter_before_mg = world.total_matter_mg();
+        // Founding is not trial activity. These buffers are non-authoritative
+        // presentation records, so draining them cannot change entry or replay.
+        let _ = world.drain_flows();
+        let _ = world.drain_events();
+        let mut evidence = TrialEvidence::begin(&world, subject_id, ticks);
+        let mut living = world.living().map(|organism| organism.id).collect();
         for _ in 0..ticks {
+            evidence.record_controller(&world, subject_id);
             world.apply(crate::Intent::Idle);
+            evidence.record_tick(&mut world, subject_id, &mut living);
         }
+        evidence.finish(&world, subject_id);
         Ok(Observation {
             ticks,
             before,
@@ -123,6 +134,7 @@ impl Prepared {
             compatible_nearby,
             matter_before_mg,
             matter_after_mg: world.total_matter_mg(),
+            evidence,
             subject_alive: world
                 .organisms
                 .iter()

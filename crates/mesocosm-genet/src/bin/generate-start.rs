@@ -149,6 +149,11 @@ fn run() -> Result<(), String> {
             let observation = prepared
                 .observe(index, observe)
                 .map_err(|e| format!("{e:?}"))?;
+            println!(
+                "Trial {index} ({} ticks): {}",
+                observation.ticks,
+                observation.evidence.summary()
+            );
             write(
                 &format!("observation-{index}.json"),
                 serde_json::to_vec_pretty(&observation).map_err(|e| e.to_string())?,

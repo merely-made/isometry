@@ -323,8 +323,55 @@ fn habitat_trial_is_bounded_conservative_and_does_not_advance_entry() {
     assert_eq!(observation.matter_before_mg, observation.matter_after_mg);
     assert_eq!(state_hash(&prepared.enter(1).unwrap()), before);
     assert_eq!(observation, prepared.observe(1, 32).unwrap());
+    assert_eq!(observation.evidence.controller.held_ticks, 29);
+    assert_eq!(observation.evidence.controller.instinct_ticks, 3);
     assert!(prepared.observe(1, 129).is_err());
     assert!(prepared.observe(999, 32).is_err());
+}
+
+#[test]
+fn habitat_trial_records_actual_intake_without_explaining_its_absence() {
+    let prepared = Request::default().prepare(palette()).unwrap();
+    let none = prepared.observe(1, 1).unwrap();
+    assert_eq!(none.evidence.subject_feeding_mg, 0);
+    assert_eq!(none.evidence.subject_uptake_mg, 0);
+    assert!(none.evidence.subject_alive);
+    assert!(none.evidence.summary().contains("no intake"));
+
+    let observed = prepared.observe(0, 128).unwrap();
+    assert!(
+        observed.evidence.subject_uptake_mg > 0,
+        "the selected generated producer records accepted soil uptake"
+    );
+    assert!(
+        !observed.evidence.summary().contains("compatible"),
+        "nearby diet admission is not used as an explanation"
+    );
+}
+
+#[test]
+fn dense_habitat_trial_records_feeding_and_one_subject_ending() {
+    let prepared = Request {
+        organisms: 120,
+        ..Request::default()
+    }
+    .prepare(palette())
+    .unwrap();
+    let observation = prepared.observe(1, 128).unwrap();
+    assert!(observation.evidence.subject_feeding_mg > 0);
+    assert!(!observation.evidence.subject_alive);
+    assert!(observation.evidence.subject_death_recorded);
+    assert_eq!(
+        observation.before.into_iter().sum::<u32>() + observation.evidence.births
+            - observation.after.into_iter().sum::<u32>(),
+        observation.evidence.deaths,
+        "one ending is counted for each initially living or trial-born critter"
+    );
+    let controller = observation.evidence.controller;
+    assert_eq!(
+        controller.held_ticks + controller.instinct_ticks + controller.inactive_ticks,
+        observation.ticks
+    );
 }
 
 #[test]

@@ -9,13 +9,13 @@ use std::sync::mpsc::{self, Receiver, Sender};
 
 type ResultMessage = (u64, Result<(Prepared, Option<Observation>), Error>);
 pub(super) struct Worker {
-    requests: Sender<(u64, Request)>,
+    requests: Sender<(u64, Request, u32)>,
     pub results: Receiver<ResultMessage>,
 }
 
 impl Worker {
     pub fn new(palette: PartPalette) -> Self {
-        let (requests, incoming) = mpsc::channel::<(u64, Request)>();
+        let (requests, incoming) = mpsc::channel::<(u64, Request, u32)>();
         let (finished, results) = mpsc::channel();
         std::thread::spawn(move || {
             while let Ok(mut job) = incoming.recv() {
@@ -27,7 +27,7 @@ impl Worker {
                 let result = job.1.prepare(palette).map(|prepared| {
                     let observation =
                         if job.1.fixed_body.is_some() && !prepared.draft().candidates.is_empty() {
-                            prepared.observe(0, 32).ok()
+                            prepared.observe(0, job.2).ok()
                         } else {
                             None
                         };
@@ -41,7 +41,7 @@ impl Worker {
         Self { requests, results }
     }
 
-    pub fn send(&self, serial: u64, request: Request) -> bool {
-        self.requests.send((serial, request)).is_ok()
+    pub fn send(&self, serial: u64, request: Request, ticks: u32) -> bool {
+        self.requests.send((serial, request, ticks)).is_ok()
     }
 }

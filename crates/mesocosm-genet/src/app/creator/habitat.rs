@@ -18,6 +18,8 @@ impl Creator {
                 if self.request.fixed_body.is_some() {
                     self.request.fixed_body = None;
                     self.habitat_view = false;
+                    self.comparison.clear();
+                    self.compare_view = false;
                 } else {
                     let Some(c) = self
                         .prepared
@@ -31,6 +33,7 @@ impl Creator {
                         role: c.role,
                     });
                     self.habitat_view = true;
+                    self.comparison.clear();
                 }
             },
             "f" => {

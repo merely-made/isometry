@@ -20,6 +20,8 @@ mod body_plan;
 pub use body_plan::BodyPlan;
 mod habitat;
 pub use habitat::{FixedBody, Observation, SoilPattern};
+mod trial;
+pub use trial::{TrialController, TrialEvidence};
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(default, deny_unknown_fields)]

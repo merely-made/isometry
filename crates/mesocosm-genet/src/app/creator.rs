@@ -12,6 +12,7 @@ use mesocosm_core::{
 use mesocosm_views::BodyMenu;
 use winit::keyboard::{Key, NamedKey};
 
+mod comparison;
 mod habitat;
 mod reading;
 mod worker;
@@ -31,6 +32,9 @@ pub(super) struct Creator {
     pub pending: bool,
     serial: u64,
     worker: worker::Worker,
+    comparison: comparison::ComparisonHistory,
+    pub compare_view: bool,
+    pub trial_ticks: u32,
     pub notice: String,
 }
 
@@ -59,6 +63,9 @@ impl Creator {
             pending: false,
             serial: 0,
             worker: worker::Worker::new(palette),
+            comparison: comparison::ComparisonHistory::default(),
+            compare_view: false,
+            trial_ticks: 128,
             notice: String::new(),
         };
         result.regenerate();
@@ -76,7 +83,9 @@ impl Creator {
         self.preview = None;
         self.selected = 0;
         self.notice.clear();
-        self.pending = self.worker.send(self.serial, self.request.clone());
+        self.pending = self
+            .worker
+            .send(self.serial, self.request.clone(), self.trial_ticks);
         if !self.pending {
             self.notice = "Generation worker stopped. Cancel and reopen the creator.".into();
         }
@@ -102,6 +111,10 @@ impl Creator {
             match result {
                 Ok((prepared, observation)) => {
                     self.observation = observation;
+                    if let Some(observation) = self.observation.clone() {
+                        self.comparison
+                            .record(&self.request, self.trial_ticks, observation);
+                    }
                     self.rebind = true;
                     self.prepared = Some(prepared);
                     self.select(0);
@@ -133,6 +146,29 @@ impl Creator {
         self.prepared
             .as_ref()
             .map_or(0, |p| p.draft().candidates.len())
+    }
+
+    pub(super) fn comparison_count(&self) -> usize {
+        self.comparison.len()
+    }
+
+    pub(super) fn comparison_view(&self) -> bool {
+        self.compare_view
+    }
+
+    fn toggle_comparison(&mut self) {
+        self.compare_view = !self.compare_view;
+        self.refresh();
+    }
+
+    fn cycle_trial_ticks(&mut self) {
+        self.trial_ticks = match self.trial_ticks {
+            32 => 64,
+            64 => 128,
+            _ => 32,
+        };
+        self.comparison.clear();
+        self.regenerate();
     }
 
     fn move_selection(&mut self, backwards: bool) {
@@ -233,6 +269,14 @@ impl Host {
             return true;
         }
         match letter.as_str() {
+            "d" => {
+                creator.toggle_comparison();
+                return true;
+            },
+            "o" if creator.request.fixed_body.is_some() => {
+                creator.cycle_trial_ticks();
+                return true;
+            },
             "b" => {
                 use mesocosm_core::world::generation::{BodyPlan, VERSION};
                 creator.request.version = VERSION;

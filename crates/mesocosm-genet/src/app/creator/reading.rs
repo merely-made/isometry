@@ -153,12 +153,11 @@ impl Creator {
                         "trial".into(),
                         self.observation
                             .as_ref()
-                            .map_or("pending or refused".into(), |o| {
-                                format!(
-                                    "{} ticks: P/C/D {:?} -> {:?}; alive {}",
-                                    o.ticks, o.before, o.after, o.subject_alive
-                                )
-                            }),
+                            .map_or("pending or refused".into(), |o| o.evidence.summary()),
+                    ),
+                    (
+                        "window".into(),
+                        format!("{} ticks; O changes it", self.trial_ticks),
                     ),
                     (
                         "food".into(),
@@ -166,8 +165,23 @@ impl Creator {
                             .as_ref()
                             .map_or("pending or refused".into(), |o| {
                                 format!(
-                                    "{} diet-compatible neighbours within 8 voxels",
-                                    o.compatible_nearby
+                                    "feeding {}mg / uptake {}mg / incoming {}mg",
+                                    o.evidence.subject_feeding_mg,
+                                    o.evidence.subject_uptake_mg,
+                                    o.evidence.subject_incoming_mg,
+                                )
+                            }),
+                    ),
+                    (
+                        "reserve".into(),
+                        self.observation
+                            .as_ref()
+                            .map_or("pending or refused".into(), |o| {
+                                format!(
+                                    "{} -> {} mg; alive {}",
+                                    o.evidence.subject_reserve_before_mg,
+                                    o.evidence.subject_reserve_after_mg,
+                                    o.evidence.subject_alive,
                                 )
                             }),
                     ),
@@ -184,6 +198,72 @@ impl Creator {
                 },
                 self.reading.status.clone(),
             );
+            if self.compare_view {
+                let rows: Vec<BodyMenuRow> = self
+                    .comparison
+                    .trials()
+                    .iter()
+                    .map(|trial| BodyMenuRow {
+                        source: format!("{}:{}", trial.key.seed, trial.key.place),
+                        offer: format!(
+                            "{} · {:?} soil {}..{} · {} founders · access {}",
+                            trial.observation.evidence.summary(),
+                            trial.key.soil_pattern,
+                            trial.key.soil_min_mg,
+                            trial.key.soil_max_mg,
+                            trial.key.organisms,
+                            trial.key.min_open_steps,
+                        ),
+                        mass: format!("{} ticks", trial.key.ticks),
+                        cost: format!(
+                            "reserve {}→{} mg; +{} / -{}",
+                            trial.observation.evidence.subject_reserve_before_mg,
+                            trial.observation.evidence.subject_reserve_after_mg,
+                            trial.observation.evidence.births,
+                            trial.observation.evidence.deaths,
+                        ),
+                        attachment: format!(
+                            "{} soil, {}..{} mg, {} founders",
+                            trial.key.soil_pattern.label(),
+                            trial.key.soil_min_mg,
+                            trial.key.soil_max_mg,
+                            trial.key.organisms
+                        ),
+                        refusal: None,
+                    })
+                    .collect();
+                self.reading.facts = vec![
+                    (
+                        "held body".into(),
+                        self.request.fixed_body.as_ref().map_or_else(
+                            || "none".into(),
+                            |body| format!("{} / {:?}", body.seed, body.role),
+                        ),
+                    ),
+                    ("trials".into(), format!("{} / 3 recorded", rows.len())),
+                ];
+                self.reading.rows = rows;
+                let current =
+                    super::comparison::HabitatKey::from_request(&self.request, self.trial_ticks);
+                self.reading.selected = self
+                    .comparison
+                    .trials()
+                    .iter()
+                    .position(|trial| current.as_ref() == Some(&trial.key))
+                    .unwrap_or(MAX_BODY_MENU_ROWS);
+                self.reading.detail =
+                    "Completed trials for this held body. Evidence is from the disposable copy; identical requests replace their row.".into();
+                self.reading.choice = if self.pending {
+                    "waiting for the current habitat".into()
+                } else if self.count() == 0 {
+                    "current habitat refused; history is for comparison".into()
+                } else {
+                    format!(
+                        "Enter begins current seed {}, place {} at tick zero",
+                        self.request.seed, self.request.place
+                    )
+                };
+            }
         }
         self.reading.headline = "Character creator".into();
         self.reading.facts_title = "Habitat and body".into();
@@ -191,7 +271,14 @@ impl Creator {
         self.reading.keys = "↑/↓ choose · B body plan · K keep · U clear · R vary · N habitat · P place · C role · M organs · +/- mass · Z/V change view".into();
         self.reading.keys.push_str(" / H compare habitats");
         if self.request.fixed_body.is_some() {
-            self.reading.keys = "H release body  /  N seed  /  P place  /  F nutrients  /  [/] amount  /  ,/. population  /  T access  /  Z/V view".into();
+            self.reading.keys = format!(
+                "H release body  /  D {}  /  O trial length  /  N seed  /  P place  /  F nutrients  /  [/] amount  /  ,/. population  /  T access  /  Z/V view",
+                if self.compare_view {
+                    "current trial"
+                } else {
+                    "comparison"
+                }
+            );
         }
         if self.draft_path.is_some() {
             self.reading.keys.push_str(" · S save criteria");
