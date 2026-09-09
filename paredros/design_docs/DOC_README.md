@@ -101,3 +101,5 @@ and social/charge proposals remain unimplemented and open to design discussion.
 ## Archive
 
 None yet. Retired plans go to `archive_docs/<YYYY-MM-DD>/`.
+
+- Timed limb contributions: [functional loops B1](2026-09-09_functional_loops_plan.md#b1-timed-limb-contributions-2026-09-09), prepare/charge/release and partial interruption; implementation in progress.

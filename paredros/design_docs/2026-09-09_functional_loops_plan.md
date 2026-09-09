@@ -401,3 +401,74 @@ enter its settled shared owner earlier.
   `cargo-homes/paredros-save-check-20260908` cache. This is automated projection
   coverage; injury input, general save admission and crossing integration remain
   open. No new native screenshot or physical-input receipt is claimed.
+
+## B1: timed limb contributions (2026-09-09)
+
+**Status: core implemented; native verification in progress.** Authorized after the shared functional evaluator and
+wire-format commit `dadbd0c`. This slice turns finite-charge operation receipts
+into a product-owned action lifecycle; it does not claim full geometric combat.
+
+### Ownership and rules
+
+A timed-action coordinator owns one existing Session, functional network and
+current action. The Session retains sole GameState/body/inventory authority.
+Contributions bind real part IDs of the controlled subject, have a direction
+and accumulate committed charge over explicit integer ticks. Additional limbs
+may join an existing preparation. Release emits one typed strike per surviving
+contribution; it does not debit the committed charge again.
+
+Part loss cancels only affected contributions. An explicit shared dependency
+such as a gate may interrupt several. Charge already spent on an interrupted
+contribution is not refunded. Resource exhaustion must be distinguishable from
+limb loss. Save and restore preserve charge, timing, bindings and interruption
+state alongside the same authoritative Session; restoring is not regeneration.
+
+Injury currently advances body revision before detailed anatomy reconciliation.
+The host must batch the accepted injury and reconciliation atomically before
+reevaluating bindings. An unresolved stale anatomy cannot authorize a strike,
+but does not identify which specific limb was lost.
+
+### Lanes and done-conditions
+
+- Terra owns the deterministic lifecycle, validated save envelope and tests.
+  Done when two contributions charge, one real limb is severed through game
+  transitions, surviving strikes release, and save/resume agrees with uninterrupted
+  continuation. Invalid inputs and invalid archives leave the current state intact.
+- Luna owns native input and visible direction/contribution status using this
+  same coordinator. Done when mapped prepare/charge/join/release/injury/save/load
+  controls exercise the model and their dispatch tests pass; headed/physical
+  observations are reported separately from compile and automated dispatch.
+- Root owns integration review, manifests, documentation and publication.
+- The independent ecology lane finishes the core suite, including flow tests.
+  Its result does not certify native action input.
+
+### Remaining boundaries
+
+ContactWorld-to-GameState collision outcomes, hit quality, damage allocation,
+full equipment tool bindings, native pointer trajectory sampling and general
+spell/enchantment execution need further consumer work. This first action model
+produces direction/binding/charge receipts for those adjudicators to consume.
+
+### Progress
+
+- 2026-09-09: read Session, current_anatomy and injury/reconciliation ownership;
+  split model and native input lanes. Existing source-identity audit script is
+  unrelated work and remains untouched.
+- 2026-09-09: core lifecycle landed in source with transactional charge/release
+  and injury batches. A full `paredros-world` run passed 91 tests. After the final
+  routing-hop bound and batch-rejection addition, both timed-action integration
+  suites passed all 9 tests (7 admission, 2 lifecycle). Coverage includes separate
+  limb contributions, shared gate interruption, exhausted supply, partial loss
+  followed by save/restore/release, death, stale anatomy, forged bindings and
+  rejected transitions. The native handler/render gate remains in progress.
+
+Run the native surface with `./scripts/wing.ps1 paredros run -p paredros-room
+--bin timed_action`. Arrow keys prepare a direction; hold Space or left mouse
+for charge, release to emit strikes, J joins the second limb, I applies injury,
+and F5/F9 save/load. `PAREDROS_TIMED_ACTION_SAVE` selects the save path.
+`PAREDROS_TIMED_ACTION_SMOKE=1` requests the asserted lifecycle and one presented
+frame. These controls currently use an authored two-limb functional network.
+
+This save envelope bounds input bytes and action contributors/ticks. Session
+history still uses the existing replay log; these checks do not establish a
+bounded multi-year world size or a history-compaction policy.
