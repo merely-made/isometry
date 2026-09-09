@@ -125,6 +125,24 @@ impl Host {
         if self.try_inspection_key(key) {
             return;
         }
+        if self.config.effective_scene().is_family_clearing()
+            && matches!(key, Key::Named(winit::keyboard::NamedKey::Enter))
+            && self.runtime.checkpoint().is_none()
+        {
+            if input::admits(input::Urgency::Deliberate, self.runtime.queued_len()) {
+                self.runtime.queue(Intent::Resume);
+            }
+            return;
+        }
+        if self.config.effective_scene().is_family_clearing()
+            && matches!(key, Key::Character(c) if c.eq_ignore_ascii_case("x"))
+            && self.runtime.checkpoint().is_none()
+        {
+            if self.runtime.queued_len() == 0 {
+                self.runtime.queue(Intent::EndEpoch);
+            }
+            return;
+        }
         if self.try_dev_key(key) {
             return;
         }
@@ -372,9 +390,9 @@ fn key_named(name: &str) -> Option<Key> {
         "right" => Some(Key::Named(NamedKey::ArrowRight)),
         // Play: WASD, E, Q, C; T at a checkpoint; R at the board.
         // Dev (live only under `--dev`): P . , [ ] N B M X F K G.
-        "w" | "a" | "s" | "d" | "e" | "q" | "c" | "t" | "r" | "p" | "." | "," | "[" | "]" | "n"
-        | "b" | "m" | "x" | "f" | "k" | "g" | "h" | "o" | "i" | "j" | "l" | "u" | "z" | "v"
-        | "+" | "=" | "-" => Some(Key::Character(name.into())),
+        "y" | "w" | "a" | "s" | "d" | "e" | "q" | "c" | "t" | "r" | "p" | "." | "," | "[" | "]"
+        | "n" | "b" | "m" | "x" | "f" | "k" | "g" | "h" | "o" | "i" | "j" | "l" | "u" | "z"
+        | "v" | "+" | "=" | "-" => Some(Key::Character(name.into())),
         _ => None,
     }
 }

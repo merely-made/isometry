@@ -144,7 +144,7 @@ fn main() {
                 let named = args.next().unwrap_or_default();
                 config.scene =
                     mesocosm_genet::played::SceneMode::parse(&named).unwrap_or_else(|| {
-                        eprintln!("--scene wants ecology, terrarium, graft-practice, expression-practice or family-practice");
+                        eprintln!("--scene wants ecology, terrarium, graft-practice, expression-practice, family-practice, family-clearing or family-clearing-lean");
                         std::process::exit(1);
                     });
             },
@@ -240,10 +240,6 @@ fn main() {
         }
     }
 
-    if config.scene != mesocosm_genet::played::SceneMode::Ecology && !config.camera_explicit {
-        config.camera = CameraMode::TerrariumEast;
-    }
-
     // A scratch name under the workspace's headed-verify home, unless a flag
     // says otherwise. **Scratch, deliberately** (ruled 2026-09-02): these
     // defaulted to `ps1_played.*` until 2026-09-04, which is the golden fixture
@@ -275,7 +271,11 @@ fn main() {
     if config.effective_scene() != mesocosm_genet::played::SceneMode::Ecology
         && !config.camera_explicit
     {
-        config.camera = CameraMode::TerrariumEast;
+        config.camera = if config.effective_scene().is_family_clearing() {
+            CameraMode::TerrariumSouth
+        } else {
+            CameraMode::TerrariumEast
+        };
     }
 
     if config.effective_scene() != mesocosm_genet::played::SceneMode::Ecology && !slab_explicit {
@@ -345,7 +345,7 @@ mesocosm-genet: run Mesocosm in a window
   --draft PATH    reopen criteria or begin a new draft; implies --create; S saves
                   K retains selected role/organs/segment count; U clears these filters
   --start PATH    enter a generated selection JSON (recorded for replay)
-  --scene MODE    ecology (default), terrarium, or authored graft-practice/expression-practice/family-practice
+  --scene MODE    ecology (default), terrarium, or authored graft-practice/expression-practice/family-practice/family-clearing/family-clearing-lean
   --terrarium-pitch DEG  shallow camera pitch, 0..45 degrees (default 12)
   --cutaway MODE  occupied (default), always (expose interior), or never
   --terrain-style MODE  auto (habitat in terrarium, classic in ecology),
@@ -368,10 +368,13 @@ headed-verify home: <Code>/testing/mesocosm/scratch_played.png, .trace.json and
 when one of those flags names it.
 
 controls: Z/V turn the terrarium left/right; WASD move along world axes, E/Space eat, Q deposit, C dig, arrows pan, Esc quit
+Y opens Inspect and consume tissue (world paused): arrows or J/L select; Enter consumes; Esc cancels
 O opens Express discovery (world paused): arrows or J/L select; Enter expresses; Esc cancels
 H opens Graft tissue beside a carcass (world paused):
   arrows or J/L select a branch; Tab switches keep/regrow; Enter confirms
   Esc cancels the menu; Z/V rotates the preview. Only confirmation enters the trace.
+in family-clearing and family-clearing-lean, Enter waits one tick and X opens lineage review.
+  X remains an explicit assisted epoch boundary on the receipt.
 at a checkpoint the world stops and the keys narrow:
   Enter  carry on unchanged
   T      take the body on offer (the newborn, or your eldest descendant)

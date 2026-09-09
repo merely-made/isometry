@@ -47,6 +47,15 @@ fn runtime(
         crate::played::SceneMode::ExpressionPractice => {
             Runtime::expression_practice(config.seed, config.ticks_per_second, founding, palette)
         },
+        crate::played::SceneMode::FamilyClearing | crate::played::SceneMode::FamilyClearingLean => {
+            Runtime::family_clearing(
+                config.seed,
+                config.ticks_per_second,
+                founding,
+                palette,
+                config.effective_scene() == crate::played::SceneMode::FamilyClearing,
+            )
+        },
         crate::played::SceneMode::FamilyPractice => {
             Runtime::family_practice(config.seed, config.ticks_per_second, founding, palette)
         },

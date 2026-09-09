@@ -249,6 +249,13 @@ impl Automatable for Host {
         ProbeSnapshot {
             focused: self.followed().map(|id| format!("critter {}", id.0)),
             fields: [
+                (
+                    "consume-menu",
+                    yes_no(
+                        self.grafting.open
+                            && self.grafting.operation == super::grafting::BodyOperation::Consume,
+                    ),
+                ),
                 ("creator", yes_no(self.creator.is_some())),
                 (
                     "creator-comparisons",

@@ -269,6 +269,8 @@ impl Host {
                 self.config.body_mode.name()
             },
             inspecting: self.inspection.open,
+            consume_menu: self.grafting.open
+                && self.grafting.operation == super::grafting::BodyOperation::Consume,
             graft_menu: self.grafting.open
                 && self.grafting.operation == super::grafting::BodyOperation::Graft,
             expression_tissue_mg: self.expression_tissue(false),

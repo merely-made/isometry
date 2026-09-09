@@ -9,6 +9,22 @@ use mesocosm_core::{DevelopmentError, Founding, PartPalette, World};
 use super::Runtime;
 
 impl Runtime {
+    /// A recorded family origin in the clearing, cave and tunnel scene.
+    pub fn family_clearing(
+        seed: u64,
+        ticks_per_second: u32,
+        founding: Founding,
+        palette: PartPalette,
+        reserve_assisted: bool,
+    ) -> Result<Self, DevelopmentError> {
+        let world = World::family_clearing(seed, founding, palette, reserve_assisted)?;
+        let organisms = world.organisms.len().saturating_sub(1) as u32;
+        let mut runtime = Self::from_world(world, seed, organisms, ticks_per_second);
+        let origin = runtime.world.drain_events();
+        runtime.history.record_all(origin);
+        Ok(runtime)
+    }
+
     /// Drives the authored single-critter expression practice scene.
     pub fn expression_practice(
         seed: u64,

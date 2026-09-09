@@ -23,6 +23,11 @@ use super::{Intent, Outcome, Placement, Rejection, Route, World};
 const MOVE_COST_MG: u64 = 1;
 
 impl World {
+    /// Applies an ordered trace, returning every outcome in order.
+    pub fn apply_all(&mut self, trace: &[Intent]) -> Vec<Outcome> {
+        trace.iter().map(|i| self.apply(i.clone())).collect()
+    }
+
     pub(super) fn resolve(&mut self, intent: Intent) -> Outcome {
         // Every acting intent needs somebody to act. Nobody home is a
         // refusal, not a panic: a world can outlive whoever was in it.

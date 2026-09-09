@@ -30,6 +30,7 @@ mod creator;
 mod devtime;
 mod devworld;
 pub mod drive;
+mod eating;
 mod expression;
 mod follow;
 mod frame;
@@ -257,8 +258,13 @@ impl Host {
             },
             None => None,
         };
-        let habitat = (config.effective_scene() != crate::played::SceneMode::Ecology)
-            .then(|| section::framed_habitat(runtime.world()));
+        let habitat = (config.effective_scene() != crate::played::SceneMode::Ecology).then(|| {
+            if config.effective_scene().is_family_clearing() {
+                runtime.world().family_clearing_habitat()
+            } else {
+                section::framed_habitat(runtime.world())
+            }
+        });
         Self {
             creator,
             habitat,

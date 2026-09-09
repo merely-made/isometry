@@ -35,44 +35,8 @@ use serde::{Deserialize, Serialize};
 
 mod layout;
 pub use layout::BodyLayout;
-
-/// The host presentation/world fixture selected for a run.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum SceneMode {
-    #[default]
-    Ecology,
-    Terrarium,
-    /// Authored practice fixture, recorded distinctly from a natural encounter.
-    GraftPractice,
-    /// Authored discovery prehistory and a body ready for somatic expression.
-    ExpressionPractice,
-    /// Authored family prehistory and a body ready for family practice.
-    FamilyPractice,
-}
-
-impl SceneMode {
-    pub const fn name(self) -> &'static str {
-        match self {
-            Self::Ecology => "ecology",
-            Self::Terrarium => "terrarium",
-            Self::GraftPractice => "graft-practice",
-            Self::ExpressionPractice => "expression-practice",
-            Self::FamilyPractice => "family-practice",
-        }
-    }
-
-    pub fn parse(name: &str) -> Option<Self> {
-        match name.trim().to_ascii_lowercase().as_str() {
-            "ecology" => Some(Self::Ecology),
-            "terrarium" => Some(Self::Terrarium),
-            "graft-practice" => Some(Self::GraftPractice),
-            "expression-practice" => Some(Self::ExpressionPractice),
-            "family-practice" => Some(Self::FamilyPractice),
-            _ => None,
-        }
-    }
-}
+mod scene;
+pub use scene::SceneMode;
 
 /// Steps the recorded demo runs for.
 ///
@@ -178,12 +142,6 @@ pub struct PlayedTrace {
     pub content: Option<mesocosm_mesh::content::ContentPack>,
 }
 
-impl SceneMode {
-    pub const fn is_ecology(&self) -> bool {
-        matches!(self, Self::Ecology)
-    }
-}
-
 /// What a run says about itself on the way out.
 #[derive(Clone, Debug, Serialize)]
 pub struct PartSelectionReceipt {
@@ -218,6 +176,7 @@ pub struct PlayedReceipt {
     pub body_content: &'static str,
     pub inspecting: bool,
     pub graft_menu: bool,
+    pub consume_menu: bool,
     pub expression_menu: bool,
     pub expression_preview: bool,
     pub expression_part: Option<u32>,

@@ -2233,27 +2233,80 @@ explicitly; natural encounter and reproduction timing remain separate evidence.
 The relative control receives no intervention; compare its treatment against
 the same elapsed ecology rather than expecting ordinary upkeep to stop.
 
-**Next integration target, 2026-09-09: playable clearing and burrow.**
-The authored family receipt above proves transitions; the next acceptance is
-whether the enclosure and ordinary interactions make that sequence legible.
-Frame the surface, entrance and chamber at shallow depth across quarter turns,
-then find and inspect tissue, consume or graft it through the menus, express a
-discovery, revise the lineage and observe offspring. Show accepted causes at
-the place of action. A recorded playthrough must replay exactly and retain
-explicit labels for origin assistance and developer-only actions.
+**Playable clearing, cave and tunnel receipt, 2026-09-09.**
+`family-clearing` now joins ordinary addressed intake (Y), grafting (H),
+expression (O), lineage review (X, then Tab/R/Enter), and offspring in one
+physical enclosure. The existing `family-practice` origin remains available
+for saved recordings. A level approach and five-step open descent lead into a
+seven-cell level passage and a wider roofed cave pocket. Terrain clearance
+includes the bodies produced by the complete intake/graft/expression sequence;
+it is authored once at genesis. A smaller body's centre floor cannot obstruct
+the enlarged body's next tread. Cave floors, tunnel ceilings and body footing
+are actual Ground, while quarter turns and occupied/always/never cutaways
+remain presentation choices. This is a bounded authored scene over existing
+generated terrain, not a general cave-system generator.
 
-Pair the assisted origin with the same scene and choices after removing the
-parent's reserve assistance. `World::family_practice` currently sets the parent
-reserve to 100,000 mg before its authored births; the paired experiment must
-name the point and amount removed and reconcile that origin difference.
-It must distinguish reserve assistance from authored family history, carrion
-placement, intake declarations and prior discovery evidence. Removing one does
-not make the whole origin unassisted. Record survival/reproduction blockers
-before changing balance. The creator's bounded trial evidence supports local
-diagnosis, but does not replace this played scene or its longer birth window.
+The 799-intent native playthrough consumes 40 mg from one donor part, carries
+an 80 mg branch, expresses endured hunger, revises the line, walks into the
+cave and back, and waits for ecological offspring. Its final hash is
+`53f10bd1ed610082`; a second runtime reconstructs that exact state. Four views
+were captured in the cave and after returning. The default family view faces
+the plates so body changes read more clearly; Z/V still exposes their thin
+edge views. Menus explain the addressed part, actual admission/refusal,
+incorporation versus grafting, and the separation from lineage revision.
+Consumption previews run the real Consume on a disposable copy; cancellation
+and stale confirmation preserve the authoritative world.
 
-TG2/TG3 and their typed appearance join follow this playable acceptance;
-full-roster performance acceptance measures the resulting intended experience.
+The recorded stream contains one accepted `EndEpoch`, still counted as a dev
+intent even though this scene exposes X in ordinary play. The scenario's P
+and period keys only pace the clock. Authored prehistory, donor placement,
+intake permission and prior hunger evidence remain explicit origin assistance.
+The offspring is an ordinary ecological birth, not a forced-birth command.
+
+`family-clearing-lean` caps the parent reserve at its current body mass after
+authored setup, returning the excess to the local soil. The paired example
+replays the exact native intent stream, retained palette and seed against both
+origins, reconstructing the native epoch assessment from the same origin
+history. It distinguishes parent-linked births from authored births, records
+refusals and deaths, and attributes feeding, uptake and predation separately.
+
+| Seed 7, spaced layout, 799 intents | Reserve retained | Reserve returned to soil |
+| --- | ---: | ---: |
+| Initial parent reserve | 99,556 mg | 563 mg |
+| Parent feeding intake | 40 mg | 2,404 mg |
+| Parent uptake / predation loss | 0 / 0 mg | 0 / 0 mg |
+| First new offspring, zero-based intent index | 797 | 797 |
+| Final parent reserve | 96,859 mg | 230 mg |
+| Final parent body mass | 513 mg | 513 mg |
+| Final hash | `53f10bd1ed610082` | `dd12918e745d4c7d` |
+
+Both parents survive, reproduce once, and encounter no refused recorded
+choices in this window. Both replay exactly and retain 1,765,154 mg total
+matter throughout. The 98,993 mg reserve difference remains environmental
+stock in the lean origin: this isolates direct reserve provision, not all
+material assistance. This receipt supplies no reason to change balance and
+does not establish long-term self-sufficiency, naturally encountered donors,
+or an unassisted founding history.
+
+Local evidence: `Code/testing/mesocosm/family_clearing/` contains the frozen
+`play.scenario`, `played.json`, `paired.json`, native receipts and captures.
+`cargo run -p mesocosm-core --example family_clearing_receipt -- OUTPUT PLAYED`
+reproduces the paired diagnosis from a spaced family-clearing recording;
+omitting PLAYED uses the standalone bounded opening. The three focused core
+scene tests pass, including seed 7/41 and axial/spaced roster roof checks.
+The native library suite passes 117 tests with one ignored, including the
+ordinary menu playthrough, fresh runtime replay, prior family proof and
+historical content behavior.
+
+Final-build windowed replays also match both hashes at the new default south
+view. The 32-intent menu/round-trip capture run matches `60d8c0085fb82e99`;
+`views.json`, `replay.json`, `lean-replay.json` and `scene.html` distinguish
+these final views from the original full east-view recording.
+
+**Next:** TG2/TG3 and their typed appearance join; full-roster performance
+acceptance measures the resulting intended experience. Broader cave/tunnel
+world generation and recognition across arbitrary generated bodies remain
+separate from this authored scene receipt.
 
 **VB4b, typed extension.** Add diet-driven tissue appearance only after TG2/TG3 supply reconciled typed
 accounts and actual scruple. A visual mix is a deterministic projection of

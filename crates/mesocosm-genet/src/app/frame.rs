@@ -60,8 +60,22 @@ impl Host {
             let exposed = self.config.cutaway == section::Cutaway::Always
                 || (self.config.cutaway == section::Cutaway::Occupied
                     && section::terrarium_occupied(habitat, played_at));
+            let place = match self.config.effective_scene() {
+                crate::played::SceneMode::FamilyClearing => {
+                    "clearing, cave and tunnel / assisted reserve"
+                },
+                crate::played::SceneMode::FamilyClearingLean => {
+                    "clearing, cave and tunnel / reserve assistance removed"
+                },
+                _ => "clearing and burrow",
+            };
+            let family_keys = if self.config.effective_scene().is_family_clearing() {
+                " | X lineage review | Enter wait"
+            } else {
+                ""
+            };
             window.set_title(&format!(
-                "Mesocosm | clearing and burrow | {} | cutaway {} ({}) | Z/V turn | H graft tissue | O express discovery",
+                "Mesocosm | {place} | {} | cutaway {} ({}) | Z/V turn | Y inspect/eat | H graft | O express{family_keys}",
                 self.config.camera.name(),
                 self.config.cutaway.name(),
                 if exposed { "open" } else { "closed" }

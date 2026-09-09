@@ -22,6 +22,7 @@ mod dev;
 mod discover;
 mod express;
 mod expression_practice;
+mod family_clearing;
 mod family_practice;
 mod filial;
 pub mod generation;
@@ -584,11 +585,6 @@ impl World {
     /// Living organisms, in id order.
     pub fn living(&self) -> impl Iterator<Item = &Organism> {
         self.organisms.iter().filter(|o| o.is_alive())
-    }
-
-    /// Applies an ordered trace, returning every outcome in order.
-    pub fn apply_all(&mut self, trace: &[Intent]) -> Vec<Outcome> {
-        trace.iter().map(|i| self.apply(i.clone())).collect()
     }
 }
 

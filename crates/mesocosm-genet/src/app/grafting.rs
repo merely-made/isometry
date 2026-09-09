@@ -14,6 +14,7 @@ pub(super) enum BodyOperation {
     #[default]
     Graft,
     Express,
+    Consume,
 }
 
 pub(super) struct Grafting {
@@ -55,7 +56,7 @@ impl Host {
             _ => String::new(),
         };
         if !self.grafting.open {
-            if !matches!(letter.as_str(), "h" | "o") || self.inspection.open {
+            if !matches!(letter.as_str(), "h" | "o" | "y") || self.inspection.open {
                 return false;
             }
             if self.config.replay.is_some()
@@ -66,7 +67,9 @@ impl Host {
                 return true;
             }
             self.grafting.open = true;
-            self.grafting.operation = if letter == "o" {
+            self.grafting.operation = if letter == "y" {
+                BodyOperation::Consume
+            } else if letter == "o" {
                 BodyOperation::Express
             } else {
                 BodyOperation::Graft
@@ -115,6 +118,10 @@ impl Host {
     }
 
     fn refresh_graft(&mut self, notice: &str) {
+        if self.grafting.operation == BodyOperation::Consume {
+            self.refresh_eating(notice);
+            return;
+        }
         if self.grafting.operation == BodyOperation::Express {
             self.refresh_expression(notice);
             return;
@@ -228,6 +235,10 @@ impl Host {
     }
 
     fn confirm_graft(&mut self) {
+        if self.grafting.operation == BodyOperation::Consume {
+            self.confirm_eating();
+            return;
+        }
         if self.grafting.operation == BodyOperation::Express {
             self.confirm_expression();
             return;
