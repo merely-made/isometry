@@ -55,8 +55,8 @@ pub const DEFAULT_EPOCH_TICKS: u64 = 1_000;
 /// Version of the trophic semantics embodied in a world and its trace.
 /// Zero names the pre-port grammar, so a decoded historical world can be
 /// distinguished at the `WorldRules` admission gate rather than replayed as
-/// TG1.
-pub const TROPHIC_GRAMMAR_REVISION: u32 = 1;
+/// TG1. Revision 2 introduces live typed soil storage and untyped-only roots.
+pub const TROPHIC_GRAMMAR_REVISION: u32 = 2;
 
 /// How long a candidate is grown before its flow record is read. (P4b)
 ///

@@ -44,7 +44,11 @@
 //! promised: a read over `columns_within` followed by the same `draw` uptake
 //! always took. See [`Soil::draw_richest_within`] and [`FORAGE_RADIUS`].
 
-use serde::{Deserialize, Serialize};
+use std::fmt;
+
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
+
+use crate::matter::{Stock, StockError, transport};
 
 /// Fraction of a column that percolates outward each tick, as a divisor.
 ///
@@ -76,16 +80,80 @@ pub const FORAGE_RADIUS: i32 = 3;
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub struct Column(u32);
 
+/// A rejected typed soil transfer.
+///
+/// Soil keeps the scalar world's `u64` bound per column even though a
+/// [`Stock`] has four independent channels. This makes a failed typed deposit
+/// explicit instead of silently dropping a channel or widening one old
+/// account behind its callers' backs.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SoilError {
+    /// The serialized extent cannot form a finite square store.
+    InvalidExtent(i32),
+    /// The serialized field does not cover exactly one square enclosure.
+    InvalidShape { extent: i32, columns: usize },
+    /// A deserialized or otherwise stale column does not belong to this soil.
+    InvalidColumn(Column),
+    /// One provenance channel overflowed while combining stocks.
+    Stock(StockError),
+    /// The combined channels would exceed a scalar column's finite capacity.
+    TotalOverflow { column: Column },
+    /// The whole finite world's scalar conservation ledger would overflow.
+    GlobalTotalOverflow,
+    /// Percolation could not produce a valid next field.
+    Transport(transport::TransportError),
+}
+
+impl fmt::Display for SoilError {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(formatter, "{self:?}")
+    }
+}
+
+impl std::error::Error for SoilError {}
+
 /// Matter in the ground, one entry per voxel column of the enclosure.
 ///
 /// World state: serialized, hashed, and deterministic. Row-major in z then x
 /// over `-extent..=extent` on both axes, so the whole store is one contiguous
 /// array and a lookup is arithmetic rather than a search.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Soil {
     extent: i32,
-    /// Milligrams per column, in canonical index order.
-    matter_mg: Vec<u64>,
+    /// Matter per column, in canonical index order.
+    matter_mg: Vec<Stock>,
+    /// Derived whole-field total. Kept outside the snapshot wire so Stock is
+    /// the only serialized authority and deposits need not rescan the field.
+    total_mg: u64,
+}
+
+#[derive(Serialize)]
+struct SoilWireRef<'a> {
+    extent: i32,
+    matter_mg: &'a [Stock],
+}
+
+#[derive(Deserialize)]
+struct SoilWire {
+    extent: i32,
+    matter_mg: Vec<Stock>,
+}
+
+impl Serialize for Soil {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        SoilWireRef {
+            extent: self.extent,
+            matter_mg: &self.matter_mg,
+        }
+        .serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for Soil {
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let wire = SoilWire::deserialize(deserializer)?;
+        Self::from_columns(wire.extent, wire.matter_mg).map_err(serde::de::Error::custom)
+    }
 }
 
 impl Default for Soil {
@@ -101,11 +169,47 @@ impl Soil {
     /// `per_column_mg`.
     pub fn seeded(extent: i32, per_column_mg: u64) -> Self {
         let extent = extent.max(0);
-        let side = (2 * extent + 1) as usize;
+        let side = Self::side_for(extent).expect("a seeded soil has a valid extent");
+        let columns = side.checked_mul(side).expect("a seeded soil is finite");
+        let count = u64::try_from(columns).expect("a seeded soil column count fits u64");
+        let total_mg = per_column_mg
+            .checked_mul(count)
+            .expect("a seeded soil fits the world's scalar conservation ledger");
         Self {
             extent,
-            matter_mg: vec![per_column_mg; side * side],
+            matter_mg: vec![
+                Stock::single(crate::matter::Material::Untyped, per_column_mg);
+                columns
+            ],
+            total_mg,
         }
+    }
+
+    fn from_columns(extent: i32, matter_mg: Vec<Stock>) -> Result<Self, SoilError> {
+        let side = Self::side_for(extent)?;
+        let expected = side
+            .checked_mul(side)
+            .ok_or(SoilError::InvalidExtent(extent))?;
+        if matter_mg.len() != expected {
+            return Err(SoilError::InvalidShape {
+                extent,
+                columns: matter_mg.len(),
+            });
+        }
+        let total_mg = Self::sum_total_mg(&matter_mg)?;
+        Ok(Self {
+            extent,
+            matter_mg,
+            total_mg,
+        })
+    }
+
+    fn side_for(extent: i32) -> Result<usize, SoilError> {
+        let side = extent
+            .checked_mul(2)
+            .and_then(|twice| twice.checked_add(1))
+            .ok_or(SoilError::InvalidExtent(extent))?;
+        usize::try_from(side).map_err(|_| SoilError::InvalidExtent(extent))
     }
 
     /// How far the store reaches from the middle, in voxels. Sized from the
@@ -134,38 +238,107 @@ impl Soil {
         Column((z * self.side() + x) as u32)
     }
 
-    /// What one column holds.
-    pub fn matter_mg(&self, column: Column) -> u64 {
+    /// Every material channel in one column.
+    pub fn stock(&self, column: Column) -> Stock {
         self.matter_mg
             .get(column.0 as usize)
             .copied()
-            .unwrap_or_default()
+            .unwrap_or(Stock::EMPTY)
+    }
+
+    /// The untyped matter one scalar caller may still spend.
+    ///
+    /// This compatibility read deliberately excludes nis. A scalar caller
+    /// cannot name its provenance, so letting it see mixed material would let
+    /// its later [`Self::draw`] erase living history.
+    pub fn matter_mg(&self, column: Column) -> u64 {
+        self.stock(column).amount(crate::matter::Material::Untyped)
     }
 
     /// Takes up to `want_mg` out of one column, returning what was actually
     /// there to take. A column that is spent gives nothing, which is the whole
     /// point: a producer's income is limited by the ground under it.
     pub fn draw(&mut self, column: Column, want_mg: u64) -> u64 {
-        let Some(held) = self.matter_mg.get_mut(column.0 as usize) else {
+        let index = column.0 as usize;
+        let Some(held) = self.matter_mg.get(index).copied() else {
             return 0;
         };
-        let drawn = want_mg.min(*held);
-        *held -= drawn;
+        let drawn = want_mg.min(held.amount(crate::matter::Material::Untyped));
+        self.matter_mg[index] = held
+            .checked_sub(Stock::single(crate::matter::Material::Untyped, drawn))
+            .expect("a bounded untyped draw cannot underflow");
+        self.total_mg -= drawn;
+        drawn
+    }
+
+    /// Takes a deterministic proportional mixture from one column.
+    pub fn draw_stock(&mut self, column: Column, want_mg: u64) -> Stock {
+        let index = column.0 as usize;
+        let Some(held) = self.matter_mg.get(index).copied() else {
+            return Stock::EMPTY;
+        };
+        let (drawn, remainder) = held.take(want_mg);
+        self.matter_mg[index] = remainder;
+        self.total_mg -= u64::try_from(drawn.total()).expect("a soil draw stays scalar-bounded");
         drawn
     }
 
     /// Returns matter to one column. Decay, rent, and the player's deposit all
     /// land here.
     pub fn deposit(&mut self, column: Column, mg: u64) {
-        if let Some(held) = self.matter_mg.get_mut(column.0 as usize) {
-            *held = held.saturating_add(mg);
+        self.deposit_stock(column, Stock::single(crate::matter::Material::Untyped, mg))
+            .expect("scalar soil deposits must fit their finite column");
+    }
+
+    /// Returns typed matter to one column without losing an overflowing
+    /// channel or exceeding the scalar column capacity.
+    pub fn deposit_stock(&mut self, column: Column, stock: Stock) -> Result<(), SoilError> {
+        let index = column.0 as usize;
+        let Some(held) = self.matter_mg.get(index).copied() else {
+            return Err(SoilError::InvalidColumn(column));
+        };
+        let deposited = held.checked_add(stock).map_err(SoilError::Stock)?;
+        if deposited.total() > u64::MAX as u128 {
+            return Err(SoilError::TotalOverflow { column });
         }
+        let added = u64::try_from(stock.total()).expect("a scalar-bounded deposit fits u64");
+        let total_mg = self
+            .total_mg
+            .checked_add(added)
+            .ok_or(SoilError::GlobalTotalOverflow)?;
+        self.matter_mg[index] = deposited;
+        self.total_mg = total_mg;
+        Ok(())
     }
 
     /// Every milligram the ground is holding. One half of the conservation
     /// ledger; living bodies, carrion, and budgets are the other.
     pub fn total_mg(&self) -> u64 {
-        self.matter_mg.iter().sum()
+        self.total_mg
+    }
+
+    /// Every material channel in the enclosure, for typed conservation
+    /// receipts.
+    pub fn total_stock(&self) -> Stock {
+        self.matter_mg
+            .iter()
+            .copied()
+            .try_fold(Stock::EMPTY, |total, held| total.checked_add(held))
+            .expect("the finite world's typed totals fit its scalar ledger")
+    }
+
+    fn sum_total_mg(columns: &[Stock]) -> Result<u64, SoilError> {
+        columns
+            .iter()
+            .enumerate()
+            .try_fold(0_u64, |total, (index, stock)| {
+                let held = u64::try_from(stock.total()).map_err(|_| SoilError::TotalOverflow {
+                    column: Column(index as u32),
+                })?;
+                total
+                    .checked_add(held)
+                    .ok_or(SoilError::GlobalTotalOverflow)
+            })
     }
 
     /// One tick of percolation: every column sheds a share of what it holds
@@ -180,39 +353,10 @@ impl Soil {
     /// pass a wider enclosure charges for directly. S1 measured it.
     ///
     /// See [`PERCOLATION_DIVISOR`] for why the round needed it.
-    pub fn percolate(&mut self) {
-        let side = self.side();
-        let columns = self.matter_mg.len();
-        let mut delta = vec![0i64; columns];
-        for index in 0..columns {
-            let (x, z) = (index as i32 % side, index as i32 / side);
-            let neighbours: Vec<usize> = [(-1i32, 0i32), (1, 0), (0, -1), (0, 1)]
-                .iter()
-                .map(|(dx, dz)| (x + dx, z + dz))
-                .filter(|(nx, nz)| (0..side).contains(nx) && (0..side).contains(nz))
-                .map(|(nx, nz)| (nz * side + nx) as usize)
-                .collect();
-            if neighbours.is_empty() {
-                continue;
-            }
-            // Split so nothing is lost to integer truncation: the remainder
-            // goes to the first neighbours in a fixed order rather than being
-            // rounded away, which at these column sizes was the difference
-            // between a flow and no flow at all.
-            let out = self.matter_mg[index] / PERCOLATION_DIVISOR;
-            if out == 0 {
-                continue;
-            }
-            let share = out / neighbours.len() as u64;
-            let extra = out % neighbours.len() as u64;
-            delta[index] -= out as i64;
-            for (rank, neighbour) in neighbours.into_iter().enumerate() {
-                delta[neighbour] += (share + u64::from((rank as u64) < extra)) as i64;
-            }
-        }
-        for (held, change) in self.matter_mg.iter_mut().zip(delta) {
-            *held = held.saturating_add_signed(change);
-        }
+    pub fn percolate(&mut self) -> Result<(), SoilError> {
+        let side = self.side() as usize;
+        transport::percolate(&mut self.matter_mg, side, PERCOLATION_DIVISOR)
+            .map_err(SoilError::Transport)
     }
 
     /// Takes up to `want_mg` out of the richest column within `radius`.
@@ -247,133 +391,4 @@ impl Soil {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    // The shipping enclosure, read from the world rather than mirrored: S1
-    // moved it 16 -> 64 and a copied 16 here would have gone on quietly
-    // testing the world that used to ship.
-    use crate::world::ENCLOSURE;
-
-    /// Columns to a side at the shipping enclosure. 129 since S1.
-    const SIDE: usize = (2 * ENCLOSURE + 1) as usize;
-
-    #[test]
-    fn the_store_covers_the_enclosure_one_column_per_voxel() {
-        let soil = Soil::seeded(ENCLOSURE, 100);
-        assert_eq!(soil.side() as usize, SIDE);
-        assert_eq!(soil.columns(), SIDE * SIDE);
-        assert_eq!(soil.total_mg(), (SIDE * SIDE * 100) as u64);
-
-        // Distinct columns for distinct voxels, and the same one twice for
-        // the same voxel: this is the grain the ruling bought.
-        let mut seen = std::collections::BTreeSet::new();
-        for z in -ENCLOSURE..=ENCLOSURE {
-            for x in -ENCLOSURE..=ENCLOSURE {
-                assert!(seen.insert(soil.column_at([x, 7, z])), "({x},{z}) collided");
-            }
-        }
-        assert_eq!(seen.len(), soil.columns());
-    }
-
-    #[test]
-    fn height_is_not_part_of_a_column() {
-        let soil = Soil::seeded(ENCLOSURE, 1);
-        assert_eq!(soil.column_at([3, -4, -7]), soil.column_at([3, 22, -7]));
-    }
-
-    #[test]
-    fn a_position_past_the_wall_clamps_rather_than_dropping_matter() {
-        // Insurance against a leak at the edge: whatever is deposited has to
-        // land in a column that exists, or the cycle stops conserving.
-        let mut soil = Soil::seeded(ENCLOSURE, 0);
-        let outside = soil.column_at([900, 0, -900]);
-        soil.deposit(outside, 40);
-        assert_eq!(soil.total_mg(), 40);
-        assert_eq!(outside, soil.column_at([ENCLOSURE, 0, -ENCLOSURE]));
-    }
-
-    #[test]
-    fn a_draw_never_takes_more_than_the_column_holds() {
-        let mut soil = Soil::seeded(2, 30);
-        let column = soil.column_at([0, 0, 0]);
-        assert_eq!(soil.draw(column, 12), 12);
-        assert_eq!(soil.matter_mg(column), 18);
-        assert_eq!(
-            soil.draw(column, 1_000),
-            18,
-            "a spent column gives what it has"
-        );
-        assert_eq!(soil.draw(column, 1_000), 0);
-    }
-
-    #[test]
-    fn drawing_and_depositing_move_matter_without_making_it() {
-        let mut soil = Soil::seeded(4, 50);
-        let before = soil.total_mg();
-        let from = soil.column_at([-3, 0, 2]);
-        let to = soil.column_at([1, 0, -4]);
-        let moved = soil.draw(from, 40);
-        soil.deposit(to, moved);
-        assert_eq!(soil.total_mg(), before);
-    }
-
-    #[test]
-    fn a_radius_reads_a_real_neighbourhood_at_the_shipping_size() {
-        // The measured reason for this grain: r=3 is 49 columns of the
-        // enclosure's 16,641 (1,089 before S1 widened it), where the coarse
-        // grains' r=3 already covered the whole world.
-        let soil = Soil::seeded(ENCLOSURE, 0);
-        let middle = soil.column_at([0, 0, 0]);
-        assert_eq!(soil.columns_within(middle, 3).count(), 49);
-        assert_eq!(soil.columns_within(middle, 0).count(), 1);
-        // Clipped at the wall rather than wrapping onto the far side.
-        let corner = soil.column_at([-ENCLOSURE, 0, -ENCLOSURE]);
-        assert_eq!(soil.columns_within(corner, 3).count(), 16);
-    }
-
-    #[test]
-    fn a_root_reaches_the_richest_column_it_can_search_and_takes_only_its_income() {
-        // The TD7 shape: wide reach, ordinary draw. A spent column no longer
-        // means a spent producer, because the neighbourhood is what it eats
-        // out of — but one tick still only buys one tick's income.
-        let mut soil = Soil::seeded(ENCLOSURE, 0);
-        let standing = soil.column_at([0, 0, 0]);
-        let rich = soil.column_at([2, 0, -3]);
-        soil.deposit(rich, 500);
-
-        assert_eq!(soil.draw_richest_within(standing, FORAGE_RADIUS, 20), 20);
-        assert_eq!(soil.matter_mg(rich), 480, "only the income came out");
-        assert_eq!(soil.total_mg(), 480, "and nothing was made or lost");
-
-        // Out of reach is out of reach: the radius is a real bound, not a
-        // world-wide search wearing one.
-        let far = soil.column_at([12, 0, 12]);
-        soil.deposit(far, 900);
-        assert_eq!(
-            soil.draw_richest_within(standing, FORAGE_RADIUS, 1_000),
-            480
-        );
-        assert_eq!(soil.matter_mg(far), 900);
-    }
-
-    #[test]
-    fn a_forage_read_is_deterministic_when_every_column_is_equal() {
-        // Ties go to the lowest column index, so a stand on flat ground draws
-        // the same way in every replay of the same world.
-        let mut a = Soil::seeded(ENCLOSURE, 100);
-        let mut b = a.clone();
-        let middle = a.column_at([0, 0, 0]);
-        a.draw_richest_within(middle, FORAGE_RADIUS, 7);
-        b.draw_richest_within(middle, FORAGE_RADIUS, 7);
-        assert_eq!(a, b);
-    }
-
-    #[test]
-    fn a_store_round_trips() {
-        let mut soil = Soil::seeded(ENCLOSURE, 7);
-        soil.deposit(soil.column_at([5, 0, -5]), 99);
-        let bytes = crate::snapshot::encode(&soil).unwrap();
-        assert_eq!(crate::snapshot::decode::<Soil>(&bytes).unwrap(), soil);
-    }
-}
+mod tests;

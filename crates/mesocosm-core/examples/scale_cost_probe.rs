@@ -160,10 +160,10 @@ fn place_graph() -> PlaceGraph {
 /// One percolation sweep over a flat store of the given extent.
 fn flat_percolate_us(extent: i32) -> f64 {
     let mut store = Soil::seeded(extent, SOIL_SEED_MG_PER_COLUMN);
-    store.percolate();
+    store.percolate().expect("finite soil transport");
     let started = Instant::now();
     for _ in 0..REPEATS {
-        store.percolate();
+        store.percolate().expect("finite soil transport");
     }
     let elapsed = started.elapsed().as_secs_f64() * 1e6 / f64::from(REPEATS);
     std::hint::black_box(&store);
@@ -198,7 +198,7 @@ fn measure(founders: u32) -> Measured {
     let mut store = world.soil().clone();
     let started = Instant::now();
     for _ in 0..REPEATS {
-        store.percolate();
+        store.percolate().expect("finite soil transport");
     }
     let percolate_us = started.elapsed().as_secs_f64() * 1e6 / f64::from(REPEATS);
     std::hint::black_box(&store);

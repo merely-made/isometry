@@ -589,7 +589,8 @@ fn step_inner(
 
     // The ground settles, after everything the tick put into it. Pure
     // transport between columns: no matter is made or lost here.
-    soil.percolate();
+    soil.percolate()
+        .expect("conserved soil transport fits the finite world");
     tally
 }
 

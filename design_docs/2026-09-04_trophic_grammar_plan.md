@@ -115,12 +115,37 @@ alone does not change a material kind.
 The standalone `typed_matter_receipt` example checks independently stated
 balances, a serialized receipt replay, and a deliberately substituted channel
 whose total mass still passes. It also compares the four-channel kernel with
-incumbent scalar Soil transport at 129 by 129 columns. The kernel retains no
-world state. Live Soil, body mass, reserves, snapshots and grammar revision 1
-are unchanged; this is neither the full-run TG2 receipt nor a full-tick budget
-measurement. Next, replace storage at the existing owners and carry typed
+the frozen pre-integration scalar Soil transport at 129 by 129 columns. The
+kernel retains no world state. TG2a left live Soil, body mass, reserves,
+snapshots and grammar revision 1 unchanged; it was neither the full-run TG2
+receipt nor a full-tick budget measurement. Next, replace storage at the
+existing owners and carry typed
 stocks through accepted mutations, with scruple on the existing part mosaic.
 Do not introduce a parallel composition authority.
+
+**TG2b live soil, 2026-09-09.** Soil now owns fixed typed stocks per column and
+uses the measured transport kernel. Scalar reads and draws expose only untyped
+nutrients; typed draws preserve the selected mixture. Deposits reject column
+or global overflow atomically. The scalar total is a derived cache, reconstructed
+from stocks on decode and excluded from the wire. Ordinary roots cannot consume
+typed matter awaiting its completed return. Existing body returns remain
+untyped until body accounting is integrated; live ecology does not yet emit nis.
+Tests seed mixed soil as an initial condition to exercise this boundary.
+
+World grammar revision 2 admits this storage and uptake contract. Current
+snapshots retain all channels and validate soil shape and amount bounds on
+decode. Older trace rules are incompatible; historical raw postcard worlds
+have no migration and may fail decoding before the rules check. The standalone
+scalar reference is frozen from `ef4828b`, so transport parity remains an
+independent comparison after Soil itself adopts the typed kernel.
+
+The next body join must cover root growth, ordered body spending, named-part
+consumption, attachment, subtree severing, reserves, meals, births and grafts
+together. `Mosaic` owns the scruple, with part mass equal to its total;
+harvest/receive carry the donor mix and rejected candidates restore both.
+Founder and child realization need explicit initial composition. Conversion
+receipts must come from the accepted mutation, never inferred afterward from
+the body's current kingdom. Full TG2 and TG3 remain open.
 
 ### TG3: scruple per part
 
@@ -239,6 +264,24 @@ beginning body types; start investigating a beginning set of traits.
 
 ## Findings
 
+- **2026-09-09, TG2b live soil:** mixed initial soil retains producer, consumer
+  and decomposer totals through 120 ordinary ticks; untyped changes reconcile
+  against the existing flow stream. Restore at tick 60 replays to the same
+  subsequent hashes. Equal-mass channel substitutions change the world hash,
+  and revision-1 rules are refused by snapshot admission. The release
+  `live_soil_receipt` instrument starts 917 organisms on each of seeds 1, 4 and 7,
+  warms 20 ticks and measures 200 more serially. Median core tick times are
+  7.34, 7.69 and 7.22 ms; p95 times are 11.98, 12.64 and 9.85 ms; the largest
+  measured tick is 15.46 ms. Every tick conserves total matter, and all three
+  final snapshots round-trip exactly. These are `World::apply` timings,
+  excluding validation, snapshot and rendering cost, and do not establish
+  long-run food-web viability or performance after typed-body integration.
+  Validation: 507 release tests pass across the core library, flows, matter
+  and replay targets, with one existing ignored test. This includes the
+  four-seed 4,000-tick conservation run and new typed-soil rejection,
+  extraction, foraging, cache reconstruction and world replay checks.
+  Local receipt: `Code/testing/mesocosm/tg2b_live_soil.json`; reproduce with
+  `cargo run -p mesocosm-core --release --example live_soil_receipt -- <output.json>`.
 - **2026-09-09, TG2a accounting and transport:** the release instrument keeps
   101 mg across synthesis, graft, digestion to reserve and mineralization;
   independent expected balances reconcile and postcard receipt replay is exact.

@@ -11,8 +11,10 @@ use mesocosm_core::{
         receipt::{Address, Book, Conversion, Receipt, reconcile, replay},
         transport,
     },
-    places::Soil,
 };
+#[path = "../src/matter/transport/scalar_reference.rs"]
+mod scalar_reference;
+use scalar_reference::ScalarSoil as Soil;
 use serde_json::json;
 
 fn main() {

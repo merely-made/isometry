@@ -62,12 +62,15 @@ pub fn percolate(columns: &mut [Stock], side: usize, divisor: u64) -> Result<(),
 }
 
 #[cfg(test)]
+mod scalar_reference;
+
+#[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn typed_transport_matches_four_independent_scalar_soils() {
-        use crate::places::Soil;
+        use super::scalar_reference::ScalarSoil as Soil;
         let extent = 2;
         let side = 5;
         let mut columns = vec![Stock::EMPTY; side * side];
