@@ -1,6 +1,6 @@
 # Games wing repository consolidation
 
-**Status: completed locally, 2026-09-09.** Isometry is the repository
+**Status: published; standalone repositories archived, 2026-09-09.** Isometry is the repository
 home for the Isometry tabletop, Mesocosm, and Paredros. Package names, product
 behaviour, licenses, source histories and existing uncommitted work survive.
 
@@ -98,3 +98,39 @@ their consumers without duplicate implementations imposed by old repo borders.
   need deliberate transfer when resumed. No remote repositories were deleted,
   no product licenses changed, and no pre-existing gameplay WIP was committed
   as part of the migration.
+
+## Publication and retirement receipt (2026-09-09)
+
+The local migration record above describes the initial handoff. Subsequently:
+
+- Committed the preserved tabletop work as `e5d1b97`, Paredros anatomy,
+  equipment and persistence work as `e82a17f`, and procedural-system design
+  notes plus repository metadata as `c8168b8`. Published the full imported
+  history to Isometry main and verified both product manifests on GitHub.
+- Published eight historical branch refs under `archive/mesocosm/` and
+  `archive/paredros/`. Four clean Mesocosm linked worktrees now use Isometry's
+  Git storage and these historical branches. Their HEADs and source trees
+  were verified unchanged. They retain the old standalone tree layout.
+- Archived both standalone GitHub repositories, with descriptions and homepages
+  pointing to their Isometry directories. GitHub repositories remain available
+  as read-only historical records.
+- Removed the old checkout paths from `Code/repos/` by moving their junctions
+  into the recovery archive as `mesocosm-retired-alias` and
+  `paredros-retired-alias`. Use canonical Isometry product paths going forward.
+- Automatic approval review blocked removal of cache junctions with the generic
+  reason `blocked by policy`. The safer retirement retains the original recovery
+  checkouts and target caches under `Code/archive/wing-consolidation-20260909/`.
+  Physical deletion of those recovery copies was not performed. Current product
+  target junctions still reference those caches; preserve that archive.
+- Recovery also contains verified complete Git bundles, source tar archives,
+  original diffs and file inventory. The copied party-start test harness and
+  its transient resolver log were moved there instead of publishing duplicate
+  source trees.
+- Expanded review: Isometry views 75 passed; Paredros world 83, room library 37,
+  body-sheet host 3 passed. Combined with the earlier distinct Isometry core
+  and Mesocosm core selections, 735 tests passed and one was ignored.
+- Native watchtower, current full replication, all-feature/all-target workspace,
+  capture and interaction benchmark checks remain unverified. Pending review
+  test processes were stopped when unrelated jobs held the shared Cargo cache.
+  Physical input and headed acceptance remain open. Paredros formatting checks
+  also encountered unrelated external Renderling formatting differences.
