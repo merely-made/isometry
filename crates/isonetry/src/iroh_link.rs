@@ -16,13 +16,13 @@ use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 use std::sync::Arc;
 use std::time::Duration;
 
-use iroh::endpoint::{presets, Connection, RecvStream, SendStream};
+use iroh::endpoint::{Connection, RecvStream, SendStream, presets};
 use iroh::{Endpoint, EndpointAddr};
 use iroh_tickets::endpoint::EndpointTicket;
-use tokio::sync::{mpsc, Mutex};
+use tokio::sync::{Mutex, mpsc};
 
 use crate::protocol::{
-    fnv1a, GameEvent, GameSnapshot, NetMessage, Outbound, PeerId, Recipient, FNV_OFFSET,
+    FNV_OFFSET, GameEvent, GameSnapshot, NetMessage, Outbound, PeerId, Recipient, fnv1a,
 };
 use crate::session::{ClientSession, HostSession};
 use isometry_campaign::CampaignStore;
@@ -89,13 +89,13 @@ async fn dispatch(peers: &PeerMap, out: Vec<Outbound>) {
                 for tx in map.values() {
                     let _ = tx.send(msg.clone());
                 }
-            }
+            },
             Recipient::One(peer) => {
                 if let Some(tx) = map.get(&peer) {
                     let _ = tx.send(msg);
                 }
-            }
-            Recipient::Host => {}
+            },
+            Recipient::Host => {},
         }
     }
 }
@@ -230,6 +230,39 @@ impl HostNet {
         Ok(())
     }
 
+    /// Commit a campaign and seed the named party at its one starting place.
+    pub async fn commit_campaign_for_party(
+        &self,
+        record: isometry_campaign::GenerationRecord,
+        item_owner: Option<isometry_core::TokenId>,
+        party: &str,
+    ) -> Result<(), String> {
+        let out = self
+            .session
+            .lock()
+            .await
+            .commit_campaign_for_party(record, item_owner, party)?;
+        dispatch(&self.peers, out).await;
+        Ok(())
+    }
+
+    /// Rule and commit one doorway crossing while holding the authoritative
+    /// session lock, then broadcast both committed consequences in order.
+    pub async fn commit_transition_for_party(
+        &self,
+        token: isometry_core::TokenId,
+        request: crate::protocol::RequestId,
+        party: &str,
+    ) -> Result<(), String> {
+        let out = self
+            .session
+            .lock()
+            .await
+            .commit_transition_for_party(token, request, party)?;
+        dispatch(&self.peers, out).await;
+        Ok(())
+    }
+
     /// Play a storylet: resolve and commit its effects, broadcasting each.
     pub async fn commit_storylet(
         &self,
@@ -314,7 +347,7 @@ async fn reader_task_host(
             Ok(msg) => {
                 let out = session.lock().await.on_message(peer, msg);
                 dispatch(&peers, out).await;
-            }
+            },
             Err(_) => break,
         }
     }
@@ -360,7 +393,7 @@ impl ClientNet {
                 match read_frame(&mut recv).await {
                     Ok(msg) => {
                         reader_session.lock().await.on_message(msg);
-                    }
+                    },
                     Err(_) => break,
                 }
             }

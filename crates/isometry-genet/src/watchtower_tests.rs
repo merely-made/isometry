@@ -1,5 +1,8 @@
 //! The inhabited watchtower through the desktop host's real dispatch seam.
 
+mod atlas;
+mod performance;
+
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -7,12 +10,112 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use cambium_genet_winit_host::{Harness, Init};
 use genet_probe::Selector;
 use isometry_core::TokenId;
+use layout_dom_api::{LayoutDom as _, LocalName, Namespace};
 
 use super::*;
 
 type WatchtowerHarness = Harness<UiState, Logic, UiChild>;
 
 const WINDOW: (f32, f32) = (1_100.0, 820.0);
+
+#[test]
+fn campaign_creation_places_the_selected_party_on_the_overmap() {
+    for viewer in [None, Some("player")] {
+        let (mut harness, _) = watchtower();
+        harness.update(|ui| {
+            ui.viewer = viewer.map(str::to_owned);
+            ui.start_generator("watchtower");
+        });
+        harness.after_dispatch();
+        harness.update(|ui| ui.commit_generation_preview());
+        harness.after_dispatch();
+        harness.update(|ui| ui.open_overmap());
+        harness.relayout();
+        let ui = harness.state();
+        let party = viewer.unwrap_or("dm");
+        assert_eq!(
+            ui.world.party_at(party),
+            Some("watchtower:ruined-watchtower")
+        );
+        assert_eq!(
+            ui.world.party_node.len(),
+            1,
+            "only the selected party is placed"
+        );
+        let known = ui.world.overmap_for(party);
+        let ids: Vec<_> = known.nodes.iter().map(|node| node.id.as_str()).collect();
+        assert_eq!(
+            ids,
+            ["watchtower:forest-region", "watchtower:ruined-watchtower"]
+        );
+        assert_eq!(known.edges.len(), 1);
+        assert!(
+            isometry_views::overmap_swatch(ui).is_some(),
+            "the native overmap has content"
+        );
+    }
+}
+
+#[test]
+fn map_only_campaign_creation_does_not_require_a_regional_party() {
+    let (mut harness, _) = watchtower();
+    harness.update(|ui| ui.start_generator("watchtower"));
+    harness.after_dispatch();
+    harness.update(|ui| {
+        let isometry_campaign::GenValue::Campaign { campaign } =
+            &mut ui.generator_preview.as_mut().unwrap().proposal
+        else {
+            panic!("campaign preview")
+        };
+        campaign.world.places.clear();
+        campaign.world.routes.clear();
+        ui.commit_generation_preview();
+    });
+    harness.after_dispatch();
+    let ui = harness.state();
+    assert_eq!(
+        ui.active_map.as_deref(),
+        Some("watchtower:ruined-watchtower")
+    );
+    assert!(ui.world.party_node.is_empty());
+    assert!(ui.world.party_known.is_empty());
+    assert_eq!(ui.map.tokens.len(), 5);
+}
+
+#[test]
+fn generated_forest_sites_reach_the_native_board() {
+    let (mut harness, app) = watchtower();
+    harness.update(|ui| ui.start_generator("watchtower"));
+    harness.after_dispatch();
+    harness.update(|ui| ui.commit_generation_preview());
+    harness.after_dispatch();
+    let snapshot = app.borrow().snapshot_of(harness.state());
+    for map in snapshot.maps.values() {
+        let mut visit = snapshot.clone();
+        visit.active_map = Some(map.id.clone());
+        visit.map = map.document.clone();
+        harness.update(|ui| ui.apply_snapshot(visit));
+        harness.relayout();
+        let labels = harness.with_dom(|dom| {
+            genet_probe::matching(dom, &Selector::class("tile-encounter"))
+                .into_iter()
+                .map(|node| {
+                    dom.attribute(node, &Namespace::from(""), &LocalName::from("aria-label"))
+                        .unwrap_or_default()
+                        .to_owned()
+                })
+                .collect::<Vec<_>>()
+        });
+        for anchor in &map.encounter_anchors {
+            assert!(
+                labels.iter().any(|label| label.contains(&anchor.id)),
+                "{} exposes authored site {}: {labels:?}",
+                map.id,
+                anchor.id
+            );
+        }
+    }
+}
 
 #[test]
 fn board_tile_clips_its_hit_area_to_the_visible_diamond() {
@@ -278,6 +381,11 @@ fn forest_region_doors_carry_the_character_and_sheet_between_sites() {
         harness.state().status
     );
     assert_eq!(harness.state().map.sheet(hero), Some(&sheet));
+    assert_eq!(
+        harness.state().world.party_at("dm"),
+        Some("watchtower:forest-region")
+    );
+    assert_eq!(harness.state().world.overmap_for("dm").nodes.len(), 4);
     // Stage each further departure with the editor, then resolve the normal
     // doorway. This proves entry lookup and transfer, independently of budget.
     for (door, destination) in [
@@ -304,6 +412,7 @@ fn forest_region_doors_carry_the_character_and_sheet_between_sites() {
             "{door}: {}",
             harness.state().status
         );
+        assert_eq!(harness.state().world.party_at("dm"), Some(destination));
         assert_eq!(harness.state().map.sheet(hero), Some(&sheet));
         assert_eq!(
             harness.state().map.token(hero).unwrap().owner.as_deref(),

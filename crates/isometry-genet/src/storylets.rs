@@ -138,11 +138,11 @@ impl App {
                             ui.status = format!("played storylet: {key}");
                         });
                     }
-                }
+                },
                 Err(error) => {
                     let runner = &mut *ctx.runner;
                     runner.update(|ui| ui.status = format!("storylet failed: {error}"));
-                }
+                },
             }
         }
     }
@@ -279,11 +279,11 @@ impl App {
                             ui.status = "downtime committed".to_owned();
                         });
                     }
-                }
+                },
                 Err(error) => {
                     let runner = &mut *ctx.runner;
                     runner.update(|ui| ui.status = format!("downtime failed: {error}"));
-                }
+                },
             }
         }
     }

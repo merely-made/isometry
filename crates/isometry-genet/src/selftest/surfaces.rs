@@ -245,7 +245,11 @@ impl App {
              unsent (messages {}, outbox {}) | status: {}",
             ui.pixel_grid.0,
             ui.board_scale,
-            if ui.integer_pixel_rounding { "on" } else { "off" },
+            if ui.integer_pixel_rounding {
+                "on"
+            } else {
+                "off"
+            },
             ui.whisper_draft.caret(),
             ui.whisper_draft.text().len(),
             ui.whisper_draft.text(),

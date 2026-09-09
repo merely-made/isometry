@@ -62,6 +62,7 @@ tracing = { version = "0.1", optional = true }
 [dev-dependencies]
 isometry-core = { workspace = true }
 isometry-system = { workspace = true }
+serde_json = { workspace = true }
 pollster = "0.4"
 
 [[example]]

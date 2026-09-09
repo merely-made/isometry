@@ -9,6 +9,21 @@
 
 use super::*;
 
+/// Source-derived homes; visual dragging never changes this placement.
+pub fn overmap_home_positions(ui: &UiState) -> BTreeMap<String, (f32, f32)> {
+    if let Some(atlas) = overmap_atlas(ui) {
+        return atlas
+            .fields
+            .iter()
+            .map(|field| (field.id.clone(), atlas.normalize_world(field.anchor)))
+            .collect();
+    }
+    overmap_positions(
+        &ui.overmap_source_world()
+            .overmap_for(ui.viewer.as_deref().unwrap_or("dm")),
+    )
+}
+
 /// Build the graph-canvas swatch for the party's discovered overmap. Both the
 /// view (native hit targets + the `custom_leaf`) and the host (the registered
 /// `paint_leaf`) call this, so they agree on node identity, order, and layout.
@@ -26,17 +41,30 @@ pub fn overmap_swatch(ui: &UiState) -> Option<GraphCanvasSwatch<String, OvermapN
 
     // Shared score -> scene realization; the final viewport fit is local to the
     // Cambium swatch and does not alter campaign or scene data.
-    let placed = overmap_positions(&overmap);
+    let atlas = overmap_atlas(ui);
+    let placed = match &atlas {
+        Some(atlas) => atlas
+            .fields
+            .iter()
+            .map(|field| (field.id.clone(), atlas.normalize_world(field.anchor)))
+            .collect(),
+        None => overmap_positions(&overmap),
+    };
     let nodes: Vec<GraphCanvasNode<String, OvermapNodeKind>> = overmap
         .nodes
         .iter()
+        .filter(|node| placed.contains_key(&node.id))
         .map(|node| {
-            let position = ui
-                .overmap_position_overrides
-                .get(&node.id)
-                .copied()
-                .or_else(|| placed.get(&node.id).copied())
-                .unwrap_or((0.5, 0.5));
+            let home = placed.get(&node.id).copied().unwrap_or((0.5, 0.5));
+            let position = if atlas.is_some() {
+                ui.overmap_motion.project(&node.id, home)
+            } else {
+                ui.overmap_position_overrides
+                    .get(&node.id)
+                    .copied()
+                    .or_else(|| placed.get(&node.id).copied())
+                    .unwrap_or(home)
+            };
             let kind = if here.as_deref() == Some(node.id.as_str()) {
                 OvermapNodeKind::Here
             } else {
@@ -108,6 +136,10 @@ pub fn overmap_swatch(ui: &UiState) -> Option<GraphCanvasSwatch<String, OvermapN
     // under the pointer reads as hovered.
     swatch.selected = here;
     swatch.hovered = ui.overmap_hover.clone();
+    swatch.focus = ui.overmap_motion_selected.clone();
+    if let Some(atlas) = atlas {
+        swatch = swatch.with_atlas(atlas).with_deferred_drag_rebuild(true);
+    }
     Some(swatch)
 }
 

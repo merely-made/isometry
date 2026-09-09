@@ -79,7 +79,7 @@ impl CampaignRepository {
         match checkpoint {
             Some(checkpoint) if (1..=CampaignCheckpoint::FORMAT).contains(&checkpoint.format) => {
                 Ok(Some(checkpoint))
-            }
+            },
             Some(checkpoint) => Err(format!(
                 "unsupported campaign checkpoint format: {}",
                 checkpoint.format

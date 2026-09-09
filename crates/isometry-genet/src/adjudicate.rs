@@ -123,7 +123,7 @@ impl App {
                     .map_err(|e| match e {
                         ActionError::OutOfRange { range, distance } => {
                             format!("out of reach ({distance} tiles, reach {range})")
-                        }
+                        },
                         ActionError::SelfTarget => "cannot target yourself".to_owned(),
                         ActionError::AlreadyDefeated => "that one is already down".to_owned(),
                         ActionError::NotTargeted(key) => format!("{key} needs no target"),
@@ -155,7 +155,7 @@ impl App {
                         // deltas, no turn spent.
                         ui.status = reason;
                         return;
-                    }
+                    },
                 };
 
                 // Where does a shove actually land? The rules said how hard and

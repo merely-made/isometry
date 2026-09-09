@@ -142,11 +142,11 @@ impl HostSession {
             Ok(out) => {
                 self.campaign.finish_reveal(id);
                 Ok(out)
-            }
+            },
             Err(error) => {
                 self.campaign.abort_reveal(id);
                 Err(error)
-            }
+            },
         }
     }
 
@@ -162,11 +162,11 @@ impl HostSession {
             Ok(out) => {
                 self.campaign.finish_item_modifier_reveal(id);
                 Ok(out)
-            }
+            },
             Err(error) => {
                 self.campaign.abort_item_modifier_reveal(id);
                 Err(error)
-            }
+            },
         }
     }
 
@@ -204,13 +204,13 @@ impl HostSession {
                 StoryletEffect::Fact { fact } => events.push(GameEvent::Fact(fact)),
                 StoryletEffect::History { event } => {
                     events.push(GameEvent::World(WorldEvent::History(event)))
-                }
+                },
                 StoryletEffect::LocalMap { map } => {
                     let map = map
                         .lower(MapScale::Local)
                         .map_err(|error| format!("storylet map is invalid: {error}"))?;
                     events.push(GameEvent::MapStored(map));
-                }
+                },
                 StoryletEffect::Item { item } => {
                     let owner = item_owner
                         .ok_or_else(|| "storylet item effect needs an owner".to_owned())?;
@@ -246,7 +246,7 @@ impl HostSession {
                         token: owner,
                         inventory,
                     });
-                }
+                },
             }
         }
         let mut preview = self.state.clone();
@@ -339,6 +339,48 @@ impl HostSession {
         record: GenerationRecord,
         item_owner: Option<TokenId>,
     ) -> Result<Vec<Outbound>, String> {
+        self.commit_campaign_inner(record, item_owner, None)
+    }
+
+    /// Accept a campaign and place the named party at its starting place.
+    ///
+    /// The party is a host-session choice, never authored campaign runtime
+    /// state. Its placement is an ordinary [`WorldEvent::PartyMoved`] in the
+    /// same preflighted batch as the campaign, so peers replay it through the
+    /// existing protocol rather than learning a new campaign wire shape.
+    pub fn commit_campaign_for_party(
+        &mut self,
+        record: GenerationRecord,
+        item_owner: Option<TokenId>,
+        party: &str,
+    ) -> Result<Vec<Outbound>, String> {
+        self.commit_campaign_inner(record, item_owner, Some(party))
+    }
+
+    /// Rule one doorway under host authority, then commit its complete tactical
+    /// and overmap consequence as a preflighted batch.
+    pub fn commit_transition_for_party(
+        &mut self,
+        token: TokenId,
+        request: RequestId,
+        party: &str,
+    ) -> Result<Vec<Outbound>, String> {
+        let events =
+            super::travel::resolve_transition_for_party(&self.state, token, request, party)
+                .map_err(|error| format!("doorway transition rejected: {error:?}"))?;
+        let mut out = Vec::new();
+        for event in events {
+            out.extend(self.try_commit(event)?);
+        }
+        Ok(out)
+    }
+
+    fn commit_campaign_inner(
+        &mut self,
+        record: GenerationRecord,
+        item_owner: Option<TokenId>,
+        party: Option<&str>,
+    ) -> Result<Vec<Outbound>, String> {
         let isometry_campaign::GenValue::Campaign { campaign: draft } = record.proposal.clone()
         else {
             return Err("generation record is not a campaign draft".to_owned());
@@ -346,6 +388,31 @@ impl HostSession {
         draft
             .validate()
             .map_err(|error| format!("invalid campaign draft: {error:?}"))?;
+
+        let start_party = party
+            .map(|party| {
+                if party.trim().is_empty() {
+                    return Err("campaign start party is required".to_owned());
+                }
+                let places: Vec<_> = draft
+                    .world
+                    .places
+                    .values()
+                    .filter(|place| place.map.as_deref() == Some(draft.starting_map.as_str()))
+                    .collect();
+                match places.as_slice() {
+                    [place] => Ok((party.to_owned(), place.id.clone())),
+                    [] => Err(format!(
+                        "campaign starting map {} has no world place",
+                        draft.starting_map
+                    )),
+                    _ => Err(format!(
+                        "campaign starting map {} has more than one world place",
+                        draft.starting_map
+                    )),
+                }
+            })
+            .transpose()?;
 
         let mut private = self.campaign.clone();
         for secret in &draft.secrets {
@@ -411,6 +478,9 @@ impl HostSession {
         events.push(GameEvent::MapActivated {
             id: draft.starting_map.clone(),
         });
+        if let Some((party, node)) = start_party {
+            events.push(GameEvent::World(WorldEvent::PartyMoved { party, node }));
+        }
 
         let mut preview = self.state.clone();
         for event in &events {

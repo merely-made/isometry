@@ -146,6 +146,58 @@ pub fn resolve_transition(
     })
 }
 
+/// Rule a doorway crossing and, when its tactical result advances the whole
+/// board, carry one explicitly named party to the matching world place.
+///
+/// Doorways remain useful to a tactical-only session: a missing party, a party
+/// at another place, or an unclear destination still emits the resolved
+/// crossing. The overmap move is added only when both sides bind exactly.
+pub fn resolve_transition_for_party(
+    state: &GameSnapshot,
+    token: TokenId,
+    request: RequestId,
+    party: &str,
+) -> Result<Vec<GameEvent>, GameError> {
+    // A replay must not re-rule a doorway after the stamped result has already
+    // entered this snapshot. This also keeps a replay from discovering again.
+    if state.applied_actions.contains(&request) {
+        return Ok(Vec::new());
+    }
+
+    let resolution = resolve_transition(state, token, request)?;
+    let mut events = vec![GameEvent::TransitionResolved(resolution.clone())];
+
+    let source_matches = state
+        .world
+        .party_at(party)
+        .and_then(|node| state.world.places.get(node))
+        .and_then(|place| place.map.as_deref())
+        == Some(resolution.from_map.as_str());
+    let target: Vec<_> = state
+        .world
+        .places
+        .values()
+        .filter(|place| place.map.as_deref() == Some(resolution.to_map.as_str()))
+        .collect();
+
+    if resolution.activated.as_deref() == Some(resolution.to_map.as_str()) && source_matches {
+        if let [target] = target.as_slice() {
+            events.push(GameEvent::World(WorldEvent::PartyMoved {
+                party: party.to_owned(),
+                node: target.id.clone(),
+            }));
+        }
+    }
+
+    // A host commits the returned batch one event at a time. Check the entire
+    // sequence first so its crossing and world move are never only half valid.
+    let mut preview = state.clone();
+    for event in &events {
+        apply_game(&mut preview, event)?;
+    }
+    Ok(events)
+}
+
 /// Apply a ruled crossing. Every peer's half: no door is looked up, no landing
 /// searched for, no id minted, no clock compared, no activation inferred.
 pub(crate) fn apply_transition(

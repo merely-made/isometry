@@ -95,16 +95,19 @@ fn storylet_matches_private_fact_casts_existing_role_and_commits_effects() {
     host.commit_storylet("drowned-oath", Some(TokenId(1)))
         .unwrap();
     assert_eq!(host.state().world.history[0].id, "oath-returned");
-    assert!(host.state().inventories[&TokenId(1)]
-        .items
-        .values()
-        .any(|item| item.name == "Oath Blade"));
+    assert!(
+        host.state().inventories[&TokenId(1)]
+            .items
+            .values()
+            .any(|item| item.name == "Oath Blade")
+    );
     assert!(host.state().maps.contains_key("oath-encounter"));
-    assert!(host
-        .state()
-        .journal
-        .iter()
-        .any(|fact| fact.id == "oath.public"));
+    assert!(
+        host.state()
+            .journal
+            .iter()
+            .any(|fact| fact.id == "oath.public")
+    );
 
     // A storylet re-lights while its requirements hold, so it can be played
     // again. The Item effect must not collide with its first grant: a second

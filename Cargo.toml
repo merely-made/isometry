@@ -12,6 +12,27 @@ members = [
 ]
 exclude = ["crates/isometry-runtime", "mesocosm", "paredros"]
 
+# Keep interactive debug builds responsive; see the watchtower plan's M4 drag
+# receipt. Include the app where generic host/layout code is instantiated.
+# Symbols and debug assertions remain enabled; only these hot packages change.
+[profile.dev.package.isometry-genet]
+opt-level = 2
+
+[profile.dev.package.cambium-rootstock]
+opt-level = 2
+
+[profile.dev.package.genet-livery]
+opt-level = 2
+
+[profile.dev.package.livery]
+opt-level = 2
+
+[profile.dev.package.buckram]
+opt-level = 2
+
+[profile.dev.package.genet-taffy]
+opt-level = 2
+
 [workspace.package]
 edition = "2021"
 license = "MIT OR Apache-2.0"
@@ -80,6 +101,7 @@ thiserror = "1"
 # opaque source refs, measured footprints, and scenes.
 sceno = { git = "https://github.com/merely-made/mere.git", branch = "main" }
 scenomise = { git = "https://github.com/merely-made/mere.git", branch = "main" }
+scenotime = { git = "https://github.com/merely-made/mere.git", branch = "main" }
 graphshell-endpoint = { git = "https://github.com/merely-made/mere.git", branch = "main" }
 # The projection contract. Was `graphshell-protocol`; mere renamed it to
 # `chirograph` on 2026-08-14 because the contract is the family's, not the

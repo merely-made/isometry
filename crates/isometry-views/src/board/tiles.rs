@@ -73,7 +73,17 @@ pub(super) fn ground_tiles(ui: &UiState) -> Vec<UiChild> {
         if doors.contains(&at) {
             class.push_str(" tile-door");
         }
-        out.push(tile_el(ui, at, elev, class));
+        let site_labels = ui.authored_site_labels_at(at);
+        if site_labels
+            .as_ref()
+            .is_some_and(|(_, _, encounter)| *encounter)
+        {
+            class.push_str(" tile-encounter");
+        }
+        let (label, accessible_label) = site_labels
+            .map(|(display, accessible, _)| (Some(display), Some(accessible)))
+            .unwrap_or((None, None));
+        out.push(tile_el(ui, at, elev, class, label, accessible_label));
         if fog == FogLevel::Dim {
             out.push(shroud_el(ui, at, elev)); // remembered terrain, dimmed
         }

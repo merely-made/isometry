@@ -32,7 +32,9 @@
 //! durable checkpoint before a host accepts peers. In a session the view is
 //! Remote — play routes through the host authority (`net` bridges the async
 //! session to this sync loop). Env hooks: `ISOMETRY_PROFILE=1` (frame timers +
-//! net trace), `ISOMETRY_CAPTURE_DIR` (self-capture), `ISOMETRY_SYNTH=1`
+//! net trace), `ISOMETRY_CAPTURE_DIR` (one final self-capture),
+//! `ISOMETRY_CAPTURE_EVERY_FRAME=1` (continuous diagnostic self-capture),
+//! `ISOMETRY_SYNTH=1`
 //! (stress board), `ISOMETRY_NET_SELFTEST=1` (fire one end-turn after warm-up
 //! to verify the session round-trip without OS input automation),
 //! `ISOMETRY_OVERMAP_SELFTEST=1` (overmap capture),
@@ -42,6 +44,7 @@
 //! `ISOMETRY_TURNS_SELFTEST=1` (collapse the Turns section through its trigger).
 
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::rc::Rc;
 use std::time::{Duration, Instant};
 
@@ -50,25 +53,27 @@ use isometry_campaign::{
     ItemInstance, MapScale, WorldEvent, WorldFact,
 };
 use isometry_core::{
-    apply, Facing, FieldValue, MapDocument, Rng, SessionEvent, SheetData, TileCoord, Token,
-    TokenId,
-};
-use isonetry::{
-    apply_game, ActionIntent, ActionResolved, GameEvent, GameSnapshot, HostSession, RequestId,
+    Facing, FieldValue, MapDocument, Rng, SessionEvent, SheetData, TileCoord, Token, TokenId, apply,
 };
 use isometry_system::{
-    monster_sheet, sheet_with_conditions, sheet_with_turn_counters, srd_5e, srd_bestiary,
-    srd_items, srd_spells, ActionError, GeneratorCatalog, GeneratorLimits, System,
+    ActionError, GeneratorCatalog, GeneratorLimits, System, monster_sheet, sheet_with_conditions,
+    sheet_with_turn_counters, srd_5e, srd_bestiary, srd_items, srd_spells,
 };
 use isometry_views::{
-    board_css, board_root, demo_map, synth_map, ActionRow, EditMode, FactionMoveRow,
-    GenerationRequest, InventoryRequest, ItemRow, MonsterRow, NetMode, SheetSchema, SpellRow,
-    StoryletRow, UiChild, UiState, PANEL_W,
+    ActionRow, EditMode, FactionMoveRow, GenerationRequest, InventoryRequest, ItemRow, MonsterRow,
+    NetMode, PANEL_W, SheetSchema, SpellRow, StoryletRow, UiChild, UiState, board_css, board_root,
+    demo_map, synth_map,
+};
+use isonetry::{
+    ActionIntent, ActionResolved, GameEvent, GameSnapshot, HostSession, RequestId, apply_game,
 };
 use muniment::Journal;
 
 mod adjudicate;
+mod atlas_labels;
+mod atlas_motion;
 mod campaign_store;
+mod capture;
 mod catalog;
 mod cleromancy_selection;
 mod dispatch;
@@ -80,8 +85,6 @@ mod host_routing;
 // The design fit and the board's pixel grid, on the same harness.
 #[cfg(test)]
 mod host_zoom;
-#[cfg(test)]
-mod watchtower_tests;
 mod net;
 mod overmap;
 mod selection_rows;
@@ -89,6 +92,8 @@ mod selftest;
 mod sheets;
 mod source_time;
 mod storylets;
+#[cfg(test)]
+mod watchtower_tests;
 
 use campaign_store::{CampaignCheckpoint, CampaignRepository};
 use catalog::{bestiary_of, items_of, schema_of, spells_of};
@@ -179,6 +184,9 @@ struct App {
     /// live" gate for the per-frame leaf-box walk.
     last_overmap_swatch:
         Option<cambium::GraphCanvasSwatch<String, isometry_views::OvermapNodeKind>>,
+    /// Font-outline callouts cached by the stable node id plus its visible
+    /// label. Motion only changes node positions, never this cache.
+    atlas_label_cache: HashMap<String, cambium::GraphCanvasAtlasCallout<String>>,
     /// The exact inputs the storylet rows were last built from: the world and
     /// the host's secret-fact ids. Compared per dispatch while the surface is
     /// open, so the rows re-resolve only when an answer could have changed. Kept
@@ -196,6 +204,7 @@ struct App {
     /// When the beat currently on screen should be dropped. `None` when the
     /// board is still. See [`BEAT_HOLD`].
     beat_until: Option<Instant>,
+    overmap_frame_at: Option<Instant>,
     /// The stylesheet, from app CSS plus whatever the content packs declared.
     /// Handed to the host once, by `init`.
     sheet: String,
@@ -203,10 +212,10 @@ struct App {
     /// rebuild the retained tree to write the same two floats.
     last_viewport: (f32, f32),
     profile: bool,
-    /// `ISOMETRY_CAPTURE_DIR`: overwrite `<dir>/isometry_capture.png`
-    /// with every presented frame, read back from the app's own texture.
-    /// Screen grabs lose to overlapping windows; this cannot.
-    capture_dir: Option<std::path::PathBuf>,
+    /// Native frame receipt policy. By default it writes one final frame after
+    /// armed self-tests finish; `ISOMETRY_CAPTURE_EVERY_FRAME=1` is the
+    /// explicit continuous diagnostic mode.
+    capture: capture::Capture,
     /// What session, if any, this process runs (from `--host`/`--join`),
     /// consumed once by `init`.
     net_intent: Option<NetIntent>,
@@ -482,6 +491,8 @@ impl App {
             source_history_len: None,
             source_history_attached: false,
             last_overmap_swatch: None,
+            atlas_label_cache: HashMap::new(),
+            overmap_frame_at: None,
             last_storylet_inputs: None,
             // A fixed seed keeps a solo session reproducible and makes the headed
             // verification deterministic. A real table seeds this per session.
@@ -491,7 +502,7 @@ impl App {
             sheet,
             last_viewport: (0.0, 0.0),
             profile: std::env::var_os("ISOMETRY_PROFILE").is_some(),
-            capture_dir: std::env::var_os("ISOMETRY_CAPTURE_DIR").map(Into::into),
+            capture: capture::Capture::from_env(),
             net_intent: parse_net_intent(),
             net_is_host: false,
             viewer_arg: parse_viewer(),

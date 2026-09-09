@@ -44,9 +44,11 @@ fn hidden_item_modifiers_stay_private_until_dm_reveal() {
             ItemId::new("reward-03.sword")
         );
         let bytes = postcard::to_allocvec(state).unwrap();
-        assert!(!bytes
-            .windows(CURSE_NAME.len())
-            .any(|w| w == CURSE_NAME.as_bytes()));
+        assert!(
+            !bytes
+                .windows(CURSE_NAME.len())
+                .any(|w| w == CURSE_NAME.as_bytes())
+        );
     }
     sim.client_intent(
         PeerId(10),
@@ -72,9 +74,11 @@ fn hidden_item_modifiers_stay_private_until_dm_reveal() {
             .modifiers
             .is_empty()
     );
-    assert!(sim.host.state().inventories[&TokenId(1)]
-        .items
-        .contains_key(&ItemId::new("reward-03.sword")));
+    assert!(
+        sim.host.state().inventories[&TokenId(1)]
+            .items
+            .contains_key(&ItemId::new("reward-03.sword"))
+    );
 
     sim.host_reveal_item_modifier("reward-03.sword.curse")
         .expect("DM reveals the curse");

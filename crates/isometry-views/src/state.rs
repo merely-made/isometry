@@ -1,3 +1,4 @@
+use std::cell::RefCell;
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 
 use isometry_campaign::{
@@ -5,11 +6,11 @@ use isometry_campaign::{
     Inventory, ItemId,
 };
 use isometry_core::{
-    apply, distance, reachable, roll, template_tiles, Facing, IsoGeometry, Layer, MapDocument,
-    MoveRules, Rng, RollRecord, SessionEvent, TemplateKind, TileCoord,
-    TileKindId, Token, TokenId, TurnList,
+    Facing, IsoGeometry, Layer, MapDocument, MoveRules, Rng, RollRecord, SessionEvent,
+    TemplateKind, TileCoord, TileKindId, Token, TokenId, TurnList, apply, distance, reachable,
+    roll, template_tiles,
 };
-use isonetry::{apply_game, GameEvent, GameSnapshot, ROLL_LOG_CAP};
+use isonetry::{GameEvent, GameSnapshot, ROLL_LOG_CAP, apply_game};
 
 use cambium::{
     CommandState, DisclosureState, SelectionItem, SelectionState, Slider, TabStrip, TextInput,
@@ -54,14 +55,17 @@ fn point_selection(state: &mut SelectionState, index: usize) {
     state.selected = vec![index];
 }
 
-mod interaction;
 mod character;
+mod interaction;
 mod lanes;
-mod play;
+mod overmap_interaction;
+mod overmap_motion;
 mod pixels;
+mod play;
 mod rows;
 mod session;
 mod source_time;
+pub use overmap_motion::{OvermapMotionState, OvermapMotionTick};
 mod surfaces;
 
 use rows::Step;
@@ -299,9 +303,25 @@ pub struct UiState {
     /// remain untouched until an explicit world-authoring feature chooses to
     /// persist coordinates.
     pub overmap_position_overrides: BTreeMap<String, (f32, f32)>,
+    /// Transient label displacement; source geography and area picking stay fixed.
+    pub overmap_motion: OvermapMotionState,
+    /// User-facing return-strength control, normalized over `0..=36`.
+    pub overmap_return_strength: Slider,
+    /// User-facing momentum control, normalized over `0..=1`.
+    pub overmap_return_damping: Slider,
+    /// Accessibility preference for this projection. The native host reads it
+    /// before advancing motion so a return completes without intermediate frames.
+    pub overmap_reduced_motion: bool,
+    /// The last label moved by a real pull. It is presentation selection for
+    /// the return/pin controls, separate from campaign travel selection.
+    pub overmap_motion_selected: Option<String>,
     /// Pointer position at the start of one captured overmap-node gesture. It
     /// distinguishes an ordinary click-to-travel from a drag-to-reposition.
     pub overmap_drag_start: Option<(String, (f32, f32))>,
+    /// Difference between the grabbed visual position and pointer position.
+    /// Preserving it prevents a down in the middle of a displaced label from
+    /// snapping that label's anchor under the cursor.
+    pub overmap_drag_grab_offset: Option<(f32, f32)>,
     /// The node moved past drag slop in the active gesture. The following click
     /// is consumed so releasing a pull never also requests travel.
     pub overmap_dragged_node: Option<String>,
@@ -314,6 +334,7 @@ pub struct UiState {
     overmap_source_snapshot: Option<GameSnapshot>,
     /// Cambium's normalized source-time scrubber state.
     pub overmap_source_slider: Slider,
+    pub(crate) overmap_atlas_terrain_cache: RefCell<Option<crate::overmap::AtlasTerrainCache>>,
     /// The catalog `segmented_control` state behind the mode, pace, and stance
     /// rows. Cambium's selection components own their own state, so these are
     /// the inner states a `lens` projects into.
@@ -489,7 +510,17 @@ impl UiState {
             overmap_hovered_relation: None,
             overmap_hidden_relations: BTreeSet::new(),
             overmap_position_overrides: BTreeMap::new(),
+            overmap_motion: OvermapMotionState::default(),
+            overmap_return_strength: Slider::new(0.5)
+                .with_steps(1.0 / 36.0, 6.0 / 36.0)
+                .with_label("Overmap return strength"),
+            overmap_return_damping: Slider::new(0.78)
+                .with_steps(0.01, 0.1)
+                .with_label("Overmap label momentum"),
+            overmap_reduced_motion: false,
+            overmap_motion_selected: None,
             overmap_drag_start: None,
+            overmap_drag_grab_offset: None,
             overmap_dragged_node: None,
             overmap_source: None,
             overmap_source_cursor: None,
@@ -497,6 +528,7 @@ impl UiState {
             overmap_source_slider: Slider::new(1.0)
                 .with_steps(1.0 / 63.0, 10.0 / 63.0)
                 .with_label("Overmap history"),
+            overmap_atlas_terrain_cache: RefCell::new(None),
             mode_selection: SelectionState::single(0).with_id("mode-row"),
             pace_selection: SelectionState::single(1).with_id("pace-row"),
             stance_selection: SelectionState::single(3).with_id("stance-row"),

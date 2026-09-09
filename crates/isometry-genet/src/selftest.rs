@@ -17,8 +17,8 @@ use super::*;
 mod adjudicate;
 mod session;
 mod surfaces;
-mod world;
 mod watchtower;
+mod world;
 
 // The 2026-09-04 split moved the lanes into the modules above, grouped by
 // what each one drives; this file keeps the shared imports and the four

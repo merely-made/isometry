@@ -13,7 +13,7 @@
 //! the panel ends — that is the host's flex layout to decide, and a test that
 //! hard-coded it would fail for the wrong reason the day it changed.
 
-use cambium_genet_winit_host::{inert_hooks, Harness, Init, KeyPress, NamedKey};
+use cambium_genet_winit_host::{Harness, Init, KeyPress, NamedKey, inert_hooks};
 use genet_probe::Selector;
 use isometry_core::{TileCoord, TokenId};
 use layout_dom_api::{LayoutDom as _, LocalName, Namespace};

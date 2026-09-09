@@ -128,9 +128,9 @@ pub(super) fn context_menu_overlay(ui: &UiState) -> Option<UiChild> {
                         TokenMenuAction::Emote(beat) => ui.emote(id, beat),
                         TokenMenuAction::ClearCondition(name) => {
                             ui.clear_condition_request = Some((id, name.clone()));
-                        }
+                        },
                         TokenMenuAction::Remove => ui.remove_token(id),
-                        TokenMenuAction::Close => {}
+                        TokenMenuAction::Close => {},
                     }
                 }
             }

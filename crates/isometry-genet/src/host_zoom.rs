@@ -11,7 +11,7 @@
 //! frame hook hands [`UiState::set_pixel_grid`] headed, and the only input the
 //! board's scale has.
 
-use cambium_genet_winit_host::{inert_hooks, Harness, HostOptions, Init};
+use cambium_genet_winit_host::{Harness, HostOptions, Init, inert_hooks};
 use genet_probe::Selector;
 use layout_dom_api::{LayoutDom as _, LocalName, Namespace};
 

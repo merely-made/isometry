@@ -16,6 +16,7 @@ isometry-system = { workspace = true }
 cleromancy = { workspace = true }
 tokio = { version = "1", features = ["rt-multi-thread", "sync", "macros", "time"] }
 cambium = { workspace = true }
+sceno = { workspace = true }
 # The shared single-root Cambium desktop host (genet G1). It owns the winit
 # lifecycle, the surface, layout, paint, hit testing, input routing, IME and
 # the AccessKit sync that host.rs / render.rs / input.rs used to assemble — so
@@ -35,6 +36,7 @@ pollster = "0.4"
 # ISOMETRY_CAPTURE_DIR self-capture (headed-verify receipts without
 # screen grabs, which lose to overlapping windows).
 png = "0.17"
+ab_glyph = "0.2"
 
 [dev-dependencies]
 # Host-routing receipts run through `Harness`, the windowless twin of the

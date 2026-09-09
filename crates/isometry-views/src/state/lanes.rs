@@ -52,14 +52,14 @@ impl UiState {
                     // themselves, not "DM"), the same way `roll_dice` does.
                     self.roll_dice(&expr);
                 }
-            }
+            },
             crate::command::Command::Time(ticks) => self.pass_time(ticks),
             crate::command::Command::Help => {
                 self.status = "commands: >spawn >gen >choose >find >roll >time".to_owned();
-            }
+            },
             crate::command::Command::Unknown(verb) => {
                 self.status = format!("unknown command: {verb} (try >help)");
-            }
+            },
         }
     }
 
@@ -129,7 +129,7 @@ impl UiState {
                 // candidate the DM can reroll or commit at once.
                 self.generation_request = Some(GenerationRequest::Generate);
                 self.status = format!("generating {}", self.generator_choices[i].name);
-            }
+            },
             None => self.status = format!("no generator matches '{kind}'"),
         }
     }
@@ -253,7 +253,7 @@ impl UiState {
                     Some(i) if i + 1 < names.len() => Some(names[i + 1].clone()),
                     _ => None,
                 }
-            }
+            },
         };
     }
 }

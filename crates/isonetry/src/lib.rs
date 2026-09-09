@@ -36,7 +36,10 @@ pub use protocol::{
     default_party_cap, ActionIntent, ActionResolved, GameEvent, GameSnapshot, NetMessage, Outbound,
     PeerId, Recipient, RequestId, TransitionResolved, PROTOCOL_VERSION, ROLL_LOG_CAP,
 };
-pub use session::{apply_game, resolve_transition, ClientSession, GameError, HostSession};
+pub use session::{
+    apply_game, resolve_transition, resolve_transition_for_party, ClientSession, GameError,
+    HostSession,
+};
 pub use source_time::{GameSourceHistory, GameSourceTimeError};
 
 #[cfg(feature = "iroh")]

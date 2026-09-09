@@ -19,8 +19,9 @@
 use std::collections::BTreeMap;
 
 use cambium::{
-    clickable, el, graph_canvas_swatch_with_drag_and_relations, lens, segmented_control, slider,
-    text, GraphCanvasNode, GraphCanvasRelation, GraphCanvasSubgraph, GraphCanvasSwatch, Slider,
+    GraphAtlasEvent, GraphCanvasNode, GraphCanvasRelation, GraphCanvasSubgraph, GraphCanvasSwatch,
+    Slider, clickable, el, graph_atlas_swatch, graph_canvas_swatch_with_drag_and_relations, lens,
+    segmented_control, slider, text,
 };
 use isometry_core::{Overmap, OvermapEdge};
 use sceno::{
@@ -66,6 +67,9 @@ fn overmap_relation_id(index: usize, edge: &OvermapEdge) -> String {
     )
 }
 
+mod atlas;
+mod atlas_terrain;
+mod atlas_view;
 mod overlay;
 mod scene;
 mod swatch;
@@ -75,6 +79,11 @@ mod swatch;
 // three build. Re-exported here so `overmap::` still names what it did.
 // `overmap_positions_relaxed` is deliberately not among them: it is
 // `overmap_positions`' own knob, and only `scene.rs` ever calls it.
+pub use atlas::{
+    AtlasBounds, AtlasProjection, AtlasRoute, AtlasSite, AtlasTerrainCell, atlas_projection,
+};
+pub(crate) use atlas_view::AtlasTerrainCache;
+pub use atlas_view::overmap_atlas;
 pub use overlay::overmap_overlay;
 pub use scene::{overmap_positions, overmap_score};
-pub use swatch::overmap_swatch;
+pub use swatch::{overmap_home_positions, overmap_swatch};

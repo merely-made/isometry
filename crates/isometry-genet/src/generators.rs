@@ -91,11 +91,11 @@ impl App {
                             );
                         });
                     }
-                }
+                },
                 Err(error) => {
                     let runner = &mut *ctx.runner;
                     runner.update(|ui| ui.status = format!("generator selection failed: {error}"));
-                }
+                },
             }
             return;
         }
@@ -149,16 +149,31 @@ impl App {
                         Ok(record) => {
                             ui.generator_preview = Some(record);
                             ui.status = "generated preview".to_owned();
-                        }
+                        },
                         Err(error) => ui.status = format!("generation failed: {error}"),
                     });
                 }
-            }
+            },
             GenerationRequest::Commit => {
                 let Some(record) = preview else {
                     return;
                 };
                 if matches!(record.proposal, GenValue::Campaign { .. }) {
+                    // Map-only packs need no regional identity. A world-backed
+                    // campaign starts the explicitly selected session party,
+                    // matching the overmap's viewer identity (including dm).
+                    let party = match &record.proposal {
+                        GenValue::Campaign { campaign } if !campaign.world.places.is_empty() => {
+                            Some(
+                                ctx.runner
+                                    .state()
+                                    .viewer
+                                    .clone()
+                                    .unwrap_or_else(|| "dm".to_owned()),
+                            )
+                        },
+                        _ => None,
+                    };
                     let item_owner = local_snapshot.as_ref().and_then(|snapshot| {
                         snapshot
                             .turns
@@ -167,7 +182,7 @@ impl App {
                     });
                     if remote {
                         if let Some(net) = self.net.as_mut() {
-                            let request = net.commit_campaign(record, item_owner);
+                            let request = net.commit_campaign(record, item_owner, party);
                             {
                                 let runner = &mut *ctx.runner;
                                 runner.update(|ui| match request {
@@ -176,10 +191,10 @@ impl App {
                                             "committing campaign draft (request {})",
                                             request
                                         )
-                                    }
+                                    },
                                     None => {
                                         ui.status = "campaign authority actor stopped".to_owned()
-                                    }
+                                    },
                                 });
                             }
                         }
@@ -189,7 +204,13 @@ impl App {
                             self.campaign.clone(),
                             self.history.clone(),
                         );
-                        match host.commit_campaign(record.clone(), item_owner) {
+                        let result = match party {
+                            Some(party) => {
+                                host.commit_campaign_for_party(record.clone(), item_owner, &party)
+                            },
+                            None => host.commit_campaign(record.clone(), item_owner),
+                        };
+                        match result {
                             Ok(_) => {
                                 self.campaign = host.campaign().clone();
                                 self.history = host.history().clone();
@@ -202,14 +223,14 @@ impl App {
                                         ui.status = "committed campaign draft".to_owned();
                                     });
                                 }
-                            }
+                            },
                             Err(error) => {
                                 let runner = &mut *ctx.runner;
                                 runner.update(|ui| {
                                     ui.generator_preview = Some(record);
                                     ui.status = format!("campaign commit failed: {error}");
                                 });
-                            }
+                            },
                         }
                     }
                     return;
@@ -222,7 +243,7 @@ impl App {
                             let id = campaign_map.id.clone();
                             events.push(GameEvent::MapStored(campaign_map));
                             events.push(GameEvent::MapActivated { id });
-                        }
+                        },
                         Err(error) => {
                             {
                                 let runner = &mut *ctx.runner;
@@ -232,7 +253,7 @@ impl App {
                                 });
                             }
                             return;
-                        }
+                        },
                     },
                     GenValue::WorldFact { fact } => events.push(GameEvent::Fact(fact.clone())),
                     GenValue::Item { item } => {
@@ -281,7 +302,7 @@ impl App {
                             token: target,
                             inventory,
                         });
-                    }
+                    },
                     GenValue::Npc { npc } => {
                         // Lower a generated NPC into a *statted* creature. The
                         // proposal is thin (key, name, tags); its key doubles as
@@ -305,7 +326,7 @@ impl App {
                                     .map(System::default_sheet)
                                     .unwrap_or_else(|| SheetData::new("5e-srd"));
                                 ("knight".to_owned(), sheet)
-                            }
+                            },
                         };
                         // The generated name over the base creature's.
                         sheet.set_text("name", npc.name.clone());
@@ -319,8 +340,8 @@ impl App {
                         events.push(GameEvent::SheetSet { token: id, sheet });
                         // A fightable NPC joins initiative.
                         events.push(GameEvent::TurnAdd(id));
-                    }
-                    _ => {}
+                    },
+                    _ => {},
                 }
                 if remote {
                     {
@@ -344,17 +365,17 @@ impl App {
                                     ui.status = "committed generated result".to_owned();
                                 });
                             }
-                        }
+                        },
                         Err(error) => {
                             let runner = &mut *ctx.runner;
                             runner.update(|ui| {
                                 ui.generator_preview = Some(record);
                                 ui.status = format!("generation commit failed: {error:?}");
                             });
-                        }
+                        },
                     }
                 }
-            }
+            },
         }
     }
 }

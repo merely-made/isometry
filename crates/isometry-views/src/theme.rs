@@ -332,6 +332,10 @@ pub fn board_css() -> String {
 /* A transition point: the door to another map. Walk onto it to cross. */
 .tile-door { background-color: #9a7bd8; }
 .tile-door.alt { background-color: #8f70cc; }
+/* Authored encounter sites remain visible landmarks on explored ground. */
+.tile.tile-encounter { background-color: #b38b49; }
+.tile.tile-encounter.alt { background-color: #a17b3e; }
+.tile.tile-door.tile-encounter { background-color: #9a7bd8; }
 
 /* Fog of war: a dim shroud over explored-but-unseen tiles. Unexplored
    tiles are simply not drawn, so the dark pane behind the board shows. */
@@ -515,6 +519,14 @@ const COMPENDIUM_CSS: &str = r#"
 .source-time .slider-track { height: 8px; border-radius: 5px; background-color: #343c52; cursor: ew-resize; }
 .source-time .slider-thumb { top: -3px; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%; background-color: #86b7ff; box-shadow: 0 0 0 2px #151923; }
 .overmap-controls { display: flex; gap: 6px; margin-top: 8px; }
+.overmap-controls .selection-bar { display: flex; gap: 3px; flex-wrap: wrap; }
+.overmap-controls .selection-item { padding: 3px 7px; background-color: #262b38; border: 1px solid #343c52; border-radius: 3px; font-size: 12px; }
+.overmap-controls .selection-item.selected { background-color: #3d4666; color: #ffffff; }
+.overmap-motion { margin: 8px 0; padding: 8px 0; border-top: 1px solid #343c52; }
+.overmap-motion label { display: block; font-size: 12px; color: #aeb8cf; }
+.overmap-motion .slider-track { height: 6px; margin: 7px 8px 12px; border-radius: 5px; background-color: #343c52; cursor: ew-resize; }
+.overmap-motion .slider-thumb { top: -4px; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%; background-color: #86b7ff; }
+.overmap-motion [aria-disabled="true"] { opacity: 0.45; }
 .generator-proposal { color: #e8ebf2; font-size: 14px; font-weight: bold; margin: 10px 0; }
 .governance-row { padding: 8px; border-top: 1px solid #2c3347; cursor: pointer; }
 .governance-row-selected { background-color: #293243; box-shadow: inset 3px 0 0 #9fd48a; }

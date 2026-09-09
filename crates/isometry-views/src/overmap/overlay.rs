@@ -61,37 +61,57 @@ pub fn overmap_overlay(ui: &UiState) -> Option<UiChild> {
             // The swatch draws its own named nodes (`with_node_labels`), so the
             // place names ride the same projection as the painted dots by
             // construction rather than by a second layer agreeing with the first.
-            body.push(Box::new(
-                el(
-                    "div",
-                    graph_canvas_swatch_with_drag_and_relations(
-                        &swatch,
-                        // A click asks the host to travel there; the drag path
-                        // consumes its own release-click so a pull stays local
-                        // curation rather than becoming a trip request.
-                        |ui: &mut UiState, id: String| {
+            let canvas: UiChild = if swatch.atlas.is_some() {
+                Box::new(graph_atlas_swatch(
+                    &swatch,
+                    |ui: &mut UiState, event| match event {
+                        GraphAtlasEvent::Hover(id) => ui.hover_overmap(id),
+                        GraphAtlasEvent::Focus(Some(id)) => ui.overmap_motion_selected = Some(id),
+                        GraphAtlasEvent::Focus(None) => {},
+                        GraphAtlasEvent::Drag(drag) => {
+                            let is_up = matches!(drag.phase, cambium::PointerPhase::Up);
+                            let dragged = ui.drag_overmap_node(drag.clone());
+                            if is_up && !dragged && !ui.overmap_is_historical() {
+                                ui.activate_overmap_node(drag.id);
+                            }
+                        },
+                        GraphAtlasEvent::Activate(id) => {
                             if !ui.overmap_is_historical() {
                                 ui.activate_overmap_node(id);
                             }
                         },
-                        // Enter/leave lifts the hovered node on the painted leaf.
-                        |ui: &mut UiState, id: Option<String>| ui.hover_overmap(id),
-                        // Pulling a site changes only this view's local
-                        // placement override. Campaign geography remains the
-                        // source of truth until a separate authoring command.
-                        |ui: &mut UiState, event| ui.drag_overmap_node(event),
-                        // Relation cells keep their own stable local identity,
-                        // even where two routes share the same endpoints.
-                        |ui: &mut UiState, id: String| ui.select_overmap_relation(id),
-                        |ui: &mut UiState, id: Option<String>| ui.hover_overmap_relation(id),
-                        // Never called: the swatch renders no Expand chip
-                        // (`with_expand(false)`).
-                        |_ui: &mut UiState| {},
-                    ),
-                )
-                .attr("class", "overmap-graph"),
-            ));
-        }
+                    },
+                ))
+            } else {
+                Box::new(graph_canvas_swatch_with_drag_and_relations(
+                    &swatch,
+                    // A click asks the host to travel there; the drag path
+                    // consumes its own release-click so a pull stays local
+                    // curation rather than becoming a trip request.
+                    |ui: &mut UiState, id: String| {
+                        if !ui.overmap_is_historical() {
+                            ui.activate_overmap_node(id);
+                        }
+                    },
+                    // Enter/leave lifts the hovered node on the painted leaf.
+                    |ui: &mut UiState, id: Option<String>| ui.hover_overmap(id),
+                    // Pulling a site changes only this view's local
+                    // placement override. Campaign geography remains the
+                    // source of truth until a separate authoring command.
+                    |ui: &mut UiState, event| {
+                        ui.drag_overmap_node(event);
+                    },
+                    // Relation cells keep their own stable local identity,
+                    // even where two routes share the same endpoints.
+                    |ui: &mut UiState, id: String| ui.select_overmap_relation(id),
+                    |ui: &mut UiState, id: Option<String>| ui.hover_overmap_relation(id),
+                    // Never called: the swatch renders no Expand chip
+                    // (`with_expand(false)`).
+                    |_ui: &mut UiState| {},
+                ))
+            };
+            body.push(Box::new(el("div", canvas).attr("class", "overmap-graph")));
+        },
         None => {
             body.push(Box::new(
                 el(
@@ -106,7 +126,67 @@ pub fn overmap_overlay(ui: &UiState) -> Option<UiChild> {
                 actions,
                 body,
             ));
-        }
+        },
+    }
+
+    if overmap_atlas(ui).is_some() {
+        let selected_motion = ui.overmap_motion_selected.clone();
+        let selected_is_pinned = selected_motion
+            .as_ref()
+            .is_some_and(|id| ui.overmap_motion.mode(id) == scenotime::ReturnMotionMode::Pinned);
+        body.push(Box::new(
+            el(
+                "section",
+                (
+                    el("div", text("Label return")).attr("class", "source-time-label"),
+                    el("label", text("Strength")),
+                    lens(
+                        |state: &mut Slider| slider(state),
+                        |ui: &mut UiState| &mut ui.overmap_return_strength,
+                    ),
+                    el("label", text("Momentum")),
+                    lens(
+                        |state: &mut Slider| slider(state),
+                        |ui: &mut UiState| &mut ui.overmap_return_damping,
+                    ),
+                    clickable(
+                        el(
+                            "button",
+                            text(if ui.overmap_reduced_motion {
+                                "Reduced motion: on"
+                            } else {
+                                "Reduced motion: off"
+                            }),
+                        )
+                        .attr("class", "btn btn-mini")
+                        .attr("type", "button"),
+                        |ui: &mut UiState, _| ui.toggle_overmap_reduced_motion(),
+                    ),
+                    clickable(
+                        el(
+                            "button",
+                            text(if selected_is_pinned {
+                                "Release label"
+                            } else {
+                                "Pin label"
+                            }),
+                        )
+                        .attr("class", "btn btn-mini")
+                        .attr("type", "button")
+                        .attr(
+                            "aria-disabled",
+                            if selected_motion.is_some() {
+                                "false"
+                            } else {
+                                "true"
+                            },
+                        ),
+                        |ui: &mut UiState, _| ui.toggle_overmap_motion_pin(),
+                    ),
+                ),
+            )
+            .attr("class", "overmap-motion"),
+        ));
     }
 
     // The routes, listed with weights: painted edges show connectivity, but the

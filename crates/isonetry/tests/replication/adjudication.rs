@@ -29,12 +29,24 @@ fn a_resolved_attack_replicates_and_lands_on_every_peer() {
     assert_eq!(hp(sim.host.state()), Some(2), "7 hp less 5 damage");
     assert_eq!(hp(sim.clients[&PeerId(10)].state().unwrap()), Some(2));
     // The attacker is untouched: a resolution changes only what it addresses.
-    assert_eq!(sim.host.state().map.sheet(TokenId(1)).unwrap().int("hp_current"), Some(12));
+    assert_eq!(
+        sim.host
+            .state()
+            .map
+            .sheet(TokenId(1))
+            .unwrap()
+            .int("hp_current"),
+        Some(12)
+    );
     // Both rolls reached the shared log, and the beats reached the client so it
     // can play the exchange rather than merely read about it.
     assert_eq!(sim.host.state().roll_log.len(), 2);
     let beats = &sim.clients[&PeerId(10)].state().unwrap().last_beats;
-    assert_eq!(beats.len(), 2, "the client must see the exchange to play it");
+    assert_eq!(
+        beats.len(),
+        2,
+        "the client must see the exchange to play it"
+    );
     assert_eq!(beats[1], Beat::new(TokenId(2), "recoil"));
     assert_converged(&sim);
 }
@@ -95,7 +107,11 @@ fn allegiance_replicates_and_a_convinced_creature_joins_your_side() {
     sim.host_event(won);
 
     let owner = |s: &GameSnapshot| s.map.token(TokenId(2)).unwrap().owner.clone();
-    assert_eq!(owner(sim.host.state()).as_deref(), Some("A"), "the goblin joined A");
+    assert_eq!(
+        owner(sim.host.state()).as_deref(),
+        Some("A"),
+        "the goblin joined A"
+    );
     assert_eq!(
         owner(sim.clients[&PeerId(10)].state().unwrap()).as_deref(),
         Some("A"),
@@ -103,7 +119,11 @@ fn allegiance_replicates_and_a_convinced_creature_joins_your_side() {
     );
     // It did no damage: convince changes sides, not hit points.
     assert_eq!(
-        sim.host.state().map.sheet(TokenId(2)).and_then(|s| s.int("hp_current")),
+        sim.host
+            .state()
+            .map
+            .sheet(TokenId(2))
+            .and_then(|s| s.int("hp_current")),
         None,
         "no sheet was bound, and none was needed to change owner"
     );
@@ -151,7 +171,10 @@ fn a_condition_and_its_numbers_replicate_and_standing_up_restores_them() {
         mobility: None,
     });
     assert_eq!(check(sim.host.state()), (false, (5, 6)));
-    assert_eq!(check(sim.clients[&PeerId(10)].state().unwrap()), (false, (5, 6)));
+    assert_eq!(
+        check(sim.clients[&PeerId(10)].state().unwrap()),
+        (false, (5, 6))
+    );
     assert_converged(&sim);
 
     // A client may not pronounce a condition: that is a rules ruling.
@@ -237,7 +260,12 @@ fn a_client_cannot_pronounce_its_own_verdict() {
     assert_eq!(sim.host.seq(), seq, "a forged verdict entered the log");
     assert_eq!(sim.host.log_hash(), hash);
     assert_eq!(
-        sim.host.state().map.sheet(TokenId(2)).unwrap().int("hp_current"),
+        sim.host
+            .state()
+            .map
+            .sheet(TokenId(2))
+            .unwrap()
+            .int("hp_current"),
         Some(7),
         "the goblin took damage from an unadjudicated claim"
     );

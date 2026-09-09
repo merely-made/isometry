@@ -9,16 +9,16 @@
 use std::collections::HashSet;
 
 use cambium::{
-    clickable, command_menu, el, lens, map_action, on_hover, on_pointer, on_wheel, overlay_surface,
     AnyView, CommandEvent, CommandItem, CommandState, ElementView, GenetCtx, GenetElement,
     HoverEvent, HoverPhase, OverlayDismiss, OverlayRole, OverlaySurface, Placement, PointerButton,
-    PointerEvent, PointerPhase, WheelEvent,
+    PointerEvent, PointerPhase, WheelEvent, clickable, command_menu, el, lens, map_action,
+    on_hover, on_pointer, on_wheel, overlay_surface,
 };
-use isometry_core::{depth_key, path_to, MapDocument, TileCoord, TileKindId, Token};
+use isometry_core::{MapDocument, TileCoord, TileKindId, Token, depth_key, path_to};
 
 use crate::panel::side_panel;
 use crate::projection::tile_board_cells;
-use crate::state::{EditMode, FogLevel, UiState, PANEL_W};
+use crate::state::{EditMode, FogLevel, PANEL_W, UiState};
 
 pub type UiChild = Box<dyn AnyView<UiState, (), GenetCtx, GenetElement>>;
 
@@ -70,27 +70,38 @@ where
         move |ui: &mut UiState, event: HoverEvent| match event.phase {
             HoverPhase::Enter => ui.hover_tile_enter(Some(at)),
             HoverPhase::Leave => ui.hover_tile_enter(None),
-            HoverPhase::Move => {}
+            HoverPhase::Move => {},
         },
     ))
 }
 
 /// One diamond at tile `at`, drawn at `elevation`, with `class` deciding
 /// its paint. Clicking selects the tile.
-fn tile_el(ui: &UiState, at: TileCoord, elevation: i32, class: String) -> UiChild {
+fn tile_el(
+    ui: &UiState,
+    at: TileCoord,
+    elevation: i32,
+    class: String,
+    label: Option<String>,
+    accessible_label: Option<String>,
+) -> UiChild {
     let geo = &ui.geo;
     let (cx, cy) = geo.tile_to_screen(at, elevation);
     let (x, y) = (cx - geo.tile_w / 2.0, cy - geo.tile_h / 2.0);
     let z = depth_key(at, elevation);
+    let mut tile = el("div", ())
+        .attr("class", class)
+        .attr("style", placed(ui, (x, y), TILE_BOX, z));
+    if let Some(label) = label {
+        tile = tile.attr("title", label);
+    }
+    if let Some(label) = accessible_label {
+        tile = tile.attr("aria-label", label);
+    }
     standing_on(
-        clickable(
-            el("div", ())
-                .attr("class", class)
-                .attr("style", placed(ui, (x, y), TILE_BOX, z)),
-            move |ui: &mut UiState, _| {
-                ui.click_tile(at);
-            },
-        ),
+        clickable(tile, move |ui: &mut UiState, _| {
+            ui.click_tile(at);
+        }),
         at,
     )
 }
@@ -251,7 +262,7 @@ fn board_pane(children: Vec<UiChild>) -> UiChild {
                     );
                 }
                 ui.board_press(event.local);
-            }
+            },
             (PointerPhase::Move, _) => ui.board_drag(event.local),
             (PointerPhase::Up, _) => ui.board_release(event.local),
         }

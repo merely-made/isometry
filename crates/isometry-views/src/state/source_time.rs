@@ -46,6 +46,14 @@ impl UiState {
             .unwrap_or(&self.world)
     }
 
+    /// Terrain follows the same source-time cursor as places and routes.
+    pub fn overmap_source_maps(&self) -> &BTreeMap<String, CampaignMap> {
+        self.overmap_source_snapshot
+            .as_ref()
+            .map(|snapshot| &snapshot.maps)
+            .unwrap_or(&self.campaign_maps)
+    }
+
     /// A compact source-time label for the Swatch control.
     pub fn overmap_source_time_label(&self) -> Option<String> {
         let source = self.overmap_source.as_ref()?;
@@ -77,7 +85,18 @@ impl UiState {
         let index =
             (self.overmap_source_slider.value.clamp(0.0, 1.0) * last as f32).round() as usize;
         let cursor = ticks[index.min(last)];
-        self.overmap_source_cursor = (cursor < source.live_cursor()).then_some(cursor);
+        let selected = (cursor < source.live_cursor()).then_some(cursor);
+        if selected == self.overmap_source_cursor {
+            // Preserve the slider's snapped position without replaying an
+            // unchanged historical snapshot on hover and drag dispatches.
+            self.overmap_source_slider.value = if last == 0 {
+                1.0
+            } else {
+                index.min(last) as f32 / last as f32
+            };
+            return;
+        }
+        self.overmap_source_cursor = selected;
         self.refresh_overmap_source_snapshot();
     }
 
@@ -98,7 +117,7 @@ impl UiState {
                     self.status = format!("history preview unavailable: {error:?}");
                     self.overmap_source_cursor = None;
                     None
-                }
+                },
             }
         };
 
@@ -146,6 +165,12 @@ mod tests {
             tags: Vec::new(),
         }));
         let mut ui = UiState::new(origin.map.clone());
+        ui.campaign_maps.insert("live-only".into(), CampaignMap {
+            id: "live-only".into(),
+            scale: isometry_campaign::MapScale::Region,
+            document: MapDocument::new("live terrain", 3, 4),
+            spawn_zones: vec![], transitions: vec![], encounter_anchors: vec![],
+        });
         let live_world = CampaignWorld::default();
         ui.world = live_world.clone();
         ui.set_overmap_source_history(Some(isonetry::GameSourceHistory::new(
@@ -158,6 +183,8 @@ mod tests {
         assert!(ui.overmap_is_historical());
         assert_eq!(ui.overmap_source_cursor, Some(0));
         assert_eq!(ui.world, live_world, "live truth stayed untouched");
+        assert!(ui.overmap_source_maps().is_empty(), "historical world uses historical terrain");
+        assert!(ui.campaign_maps.contains_key("live-only"), "live terrain remains untouched");
 
         history.append(GameEvent::Fact(WorldFact {
             id: "return".to_owned(),
@@ -175,5 +202,6 @@ mod tests {
         ui.return_overmap_to_live();
         assert!(!ui.overmap_is_historical());
         assert_eq!(ui.overmap_source_cursor, None);
+        assert!(ui.overmap_source_maps().contains_key("live-only"));
     }
 }

@@ -388,7 +388,8 @@ impl App {
     fn sync_overmap_leaf(&mut self, ctx: &mut Ctx<'_>) {
         if ctx.runner.state().overmap_open {
             match isometry_views::overmap_swatch(ctx.runner.state()) {
-                Some(swatch) => {
+                Some(mut swatch) => {
+                    self.sync_atlas_labels(&mut swatch);
                     if self.last_overmap_swatch.as_ref() != Some(&swatch) {
                         ctx.leaves.insert(
                             isometry_views::OVERMAP_LEAF_KEY,
@@ -406,6 +407,38 @@ impl App {
             ctx.leaves.remove(&isometry_views::OVERMAP_LEAF_KEY);
             self.last_overmap_swatch = None;
         }
+    }
+
+    fn sync_atlas_labels(
+        &mut self,
+        swatch: &mut cambium::GraphCanvasSwatch<String, isometry_views::OvermapNodeKind>,
+    ) {
+        let Some(atlas) = swatch.atlas.as_mut() else {
+            return;
+        };
+        let color = sprigging::ColorF::new(0.92, 0.94, 0.98, 1.0);
+        self.atlas_label_cache.retain(|key, _| {
+            swatch
+                .graph
+                .nodes
+                .iter()
+                .any(|node| key == &format!("{}\u{1f}{}", node.id, node.label))
+        });
+        let mut callouts = Vec::new();
+        for node in &swatch.graph.nodes {
+            let cache_key = format!("{}\u{1f}{}", node.id, node.label);
+            let callout = self.atlas_label_cache.entry(cache_key).or_insert_with(|| {
+                atlas_labels::atlas_label_from_default_host_font(
+                    node.id.clone(),
+                    &node.label,
+                    11.0,
+                    sceno::Vec2::new(7.0, -6.0),
+                    color,
+                )
+            });
+            callouts.push(callout.clone());
+        }
+        atlas.callouts = callouts;
     }
 
     /// Hold a staged beat for [`BEAT_HOLD`], then drop its classes. Returns
@@ -433,41 +466,6 @@ impl App {
         }
     }
 
-    /// Arm a readback of the next presented frame for `ISOMETRY_CAPTURE_DIR`.
-    ///
-    /// The host runs it inside the frame, while the rasterized view is still
-    /// alive, so the receipt is the frame that was actually presented — no
-    /// compositor, no foreground window, and no chance of photographing
-    /// something else.
-    fn arm_capture(&self, ctx: &mut Ctx<'_>) {
-        let Some(dir) = self.capture_dir.clone() else {
-            return;
-        };
-        *ctx.capture = Some(Box::new(move |surface, view, width, height| {
-            let Some(frame) = cambium_genet_winit_host::read_frame(surface, view, width, height)
-            else {
-                return;
-            };
-            let path = dir.join("isometry_capture.png");
-            let pending = dir.join("isometry_capture.png.tmp");
-            if let Err(e) = std::fs::create_dir_all(&dir).and_then(|_| {
-                let file = std::fs::File::create(&pending)?;
-                let mut enc = png::Encoder::new(std::io::BufWriter::new(file), width, height);
-                enc.set_color(png::ColorType::Rgba);
-                enc.set_depth(png::BitDepth::Eight);
-                let mut writer = enc.write_header().map_err(std::io::Error::other)?;
-                writer
-                    .write_image_data(&frame.rgba)
-                    .map_err(std::io::Error::other)?;
-                writer.finish().map_err(std::io::Error::other)?;
-                std::fs::rename(&pending, &path)?;
-                Ok(())
-            }) {
-                eprintln!("[isometry] capture failed: {e}");
-            }
-        }));
-    }
-
     /// Whether an armed self-test still needs frames to reach its deadline.
     ///
     /// A still board parks on `Wait`, which blocks until input arrives, so an
@@ -483,7 +481,7 @@ impl App {
             || (self.compendium_selftest && !self.compendium_fired)
             || (self.whisper_selftest && !self.whisper_fired)
             || (self.turns_selftest && !self.turns_fired)
-            || (self.net_selftest && !self.selftest_fired)
+            || (self.net.is_some() && self.net_selftest && !self.selftest_fired)
             || (self.combat_selftest && !(self.combat_swings == 0 && self.combat_emoted))
     }
 
@@ -518,10 +516,12 @@ pub(crate) fn hooks(app: &Rc<RefCell<App>>) -> HostHooks<UiState, Logic, UiChild
             // geometry, and the two must agree on the same frame.
             app.sync_board_scale(ctx);
             app.sync_viewport(ctx);
+            let atlas_moving = app.drive_atlas_motion(ctx);
             app.sync_overmap_leaf(ctx);
-            app.arm_capture(ctx);
+            let selftests_pending = app.selftests_pending();
+            app.capture.arm(ctx, !selftests_pending);
             let beating = app.drive_beats(ctx);
-            beating || app.selftests_pending()
+            beating || selftests_pending || atlas_moving
         }),
         after_dispatch: Box::new(move |ctx: &mut Ctx<'_>| {
             dispatch_app.borrow_mut().after_dispatch(ctx);

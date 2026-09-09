@@ -16,6 +16,8 @@ muniment = { workspace = true }
 cambium = { workspace = true }
 sceno = { workspace = true }
 scenomise = { workspace = true }
+sprigging = { workspace = true }
+scenotime = { workspace = true }
 
 [dev-dependencies]
 serde_json = { workspace = true }

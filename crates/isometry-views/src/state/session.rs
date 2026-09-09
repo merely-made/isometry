@@ -79,7 +79,7 @@ impl UiState {
                 // High roll first; ties keep input order.
                 rolled.sort_by(|a, b| b.0.cmp(&a.0).then(a.1.cmp(&b.1)));
                 rolled.into_iter().map(|(_, _, id)| id).collect()
-            }
+            },
             InitiativeMode::SideBased => {
                 // Group tokens by owner, preserving order within a side.
                 let mut sides: Vec<(String, Vec<TokenId>)> = Vec::new();
@@ -110,7 +110,7 @@ impl UiState {
                     .collect();
                 rolled.sort_by(|a, b| b.0.cmp(&a.0).then(a.1.cmp(&b.1)));
                 rolled.into_iter().flat_map(|(_, _, toks)| toks).collect()
-            }
+            },
         };
         self.status = format!("rolled initiative ({})", self.initiative_mode.label());
         if self.net_mode == NetMode::Remote {
@@ -251,7 +251,7 @@ impl UiState {
                     Some(i) => owners.get(i + 1).cloned(),
                     None => None,
                 }
-            }
+            },
         };
         self.viewer = next;
         self.explored.clear();

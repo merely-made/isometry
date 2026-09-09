@@ -327,10 +327,12 @@ fn selection_rows_mirror_mode_and_world() {
     ui.sync_selection_rows();
     assert_eq!(
         ui.mode_selection.selected,
-        vec![EditMode::ALL
-            .iter()
-            .position(|m| *m == EditMode::Measure)
-            .unwrap()],
+        vec![
+            EditMode::ALL
+                .iter()
+                .position(|m| *m == EditMode::Measure)
+                .unwrap()
+        ],
         "the mode row must follow ui.mode"
     );
 
@@ -376,10 +378,7 @@ fn compendium_tab_strip_mirrors_the_namespace() {
     ui.compendium_scroll = 40.0;
     ui.set_compendium_tab(CompendiumTab::Spells);
     assert!(ui.compendium_selected.is_none(), "the open page follows");
-    assert!(
-        ui.compendium_search.text().is_empty(),
-        "the filter follows"
-    );
+    assert!(ui.compendium_search.text().is_empty(), "the filter follows");
     assert_eq!(ui.compendium_scroll, 0.0, "the scroll follows");
 }
 

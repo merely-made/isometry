@@ -122,7 +122,7 @@ impl App {
                     encounter,
                     forage,
                 }
-            }
+            },
         };
 
         self.emit_host_event(ctx, event);

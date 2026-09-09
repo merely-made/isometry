@@ -11,8 +11,8 @@
 use super::*;
 use crate::demo::demo_map;
 
-mod interaction;
 mod character;
+mod interaction;
 mod lanes;
 mod play;
 mod session;

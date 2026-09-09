@@ -219,6 +219,67 @@ impl UiState {
             .unwrap_or_default()
     }
 
+    /// Resolve all board metadata for one tile in one campaign-map lookup.
+    /// The tuple is `(display label, stable accessible label, has encounter)`.
+    pub(crate) fn authored_site_labels_at(&self, at: TileCoord) -> Option<(String, String, bool)> {
+        let active = self.active_map.as_ref()?;
+        let map = self.campaign_maps.get(active)?;
+        let transition = map
+            .transitions
+            .iter()
+            .find(|transition| (transition.at.col as i32, transition.at.row as i32) == at);
+        let anchor = map
+            .encounter_anchors
+            .iter()
+            .find(|anchor| (anchor.at.col as i32, anchor.at.row as i32) == at);
+        if transition.is_none() && anchor.is_none() {
+            return None;
+        }
+        let door = transition.map(|transition| {
+            let destination = self
+                .campaign_maps
+                .get(&transition.target_map)
+                .map(|map| map.document.name.clone())
+                .filter(|name| !name.is_empty())
+                .unwrap_or_else(|| transition.target_map.clone());
+            format!("Travel to {destination}")
+        });
+        let encounter = anchor.map(|anchor| {
+            let mut name = anchor
+                .id
+                .split(['-', '_'])
+                .filter(|word| !word.is_empty())
+                .collect::<Vec<_>>()
+                .join(" ");
+            if let Some(first) = name.chars().next() {
+                name = first.to_uppercase().collect::<String>() + &name[first.len_utf8()..];
+            }
+            let tags = if anchor.tags.is_empty() {
+                String::new()
+            } else {
+                format!(" ({})", anchor.tags.join(", "))
+            };
+            (
+                format!("Encounter site: {name}{tags}"),
+                format!("Encounter site: {}{tags}", anchor.id),
+            )
+        });
+        let display = [
+            door.clone(),
+            encounter.as_ref().map(|(display, _)| display.clone()),
+        ]
+        .into_iter()
+        .flatten()
+        .collect::<Vec<_>>()
+        .join("; ");
+        let accessible = [door, encounter.map(|(_, accessible)| accessible)]
+            .into_iter()
+            .flatten()
+            .collect::<Vec<_>>()
+            .join("; ");
+        Some((display, accessible, anchor.is_some()))
+    }
+
     /// Walk `token` through the door it stands on (solo / hot-seat path).
     ///
     /// Deliberately *not* a reimplementation: it rules the crossing with the
@@ -255,8 +316,15 @@ impl UiState {
         // reserved host identity: there is no connection to attribute it to.
         self.travel_requests += 1;
         let request = isonetry::RequestId::host(self.travel_requests);
-        let ruled = isonetry::resolve_transition(&snap, token, request)
-            .and_then(|res| apply_game(&mut snap, &GameEvent::TransitionResolved(res)));
+        let party = self.viewer.as_deref().unwrap_or("dm");
+        let ruled = isonetry::resolve_transition_for_party(&snap, token, request, party).and_then(
+            |events| {
+                for event in events {
+                    apply_game(&mut snap, &event)?;
+                }
+                Ok(())
+            },
+        );
         match ruled {
             Ok(()) => {
                 let switched = snap.active_map != self.active_map;
@@ -265,6 +333,7 @@ impl UiState {
                 self.inventories = snap.inventories;
                 self.campaign_maps = snap.maps;
                 self.clocks = snap.clocks;
+                self.world = snap.world;
                 self.party_cap = snap.party_cap;
                 self.active_map = snap.active_map;
                 if switched {
@@ -280,7 +349,7 @@ impl UiState {
                     self.status = "through the door".to_owned();
                 }
                 self.recompute_fog();
-            }
+            },
             Err(error) => self.status = format!("cannot travel: {error:?}"),
         }
     }

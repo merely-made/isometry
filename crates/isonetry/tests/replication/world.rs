@@ -44,7 +44,11 @@ fn a_faction_turn_commits_and_every_peer_lives_in_the_changed_world() {
     };
     assert_eq!(meanwhile(sim.host.state()), 1);
     assert_eq!(meanwhile(sim.clients[&PeerId(10)].state().unwrap()), 1);
-    assert_eq!(sim.host.seq() as usize, logged, "every move event entered the log");
+    assert_eq!(
+        sim.host.seq() as usize,
+        logged,
+        "every move event entered the log"
+    );
     assert_converged(&sim);
 }
 
@@ -53,15 +57,33 @@ fn discovery_replicates_as_the_party_travels() {
     let mut snap = snapshot();
     snap.world.places.insert(
         "village".into(),
-        WorldPlace { id: "village".into(), name: "Village".into(), tags: vec![], map: None, position: None },
+        WorldPlace {
+            id: "village".into(),
+            name: "Village".into(),
+            tags: vec![],
+            map: None,
+            position: None,
+        },
     );
     snap.world.places.insert(
         "forest".into(),
-        WorldPlace { id: "forest".into(), name: "Forest".into(), tags: vec![], map: None, position: None },
+        WorldPlace {
+            id: "forest".into(),
+            name: "Forest".into(),
+            tags: vec![],
+            map: None,
+            position: None,
+        },
     );
     snap.world.routes.insert(
         "r".into(),
-        WorldRoute { id: "r".into(), from: "village".into(), to: "forest".into(), tags: vec![], weight: 2 },
+        WorldRoute {
+            id: "r".into(),
+            from: "village".into(),
+            to: "forest".into(),
+            tags: vec![],
+            weight: 2,
+        },
     );
     let mut sim = Sim::new(HostSession::new(snap));
     sim.connect(PeerId(10));
@@ -147,7 +169,13 @@ fn a_resolved_travel_moves_the_party_and_ticks_the_clock_on_every_peer() {
     let mut snap = snapshot();
     snap.world.places.insert(
         "village".into(),
-        WorldPlace { id: "village".into(), name: "Village".into(), tags: vec![], map: None, position: None },
+        WorldPlace {
+            id: "village".into(),
+            name: "Village".into(),
+            tags: vec![],
+            map: None,
+            position: None,
+        },
     );
     // The forest is a site (a tactical map), so arriving there advances its clock.
     snap.world.places.insert(
@@ -186,9 +214,21 @@ fn a_resolved_travel_moves_the_party_and_ticks_the_clock_on_every_peer() {
     let clock = |s: &GameSnapshot| s.clocks.get("forest-map").copied().unwrap_or(0);
     let tired = |s: &GameSnapshot| s.map.condition_value(TokenId(1), "exhaustion");
     let food = |s: &GameSnapshot| s.world.party_resource("A", "food");
-    assert_eq!(at(sim.host.state()).as_deref(), Some("forest"), "the party arrived");
-    assert_eq!(clock(sim.host.state()), 5, "arriving advanced the destination's clock");
-    assert_eq!(tired(sim.host.state()), 2, "the march exhausted the party member");
+    assert_eq!(
+        at(sim.host.state()).as_deref(),
+        Some("forest"),
+        "the party arrived"
+    );
+    assert_eq!(
+        clock(sim.host.state()),
+        5,
+        "arriving advanced the destination's clock"
+    );
+    assert_eq!(
+        tired(sim.host.state()),
+        2,
+        "the march exhausted the party member"
+    );
     assert_eq!(
         at(sim.clients[&PeerId(10)].state().unwrap()).as_deref(),
         Some("forest")
@@ -203,13 +243,21 @@ fn a_resolved_travel_moves_the_party_and_ticks_the_clock_on_every_peer() {
         2,
         "and the same exhaustion -- attrition is replicated truth"
     );
-    assert_eq!(food(sim.host.state()), 3, "the foraged food joined the party's stores");
+    assert_eq!(
+        food(sim.host.state()),
+        3,
+        "the foraged food joined the party's stores"
+    );
     assert_eq!(
         food(sim.clients[&PeerId(10)].state().unwrap()),
         3,
         "and the client holds the same stores"
     );
-    assert_eq!(sim.host.state().roll_log.len(), 1, "the navigation roll reached the log");
+    assert_eq!(
+        sim.host.state().roll_log.len(),
+        1,
+        "the navigation roll reached the log"
+    );
     assert_converged(&sim);
 }
 
@@ -288,11 +336,23 @@ fn a_client_cannot_pronounce_its_own_travel() {
     let mut snap = snapshot();
     snap.world.places.insert(
         "village".into(),
-        WorldPlace { id: "village".into(), name: "Village".into(), tags: vec![], map: None, position: None },
+        WorldPlace {
+            id: "village".into(),
+            name: "Village".into(),
+            tags: vec![],
+            map: None,
+            position: None,
+        },
     );
     snap.world.places.insert(
         "forest".into(),
-        WorldPlace { id: "forest".into(), name: "Forest".into(), tags: vec![], map: None, position: None },
+        WorldPlace {
+            id: "forest".into(),
+            name: "Forest".into(),
+            tags: vec![],
+            map: None,
+            position: None,
+        },
     );
     snap.world.party_node.insert("A".into(), "village".into());
     let mut sim = Sim::new(HostSession::new(snap));
@@ -319,7 +379,11 @@ fn a_client_cannot_pronounce_its_own_travel() {
             forage: 0,
         },
     );
-    assert_eq!(sim.host.seq(), seq, "a forged travel verdict entered the log");
+    assert_eq!(
+        sim.host.seq(),
+        seq,
+        "a forged travel verdict entered the log"
+    );
     assert_eq!(
         sim.host.state().world.party_at("A").as_deref(),
         Some("village"),
@@ -413,15 +477,20 @@ fn banked_time_makes_a_bigger_tick_and_the_commit_empties_the_bank() {
         },
     );
     // The table spent a long scene away: 25 units banked toward this faction.
-    snap.world
-        .faction_sheets
-        .insert("tide".to_owned(), BTreeMap::from([("banked_time".to_owned(), 25)]));
+    snap.world.faction_sheets.insert(
+        "tide".to_owned(),
+        BTreeMap::from([("banked_time".to_owned(), 25)]),
+    );
     let mut sim = Sim::new(HostSession::new(snap));
     sim.connect(PeerId(10));
 
     let mut tape = EntropyTape::from_seed(3);
     let moves = sim.host.state().world.faction_turn(5, &mut tape);
-    assert_eq!(moves.len(), 3, "banked 25 => one baseline plus two earned moves");
+    assert_eq!(
+        moves.len(),
+        3,
+        "banked 25 => one baseline plus two earned moves"
+    );
     sim.host_faction_turn(moves).expect("the tick commits");
 
     // The tick was proportional (3 faction-turn history events), and acting
@@ -440,7 +509,11 @@ fn banked_time_makes_a_bigger_tick_and_the_commit_empties_the_bank() {
             .count()
     };
     assert_eq!(logged(sim.host.state()), 3);
-    assert_eq!(banked(sim.host.state()), Some(0), "the bank emptied on the host");
+    assert_eq!(
+        banked(sim.host.state()),
+        Some(0),
+        "the bank emptied on the host"
+    );
     assert_eq!(
         banked(sim.clients[&PeerId(10)].state().unwrap()),
         Some(0),

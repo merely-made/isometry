@@ -136,7 +136,7 @@ impl UiState {
             Some((true, key, entry, _)) => {
                 self.storylet_request = Some(key);
                 self.status = format!("playing: {entry}");
-            }
+            },
             Some((false, _, _, status)) => self.status = format!("not yet: {status}"),
             None => self.status = "no storylet selected".to_owned(),
         }
@@ -211,6 +211,11 @@ impl UiState {
 
     pub fn close_overmap(&mut self) {
         self.overmap_open = false;
+        if let Some((id, _)) = self.overmap_drag_start.take() {
+            self.overmap_motion.end(&id);
+        }
+        self.overmap_drag_grab_offset = None;
+        self.overmap_dragged_node = None;
     }
 
     /// Ask to travel to `node`. Arms a one-shot the host drains: it rolls the
@@ -231,38 +236,6 @@ impl UiState {
             }
         }
         self.request_travel(node);
-    }
-
-    /// Respond to a captured Swatch node gesture with a local position override.
-    /// The pointcrawl's source graph stays immutable: this is projection curation
-    /// for the currently open UI only. A small normalized slop keeps a press and
-    /// release available as the existing travel click.
-    pub fn drag_overmap_node(&mut self, event: cambium::GraphCanvasNodeDrag<String>) {
-        const SLOP: f32 = 0.015;
-        match event.phase {
-            cambium::PointerPhase::Down => {
-                self.overmap_drag_start = Some((event.id, event.position));
-                self.overmap_dragged_node = None;
-            }
-            cambium::PointerPhase::Move | cambium::PointerPhase::Up => {
-                let Some((started_id, start)) = self.overmap_drag_start.as_ref() else {
-                    return;
-                };
-                if started_id != &event.id {
-                    return;
-                }
-                let dx = event.position.0 - start.0;
-                let dy = event.position.1 - start.1;
-                if self.overmap_dragged_node.is_some() || dx.hypot(dy) >= SLOP {
-                    self.overmap_dragged_node = Some(event.id.clone());
-                    self.overmap_position_overrides
-                        .insert(event.id, event.position);
-                }
-                if matches!(event.phase, cambium::PointerPhase::Up) {
-                    self.overmap_drag_start = None;
-                }
-            }
-        }
     }
 
     /// Choose the party's travel pace (a percent of normal time). The host
@@ -526,7 +499,10 @@ impl UiState {
     /// compare for. Without this one-way push the two would drift and the
     /// compare could not tell which side moved.
     pub fn sync_selection_rows(&mut self) {
-        let mode = EditMode::ALL.iter().position(|m| *m == self.mode).unwrap_or(0);
+        let mode = EditMode::ALL
+            .iter()
+            .position(|m| *m == self.mode)
+            .unwrap_or(0);
         point_selection(&mut self.mode_selection, mode);
 
         let party = self.viewer.clone().unwrap_or_else(|| "dm".to_owned());

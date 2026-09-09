@@ -133,7 +133,8 @@ impl UiState {
     }
 
     /// The pointer entered the element standing on `at` (or left the board,
-    /// for `None`): move the play-mode path preview and the measure template.
+    /// for `None`): show authored-site hints and move the play-mode path
+    /// preview or measure template. Hidden tiles are never surfaced.
     ///
     /// The host routes `on_hover` Enter and Leave as the *hit element*
     /// changes, and deliberately routes no Move, so the granularity comes from
@@ -145,6 +146,16 @@ impl UiState {
     pub fn hover_tile_enter(&mut self, at: Option<TileCoord>) {
         if self.hover_tile == at {
             return;
+        }
+        if let Some(at) = at {
+            if self.fog_level(at) == FogLevel::Hidden {
+                return;
+            }
+            if let Some((label, _, _)) = self.authored_site_labels_at(at) {
+                if self.status != label {
+                    self.status = label;
+                }
+            }
         }
         let play = self.mode == EditMode::Play && !self.reach.is_empty();
         let measure = self.mode == EditMode::Measure && self.measure_anchor.is_some();
@@ -163,7 +174,7 @@ impl UiState {
         match self.map.token(id).map(|t| t.at) {
             Some(cur) if cur == to => return,
             None => return,
-            _ => {}
+            _ => {},
         }
         if self.map.tokens.iter().any(|t| t.id != id && t.at == to) {
             return; // tile occupied
@@ -408,8 +419,8 @@ impl UiState {
                 self.apply_step(vec![SessionEvent::TokenRemoved { id }]);
                 self.turns.remove(id);
                 self.recompute_reach();
-            }
-            _ => {}
+            },
+            _ => {},
         }
     }
 
@@ -428,11 +439,11 @@ impl UiState {
         match self.mode {
             EditMode::Select => {
                 self.selected = Some(at);
-            }
+            },
             EditMode::Measure => {
                 self.measure_anchor = Some(at);
                 self.status = format!("anchor ({}, {})", at.0, at.1);
-            }
+            },
             EditMode::Token => {
                 if let Some(id) = self.token_at(at) {
                     self.click_token(id);
@@ -445,7 +456,7 @@ impl UiState {
                         owner: None,
                     })]);
                 }
-            }
+            },
             EditMode::Play => {
                 if let Some(id) = self.token_at(at) {
                     self.select_token(id);
@@ -481,7 +492,7 @@ impl UiState {
                         }
                     }
                 }
-            }
+            },
             EditMode::PaintGround => self.apply_step(vec![SessionEvent::TilePlaced {
                 layer: Layer::Ground,
                 at,
@@ -507,7 +518,7 @@ impl UiState {
                     self.status = format!("filled {} tiles", events.len());
                     self.apply_step(events);
                 }
-            }
+            },
             EditMode::Raise | EditMode::Lower => {
                 if at.0 >= 0 && at.1 >= 0 {
                     let h = *self
@@ -524,7 +535,7 @@ impl UiState {
                         self.apply_step(vec![SessionEvent::ElevationSet { at, height: new }]);
                     }
                 }
-            }
+            },
         }
     }
 

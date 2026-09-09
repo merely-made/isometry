@@ -32,4 +32,4 @@ mod travel;
 pub use apply::{apply_game, GameError};
 pub use client::ClientSession;
 pub use host::HostSession;
-pub use travel::resolve_transition;
+pub use travel::{resolve_transition, resolve_transition_for_party};

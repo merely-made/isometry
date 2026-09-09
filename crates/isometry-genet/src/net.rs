@@ -28,12 +28,19 @@ pub enum Role {
 
 enum BridgeCommand {
     Event(GameEvent),
+    Travel {
+        request: RequestId,
+        token: TokenId,
+        crossing: isonetry::RequestId,
+        party: String,
+    },
     /// A *client* asking the host to resolve an action. Carries no verdict.
     Action(ActionIntent),
     Campaign {
         request: RequestId,
         record: GenerationRecord,
         item_owner: Option<TokenId>,
+        party: Option<String>,
     },
     Storylet {
         request: RequestId,
@@ -141,7 +148,7 @@ impl NetBridge {
                     self.history = Some(history);
                     self.set_snapshot(snapshot);
                     changed = true;
-                }
+                },
                 Ok(BridgeUpdate::HostState {
                     snapshot,
                     campaign,
@@ -153,15 +160,15 @@ impl NetBridge {
                     self.players = players;
                     self.set_snapshot(snapshot);
                     changed = true;
-                }
+                },
                 Ok(BridgeUpdate::ClientState(snapshot)) => {
                     self.set_snapshot(snapshot);
                     changed = true;
-                }
+                },
                 Ok(BridgeUpdate::ActionIntents(mut intents)) => {
                     self.action_intents.append(&mut intents);
                     changed = true;
-                }
+                },
                 Ok(BridgeUpdate::Whispers(mut whispers)) => self.inbox.append(&mut whispers),
                 Ok(BridgeUpdate::CampaignFinished(outcome)) => self.campaign_outcomes.push(outcome),
                 Ok(BridgeUpdate::Failed(error)) => self.failure = Some(error),
@@ -181,6 +188,23 @@ impl NetBridge {
         let _ = self.actor.command(BridgeCommand::Event(event));
     }
 
+    pub fn travel(
+        &mut self,
+        token: TokenId,
+        crossing: isonetry::RequestId,
+        party: String,
+    ) -> Option<RequestId> {
+        let request = self.request_ids.issue();
+        self.actor
+            .command(BridgeCommand::Travel {
+                request,
+                token,
+                crossing,
+                party,
+            })
+            .then_some(request)
+    }
+
     /// Ask the host to resolve an action (client side). The client decides
     /// nothing: it names an actor, a victim and an action, and waits.
     pub fn submit_action(&self, intent: ActionIntent) {
@@ -196,6 +220,7 @@ impl NetBridge {
         &mut self,
         record: GenerationRecord,
         item_owner: Option<TokenId>,
+        party: Option<String>,
     ) -> Option<RequestId> {
         let request = self.request_ids.issue();
         self.actor
@@ -203,6 +228,7 @@ impl NetBridge {
                 request,
                 record,
                 item_owner,
+                party,
             })
             .then_some(request)
     }
@@ -318,7 +344,7 @@ async fn run_host(
         Err(error) => {
             out.emit(BridgeUpdate::Failed(format!("host bind failed: {error}")));
             return;
-        }
+        },
     };
     host.spawn_accept();
     let ticket = host.ticket().await;
@@ -345,17 +371,37 @@ async fn run_host(
                 // as the same request a player would send.
                 BridgeCommand::Action(intent) => {
                     out.emit(BridgeUpdate::ActionIntents(vec![intent]));
-                }
+                },
+                BridgeCommand::Travel {
+                    request,
+                    token,
+                    crossing,
+                    party,
+                } => {
+                    let result = host
+                        .commit_transition_for_party(token, crossing, &party)
+                        .await;
+                    out.emit(BridgeUpdate::CampaignFinished(Correlated::new(
+                        request, result,
+                    )));
+                },
                 BridgeCommand::Campaign {
                     request,
                     record,
                     item_owner,
+                    party,
                 } => {
-                    let result = host.commit_campaign(record, item_owner).await;
+                    let result = match party {
+                        Some(party) => {
+                            host.commit_campaign_for_party(record, item_owner, &party)
+                                .await
+                        },
+                        None => host.commit_campaign(record, item_owner).await,
+                    };
                     out.emit(BridgeUpdate::CampaignFinished(Correlated::new(
                         request, result,
                     )));
-                }
+                },
                 BridgeCommand::Storylet {
                     request,
                     key,
@@ -367,14 +413,14 @@ async fn run_host(
                     out.emit(BridgeUpdate::CampaignFinished(Correlated::new(
                         request, result,
                     )));
-                }
+                },
                 BridgeCommand::FactionTurn { request, moves } => {
                     // Same one-shot "commit this, tell me if it took" channel.
                     let result = host.commit_faction_turn(moves).await;
                     out.emit(BridgeUpdate::CampaignFinished(Correlated::new(
                         request, result,
                     )));
-                }
+                },
                 BridgeCommand::Whisper { to, text } => host.whisper("dm", &to, &text).await,
             }
         }
@@ -411,7 +457,7 @@ async fn run_client(
         Err(error) => {
             out.emit(BridgeUpdate::Failed(format!("join failed: {error}")));
             return;
-        }
+        },
     };
     println!("[isometry] joined session as {name}; replaying host log.");
     let mut last_applied = u64::MAX;
@@ -424,31 +470,37 @@ async fn run_client(
             match command {
                 BridgeCommand::Event(event) => {
                     let _ = client.intent(event).await;
-                }
+                },
                 // The player asks; the host answers. Nothing about the outcome
                 // travels with this.
                 BridgeCommand::Action(intent) => {
                     let _ = client.action(intent).await;
-                }
+                },
+                BridgeCommand::Travel { request, .. } => {
+                    out.emit(BridgeUpdate::CampaignFinished(Correlated::new(
+                        request,
+                        Err("travel is ruled by the host".to_owned()),
+                    )));
+                },
                 BridgeCommand::Campaign { request, .. } => {
                     out.emit(BridgeUpdate::CampaignFinished(Correlated::new(
                         request,
                         Err("campaign commits require the host".to_owned()),
                     )));
-                }
+                },
                 BridgeCommand::Storylet { request, .. } => {
                     out.emit(BridgeUpdate::CampaignFinished(Correlated::new(
                         request,
                         Err("storylets are played by the host".to_owned()),
                     )));
-                }
+                },
                 BridgeCommand::FactionTurn { request, .. } => {
                     out.emit(BridgeUpdate::CampaignFinished(Correlated::new(
                         request,
                         Err("faction turns are run by the host".to_owned()),
                     )));
-                }
-                BridgeCommand::Whisper { .. } => {}
+                },
+                BridgeCommand::Whisper { .. } => {},
             }
         }
 
@@ -468,127 +520,4 @@ async fn run_client(
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use isometry_campaign::{GenValue, GeneratorRequest};
-    use isometry_core::{MapDocument, TurnList};
-    use std::collections::BTreeMap;
-    use std::time::Instant;
-
-    const ACTOR_DEADLINE: Duration = Duration::from_secs(30);
-
-    fn wait_for(bridge: &mut NetBridge, what: &str, mut ready: impl FnMut(&NetBridge) -> bool) {
-        let deadline = Instant::now() + ACTOR_DEADLINE;
-        loop {
-            bridge.poll();
-            if ready(bridge) {
-                return;
-            }
-            if let Some(error) = bridge.take_failure() {
-                panic!("{what} failed: {error}");
-            }
-            assert!(Instant::now() < deadline, "timed out waiting for {what}");
-            std::thread::sleep(Duration::from_millis(20));
-        }
-    }
-
-    fn snapshot() -> GameSnapshot {
-        GameSnapshot {
-            map: MapDocument::new("bridge", 2, 2),
-            turns: TurnList::new(),
-            roll_log: Vec::new(),
-            journal: Vec::new(),
-            inventories: Default::default(),
-            generations: Vec::new(),
-            maps: Default::default(),
-            active_map: None,
-            world: Default::default(),
-            clocks: Default::default(),
-
-            party_cap: isonetry::default_party_cap(),
-            last_beats: Vec::new(),
-            beat_seq: 0,
-            applied_actions: Default::default(),
-        }
-    }
-
-    #[test]
-    fn host_bridge_delivers_actor_state_to_the_kernel() {
-        let mut bridge = NetBridge::spawn(
-            Role::Host {
-                state: snapshot(),
-                campaign: CampaignStore::new(),
-                history: Journal::new(),
-            },
-            // The windowless test drives `poll` itself, so the wake has nowhere
-            // to go: the event loop it would schedule a turn on does not exist.
-            std::sync::Arc::new(|| {}),
-        );
-
-        wait_for(&mut bridge, "host actor readiness", |bridge| {
-            bridge.ticket().is_some() && bridge.latest().is_some()
-        });
-        assert!(
-            bridge.ticket().is_some(),
-            "host actor bound and published a ticket"
-        );
-        assert_eq!(bridge.latest(), Some(snapshot()));
-
-        let version = bridge.version();
-        bridge.submit(GameEvent::TurnAdvance);
-        wait_for(&mut bridge, "host command actor update", |bridge| {
-            bridge.version() > version
-        });
-    }
-
-    #[test]
-    fn rejected_campaign_is_correlated_without_failing_the_actor() {
-        let mut bridge = NetBridge::spawn(
-            Role::Host {
-                state: snapshot(),
-                campaign: CampaignStore::new(),
-                history: Journal::new(),
-            },
-            // The windowless test drives `poll` itself, so the wake has nowhere
-            // to go: the event loop it would schedule a turn on does not exist.
-            std::sync::Arc::new(|| {}),
-        );
-        for _ in 0..100 {
-            bridge.poll();
-            if bridge.ticket().is_some() {
-                break;
-            }
-            std::thread::sleep(Duration::from_millis(20));
-        }
-        let record = GenerationRecord {
-            id: "not-a-campaign".to_owned(),
-            request: GeneratorRequest {
-                generator: "demo:text".to_owned(),
-                args: GenValue::Text {
-                    value: "text".to_owned(),
-                },
-                locks: BTreeMap::new(),
-            },
-            entropy: 1,
-            proposal: GenValue::Text {
-                value: "text".to_owned(),
-            },
-        };
-        let request = bridge
-            .commit_campaign(record, None)
-            .expect("actor accepts the command");
-
-        for _ in 0..100 {
-            bridge.poll();
-            let outcomes = bridge.take_campaign_outcomes();
-            if let Some(outcome) = outcomes.into_iter().next() {
-                assert_eq!(outcome.request, request);
-                assert!(outcome.value.is_err());
-                assert!(bridge.take_failure().is_none());
-                return;
-            }
-            std::thread::sleep(Duration::from_millis(20));
-        }
-        panic!("campaign outcome did not return through the actor update channel");
-    }
-}
+mod tests;

@@ -23,22 +23,24 @@ mod storylet;
 mod theme;
 mod widgets;
 
-pub use board::{board_root, UiChild};
-pub use demo::{demo_map, synth_map, synth_world, SYNTH_PARTY};
+pub use board::{UiChild, board_root};
+pub use demo::{SYNTH_PARTY, demo_map, synth_map, synth_world};
 pub use overmap::{
-    overmap_positions, overmap_score, overmap_swatch, OvermapNodeKind, ISOMETRY_OVERMAP_ADAPTER,
-    OVERMAP_CANVAS, OVERMAP_LEAF_KEY,
+    AtlasBounds, AtlasProjection, AtlasRoute, AtlasSite, AtlasTerrainCell,
+    ISOMETRY_OVERMAP_ADAPTER, OVERMAP_CANVAS, OVERMAP_LEAF_KEY, OvermapNodeKind, atlas_projection,
+    overmap_atlas, overmap_positions, overmap_score, overmap_swatch,
 };
 pub use projection::{
-    tile_board_cells, tile_board_scene, tile_board_score, ISOMETRY_TILE_BOARD_ADAPTER,
-    ISOMETRY_TILE_BOARD_BACKDROP,
+    ISOMETRY_TILE_BOARD_ADAPTER, ISOMETRY_TILE_BOARD_BACKDROP, tile_board_cells, tile_board_scene,
+    tile_board_score,
 };
-pub use state::{mode_items, pace_items, stance_items, PACE_PCTS, STANCE_KEYS};
 pub use state::{
-    ActionRow, CharacterCreateRequest, CompendiumTab, EditMode, FactionMoveRow, FogLevel, GenerationRequest,
-    GeneratorSelectionRequest, GovernanceBindingRow, GovernanceConflict,
-    GovernanceResolutionRequest, InitiativeMode, InventoryRequest, ItemRow, MonsterRow, NetMode,
-    SheetSchema, SpellRow, StoryletRow, UiState, BOARD_UNIT, MESSAGES_CAP, PANEL_W,
+    ActionRow, BOARD_UNIT, CharacterCreateRequest, CompendiumTab, EditMode, FactionMoveRow,
+    FogLevel, GenerationRequest, GeneratorSelectionRequest, GovernanceBindingRow,
+    GovernanceConflict, GovernanceResolutionRequest, InitiativeMode, InventoryRequest, ItemRow,
+    MESSAGES_CAP, MonsterRow, NetMode, PANEL_W, SheetSchema, SpellRow, StoryletRow, UiState,
     WHEEL_BOARD_TILES, WHEEL_NOTCH_PX,
 };
+pub use state::{OvermapMotionState, OvermapMotionTick};
+pub use state::{PACE_PCTS, STANCE_KEYS, mode_items, pace_items, stance_items};
 pub use theme::board_css;

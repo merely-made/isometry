@@ -29,8 +29,10 @@ use isonetry::{
 // `use super::*`.
 mod adjudication;
 mod authority;
+mod campaign_start;
 mod character;
 mod convergence;
+mod doorway_party;
 mod generation;
 mod items;
 mod secrets;

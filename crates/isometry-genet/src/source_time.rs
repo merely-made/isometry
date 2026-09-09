@@ -24,14 +24,14 @@ impl App {
     /// advanced (or a checkpoint changed origin). The view retains a selected
     /// historical cursor across this refresh.
     pub(crate) fn refresh_source_history(&mut self, ctx: &mut Ctx<'_>) {
+        let next_len = self.history_origin.as_ref().map(|_| self.history.len());
+        if self.source_history_attached && next_len == self.source_history_len {
+            return;
+        }
         let source = self
             .history_origin
             .clone()
             .map(|origin| isonetry::GameSourceHistory::new(origin, self.history.clone()));
-        let next_len = source.as_ref().map(|source| source.live_cursor() as usize);
-        if self.source_history_attached && next_len == self.source_history_len {
-            return;
-        }
         {
             let runner = &mut *ctx.runner;
             runner.update(|ui| ui.set_overmap_source_history(source));

@@ -288,9 +288,9 @@ impl App {
                 // emitted list keeps one crossing from being ruled twice while
                 // its echo is still in flight.
                 //
-                // The authority *rules* each crossing here and broadcasts the
-                // verdict. Peers used to be handed the traveler's id and left to
-                // work out the rest; now the payload names it.
+                // The actor rules each crossing against current authority state
+                // and commits its regional consequences under the same lock.
+                // Sequential commands also handle several players leaving at once.
                 if self.net_is_host {
                     let on_doors: Vec<TokenId> = {
                         let ui = runner.state();
@@ -301,37 +301,30 @@ impl App {
                             .map(|t| t.id)
                             .collect()
                     };
-                    let mut crossings = Vec::new();
-                    let mut refusals = Vec::new();
-                    {
-                        // Not `self.snapshot_of`: `runner` already holds a
-                        // mutable borrow of one field of `self`, so the whole-
-                        // `self` method is out of reach here.
-                        let state = snapshot_with_journal(self.journal.clone(), runner.state());
+                    let party = runner
+                        .state()
+                        .viewer
+                        .clone()
+                        .unwrap_or_else(|| "dm".to_owned());
+                    self.travel_emitted.retain(|token| on_doors.contains(token));
+                    if let Some(net) = self.net.as_mut() {
                         for token in &on_doors {
                             if self.travel_emitted.contains(token) {
                                 continue;
                             }
                             self.own_requests += 1;
-                            match isonetry::resolve_transition(
-                                &state,
-                                *token,
-                                RequestId::host(self.own_requests),
-                            ) {
-                                Ok(res) => crossings.push(GameEvent::TransitionResolved(res)),
-                                Err(error) => refusals.push(format!("cannot travel: {error:?}")),
+                            if net
+                                .travel(*token, RequestId::host(self.own_requests), party.clone())
+                                .is_none()
+                            {
+                                runner.update(|ui| {
+                                    ui.status = "travel authority actor stopped".to_owned()
+                                });
+                            } else {
+                                self.travel_emitted.push(*token);
                             }
                         }
                     }
-                    if !crossings.is_empty() || !refusals.is_empty() {
-                        runner.update(|ui| {
-                            ui.net_outbox.extend(crossings);
-                            if let Some(last) = refusals.last() {
-                                ui.status = last.clone();
-                            }
-                        });
-                    }
-                    self.travel_emitted = on_doors;
                 }
             }
         }

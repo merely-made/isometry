@@ -53,8 +53,14 @@ fn walking_through_a_door_crosses_maps_and_the_board_follows_the_party() {
     // sheet, condition, and the condition's numbers.
     let knight = host.map.token(TokenId(1)).expect("knight in the hut");
     assert_eq!(knight.at, (1, 1), "landed at the named entry");
-    assert_eq!(host.map.sheet(TokenId(1)).and_then(|s| s.int("hp_current")), Some(12));
-    assert!(host.map.has_condition(TokenId(1), "prone"), "still prone: travel is not a cure");
+    assert_eq!(
+        host.map.sheet(TokenId(1)).and_then(|s| s.int("hp_current")),
+        Some(12)
+    );
+    assert!(
+        host.map.has_condition(TokenId(1), "prone"),
+        "still prone: travel is not a cure"
+    );
     assert_eq!(host.map.effective_mobility(TokenId(1), (5, 6)), (2, 6));
     // And left the field entirely (the stored copy, since field is no longer
     // the active board).
@@ -108,7 +114,10 @@ fn arriving_where_your_id_is_taken_mints_a_new_one_and_carries_the_inventory() {
     assert_eq!(arrivals.len(), 1);
     let new_id = arrivals[0].id;
     assert_ne!(new_id, TokenId(1));
-    assert!(host.inventories.contains_key(&new_id), "the sword crossed too");
+    assert!(
+        host.inventories.contains_key(&new_id),
+        "the sword crossed too"
+    );
     assert!(!host.inventories.contains_key(&TokenId(1)));
     assert_converged(&sim);
 }
@@ -137,7 +146,11 @@ fn split_party_time_drifts_freely_and_travel_reconciles_it() {
 
     let clock = |s: &GameSnapshot, id: &str| s.clocks.get(id).copied().unwrap_or(0);
     assert_eq!(clock(sim.host.state(), "field"), 7, "3 rounds + 4 declared");
-    assert_eq!(clock(sim.host.state(), "hut"), 0, "nobody home: no time passes");
+    assert_eq!(
+        clock(sim.host.state(), "hut"),
+        0,
+        "nobody home: no time passes"
+    );
 
     // The knight walks through the gate. Nobody arrives before they left: the
     // hut's clock catches up to the traveler's, on every peer.
