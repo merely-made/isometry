@@ -24,7 +24,7 @@ burn-tensor = { version = "0.21", default-features = false, features = ["std"] }
 burn-wgpu = { version = "0.21", default-features = false, features = ["std"] }
 bytemuck = "1"
 cubecl = { version = "0.10", features = ["wgpu"] }
-netrender = { path = "../../../../netrender/netrender" }
+netrender = { git = "https://github.com/merely-made/netrender.git", rev = "c77b0be84fb6fc28a3c1602a2b1637f7d913acc0" }
 png = "0.17"
 renderling = { path = "../../../../../crates/renderling/crates/renderling" }
 wgpu = { version = "30", default-features = false, features = [

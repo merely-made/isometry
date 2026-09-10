@@ -31,63 +31,58 @@ members = [
 [workspace.dependencies]
 # The append-only journal, from mere's eidetic family. Rev-pinned with the
 # rest of the family; its causal shape landed 2026-08-01 for exactly this use.
-muniment = { git = "https://github.com/merely-made/mere.git", rev = "d82afa17e2cca86da843f07a2d718d2e69eb9f10" }
+muniment = { git = "https://github.com/merely-made/mere.git", rev = "fb7e136b13298b1e9c56ece8a282fb1b1fac4d8c" }
 # Shared voxel value mechanics. Mesocosm keeps `Ground` as the durable
 # authority; its product adapter consumes revisioned chunk and patch machinery
 # as a derived view over accepted ground revisions without acquiring a physics
 # backend.
-nisus = { git = "https://github.com/merely-made/mere.git", rev = "d82afa17e2cca86da843f07a2d718d2e69eb9f10" }
+nisus = { git = "https://github.com/merely-made/mere.git", rev = "fb7e136b13298b1e9c56ece8a282fb1b1fac4d8c" }
 # The shared tactile runtime: bodies, voxel collision, and spatial queries
 # with Rapier private inside it. Mesocosm consumes advice through Conatus ids
 # and arrays only; the T1 adapter in mesocosm-runtime is its product home.
-conatus = { git = "https://github.com/merely-made/mere.git", rev = "d82afa17e2cca86da843f07a2d718d2e69eb9f10" }
+conatus = { git = "https://github.com/merely-made/mere.git", rev = "fb7e136b13298b1e9c56ece8a282fb1b1fac4d8c" }
 # Product-neutral sparse brick carriage and ray-in WGSL traversal. Product
 # lenses keep source binding, camera, material, and composition policy.
-modulus = { git = "https://github.com/merely-made/mere.git", rev = "d82afa17e2cca86da843f07a2d718d2e69eb9f10" }
+modulus = { git = "https://github.com/merely-made/mere.git", rev = "fb7e136b13298b1e9c56ece8a282fb1b1fac4d8c" }
 # The scenograph projection contract and its solvers: the adapter-first UI
 # posture. Mesocosm discloses facts as a score; scenomise places them; a host
 # realizes the scene. Views never hand-roll layout.
-sceno = { git = "https://github.com/merely-made/mere.git", rev = "d82afa17e2cca86da843f07a2d718d2e69eb9f10" }
-scenomise = { git = "https://github.com/merely-made/mere.git", rev = "d82afa17e2cca86da843f07a2d718d2e69eb9f10" }
+sceno = { git = "https://github.com/merely-made/mere.git", rev = "fb7e136b13298b1e9c56ece8a282fb1b1fac4d8c" }
+scenomise = { git = "https://github.com/merely-made/mere.git", rev = "fb7e136b13298b1e9c56ece8a282fb1b1fac4d8c" }
 # Custom-paint leaves, from the cambium family. The family moved from genet to
 # mere on 2026-09-03 (platform boundary plan P3); the crate is unchanged.
 # Git-only, never crates.io.
-sprigging = { git = "https://github.com/merely-made/mere.git", rev = "d82afa17e2cca86da843f07a2d718d2e69eb9f10" }
+sprigging = { git = "https://github.com/merely-made/mere.git", rev = "fb7e136b13298b1e9c56ece8a282fb1b1fac4d8c" }
 # The cambium lane (ruled 2026-08-29): ordinary game GUI with words and
 # numbers. Now from mere.git with the rest of the cambium family. Same git
 # source and same rev as sprigging — cargo keys git sources by URL *plus*
 # reference, so two references would be two crate identities of one commit.
 # mere pins genet at exactly the rev this workspace does, and both pin the
 # netrender family at the same rev, which is what keeps one `PaintCmd`.
-cambium = { git = "https://github.com/merely-made/mere.git", rev = "d82afa17e2cca86da843f07a2d718d2e69eb9f10" }
-genet-scripted-dom = { git = "https://github.com/merely-made/genet.git", rev = "115d348deddc344d949754e63beaece47cf49f34" }
+cambium = { git = "https://github.com/merely-made/mere.git", rev = "fb7e136b13298b1e9c56ece8a282fb1b1fac4d8c" }
+genet-scripted-dom = { git = "https://github.com/merely-made/genet.git", rev = "3a7b50230d447f6fa7ed6921cba019f78347d932" }
 # The CSS/layout/paint engine. `genet-layout` is gone: genet deleted the Stylo
 # compatibility cone on 2026-08-21 and Livery over Buckram is what lays out a
-# ScriptedDom now. Isometry's host still names the old crate, so read that one
-# for the shape and this for the calls.
-genet-livery = { git = "https://github.com/merely-made/genet.git", rev = "115d348deddc344d949754e63beaece47cf49f34" }
+# ScriptedDom now. Isometry's shared Cambium host consumes this same engine.
+genet-livery = { git = "https://github.com/merely-made/genet.git", rev = "3a7b50230d447f6fa7ed6921cba019f78347d932" }
 # Reusable split-and-tab tile arrangement (ruled 2026-09-02, dev tools plan
 # §4): the dev lane's placement is a `workbench::TileTree`'s own geometry
 # rather than a hand-rolled corner constant. Moved to mere with the cambium
 # family; same git source and rev as cambium, for the reason stated above it.
-workbench = { git = "https://github.com/merely-made/mere.git", rev = "d82afa17e2cca86da843f07a2d718d2e69eb9f10" }
+workbench = { git = "https://github.com/merely-made/mere.git", rev = "fb7e136b13298b1e9c56ece8a282fb1b1fac4d8c" }
 # The shared automatability substrate and scenario driver (DT4): `Automatable`,
 # `Driveable`, and a text `Scenario` over the cambium surfaces this workspace
 # already emits. It replaces the bespoke replay-and-demo harness rather than
 # sitting beside it — the dev tools plan's principle 4. It stayed in genet when
 # cambium left, so it is a genet.git pin — at the same rev mere itself pins
 # genet, which is what keeps one genet in the graph.
-genet-probe = { git = "https://github.com/merely-made/genet.git", rev = "115d348deddc344d949754e63beaece47cf49f34" }
+genet-probe = { git = "https://github.com/merely-made/genet.git", rev = "3a7b50230d447f6fa7ed6921cba019f78347d932" }
 # The HUD lane (route A, ruled 2026-08-02): leaves paint PaintCmds,
 # paint_list_render lowers them, netrender rasterizes on the game's own
-# device. The wgpu-29 pin below exists for exactly this sharing.
-netrender = { git = "https://github.com/merely-made/netrender.git", rev = "6f1a4fe70a58a57ba6b248acfa662f0ec4e44a25" }
-paint_list_api = { git = "https://github.com/merely-made/netrender.git", rev = "6f1a4fe70a58a57ba6b248acfa662f0ec4e44a25" }
-paint_list_render = { git = "https://github.com/merely-made/netrender.git", rev = "6f1a4fe70a58a57ba6b248acfa662f0ec4e44a25" }
-# RG3 compatibility lane. Genet and Mere still expose the older paint-list
-# source identity above; this alias uses the same physical wgpu handles and
-# owns only the opaque-tenant frame master until those pins align.
-netrender_graph = { package = "netrender", git = "https://github.com/merely-made/netrender.git", rev = "93b221a5e48e80fe992feddf42b00dbe1eea3713" }
+# device. The wgpu version below keeps the device type shared.
+netrender = { git = "https://github.com/merely-made/netrender.git", rev = "c77b0be84fb6fc28a3c1602a2b1637f7d913acc0" }
+paint_list_api = { git = "https://github.com/merely-made/netrender.git", rev = "c77b0be84fb6fc28a3c1602a2b1637f7d913acc0" }
+paint_list_render = { git = "https://github.com/merely-made/netrender.git", rev = "c77b0be84fb6fc28a3c1602a2b1637f7d913acc0" }
 mesocosm-core = { path = "crates/mesocosm-core", version = "0.0.1" }
 mesocosm-lens = { path = "crates/mesocosm-lens", version = "0.0.1" }
 mesocosm-mesh = { path = "crates/mesocosm-mesh", version = "0.0.1" }
@@ -141,4 +136,7 @@ vello = { git = "https://github.com/mark-ik/vello.git", branch = "mark-ik/wgpu-3
 # `AlignmentOptions::last_line_alignment` field and the `StyleProperty::TabSize`
 # variant that Livery's text system is written against, and the mismatch reads
 # as three baffling compile errors inside a crate you did not write.
-parley = { git = "https://github.com/merely-made/genet.git", rev = "115d348deddc344d949754e63beaece47cf49f34" }
+parley = { git = "https://github.com/merely-made/genet.git", rev = "3a7b50230d447f6fa7ed6921cba019f78347d932" }
+# Keep layout and IPC on the same Genet implementation as the tabletop host.
+taffy = { package = "genet-taffy", git = "https://github.com/merely-made/genet.git", rev = "3a7b50230d447f6fa7ed6921cba019f78347d932", version = "=0.14.0" }
+ipc-channel = { git = "https://github.com/merely-made/genet.git", rev = "3a7b50230d447f6fa7ed6921cba019f78347d932" }

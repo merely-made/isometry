@@ -12,7 +12,7 @@ publish = false
 # The path dependency is product proof, not a permanent ownership ruling.
 [dependencies]
 wing-functions = { path = "../../../shared/wing-functions" }
-conatus = { git = "https://github.com/merely-made/mere.git", rev = "d82afa17e2cca86da843f07a2d718d2e69eb9f10" }
+conatus = { workspace = true }
 mesocosm-core = { version = "0.0.1", path = "../../../mesocosm/crates/mesocosm-core" }
 paredros-identity = { version = "0.0.1", path = "../paredros-identity" }
 serde = { version = "1", default-features = false, features = ["derive", "alloc"] }

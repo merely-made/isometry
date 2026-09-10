@@ -36,7 +36,7 @@ crabslab = { path = "../../../../../crates/crabslab/crates/crabslab" }
 opt-level = 1
 
 [dependencies]
-netrender = { path = "../../../../netrender/netrender" }
+netrender = { git = "https://github.com/merely-made/netrender.git", rev = "c77b0be84fb6fc28a3c1602a2b1637f7d913acc0" }
 renderling = { path = "../../../../../crates/renderling/crates/renderling" }
 wgpu = { version = "30", default-features = false, features = [
     "dx12",

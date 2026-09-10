@@ -180,7 +180,7 @@ struct Gpu {
     chrome: Option<Lanes>,
     /// The most recently completed Netrender tenant envelope. This is frame
     /// provenance for the played receipt, never simulation state.
-    last_tenant_receipt: Option<netrender_graph::OpaqueTenantReceipt>,
+    last_tenant_receipt: Option<netrender::OpaqueTenantReceipt>,
 }
 
 /// The five chrome lanes over one shared-device Chrome and one blend pass: the

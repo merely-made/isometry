@@ -126,6 +126,10 @@ fn note_for(mode: CameraMode) -> &'static str {
         CameraMode::Side => "the shipped section, looking down -z: bodies chain into the camera",
         CameraMode::Across => "turned a quarter, looking down -x: bodies chain across the view",
         CameraMode::Oblique => "tilted 20 degrees both ways: bodies chain along a short diagonal",
+        CameraMode::TerrariumEast => "terrarium east, across -x with a shallow downward pitch",
+        CameraMode::TerrariumSouth => "terrarium south, across -z with a shallow downward pitch",
+        CameraMode::TerrariumWest => "terrarium west, across +x with a shallow downward pitch",
+        CameraMode::TerrariumNorth => "terrarium north, across +z with a shallow downward pitch",
     }
 }
 

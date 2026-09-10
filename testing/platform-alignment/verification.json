@@ -1,0 +1,43 @@
+{
+  "schema": "wing.platform-alignment/v1",
+  "recorded_at_utc": "2026-09-10T04:58:46.2854016Z",
+  "platform": "Windows",
+  "pins": {
+    "mere": "fb7e136b13298b1e9c56ece8a282fb1b1fac4d8c",
+    "genet": "3a7b50230d447f6fa7ed6921cba019f78347d932",
+    "netrender": "c77b0be84fb6fc28a3c1602a2b1637f7d913acc0",
+    "cleromancy": "3b321539c5bc854403623087d8af18dcef6f2b53"
+  },
+  "source_audit": {
+    "status": "passed",
+    "all_features": true,
+    "audited_package_names": 80,
+    "duplicate_package_names": 0,
+    "cross_product_mismatches": 0,
+    "output": "source-identities.txt",
+    "metadata_sha256": {
+      "tabletop": "a728283241adba454ec952e359760865f154a9b6e41653845e0e5af2555cc4c4",
+      "mesocosm": "6c41fbe65f067d34370ce29c28ab9b149683135adbc333e0c5852a4fd70c2693",
+      "paredros": "3a73ce8645d092b85e86fb900d226931d5604334973d45ed94cac7cfefdf04dd"
+    }
+  },
+  "checks": {
+    "genet_production_host": "passed",
+    "genet_all_features_all_targets": "failed: vendored Parley tests cannot resolve parley_dev::font_dirs after restoring the tracked Lato fixture",
+    "mere_focused_all_targets": "passed: cambium-genet-winit-host, cambium, sprigging, scenotime",
+    "mere_all_features_all_targets": "failed: pinned Knot editor EditableTextV1 initializers omit public_revision",
+    "cleromancy_locked_library": "passed",
+    "paredros_locked_all_features_all_targets": "passed",
+    "mesocosm_locked_all_features_all_targets": "passed",
+    "tabletop_locked_all_features_all_targets": "passed",
+    "scenotime_library_tests": "passed: 36",
+    "source_audit_regression_tests": "passed: 11",
+    "live_wing_integration_tests": "passed: 4"
+  },
+  "gpu_composition": {
+    "receipt": "rg3b-single-renderer.json",
+    "provenance": "rg3b-source.json",
+    "recorded_source_hashes_match_current_files": true,
+    "headed_acceptance": false
+  }
+}

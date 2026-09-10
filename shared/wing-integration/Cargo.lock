@@ -265,7 +265,7 @@ dependencies = [
 [[package]]
 name = "muniment"
 version = "0.1.2"
-source = "git+https://github.com/merely-made/mere.git?rev=d82afa17e2cca86da843f07a2d718d2e69eb9f10#d82afa17e2cca86da843f07a2d718d2e69eb9f10"
+source = "git+https://github.com/merely-made/mere.git?rev=fb7e136b13298b1e9c56ece8a282fb1b1fac4d8c#fb7e136b13298b1e9c56ece8a282fb1b1fac4d8c"
 dependencies = [
  "async-trait",
  "blake3",
@@ -276,7 +276,7 @@ dependencies = [
 [[package]]
 name = "nisus"
 version = "0.1.0"
-source = "git+https://github.com/merely-made/mere.git?rev=d82afa17e2cca86da843f07a2d718d2e69eb9f10#d82afa17e2cca86da843f07a2d718d2e69eb9f10"
+source = "git+https://github.com/merely-made/mere.git?rev=fb7e136b13298b1e9c56ece8a282fb1b1fac4d8c#fb7e136b13298b1e9c56ece8a282fb1b1fac4d8c"
 dependencies = [
  "serde",
 ]

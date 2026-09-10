@@ -27,7 +27,6 @@ mesocosm-render = { workspace = true }
 mesocosm-runtime = { workspace = true }
 mesocosm-views = { workspace = true }
 netrender = { workspace = true }
-netrender_graph = { workspace = true }
 paint_list_api = { workspace = true }
 paint_list_render = { workspace = true }
 sprigging = { workspace = true }

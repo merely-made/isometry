@@ -11,7 +11,8 @@ with [magic and generator discussions](../mesocosm/design_docs/2026-08-06_genera
 
 - [Games wing consolidation](2026-09-09_games_wing_consolidation_plan.md):
   history-preserving repository import, source/worktree preservation, separate
-  build workspaces, and verification receipts.
+  build workspaces, aligned platform dependencies, single-renderer migration,
+  and consumer verification receipts with remaining upstream blockers.
 - [Cross-port sharing audit](../mesocosm/design_docs/2026-08-18_engine_ecology_rulings_and_review.md#7-cross-port-sharing-audit-2026-09-09):
   live-code findings across all three ports; common formats and integration
   proofs, dependency alignment, readback/surface reuse and minimap adoption.

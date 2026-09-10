@@ -1,0 +1,23 @@
+{
+  "adapter": "NVIDIA GeForce RTX 4060 Laptop GPU",
+  "backend": "Vulkan",
+  "byte_matches_direct_composite": true,
+  "caller_reported_physical_submission_count": 1,
+  "fallback_count": 3,
+  "graph_encoder_batches": 1,
+  "graph_submission_boundaries": 1,
+  "height": 24,
+  "intervening_chrome_visible": true,
+  "logical_opaque_producer_boundaries": 1,
+  "logical_plan_dump": "opaque_tenant tenant_name=\"mesocosm-section\" producer_path=\"mesocosm_lens::BrickTracer + mesocosm_genet::Section::render\" fallback_count=3 scene_op_boundary=0 caller_reported_physical_submission_count=Some(1)\nExecutionPlan\nrasterizer=Classic execution_boundary=opaque_submission\nresources:\n  image#0 imported \"mesocosm-section\" 32x24x1 Rgba8UnormSrgb\n  image#1 imported \"netrender initialized master\" 32x24x1 Rgba8Unorm\nselected_outputs: [image#1]\nsteps:\n  0: \"opaque tenant composite\" inputs=[image#0 SampledRead] output=image#1 ColorAttachment { load: Load, store: true } edges=[import->0]\nlifetimes:\ngraph_encoder_batches: 1\ngraph_submission_boundaries: 1 (submit)\n",
+  "master_allocations_after": 1,
+  "master_allocations_before": 1,
+  "master_format": "Rgba8Unorm",
+  "presentation_format": "Bgra8UnormSrgb",
+  "presented_surface_max_channel_delta": 3,
+  "producer_path": "mesocosm_lens::BrickTracer + mesocosm_genet::Section::render",
+  "reused_master_byte_match": true,
+  "scene_op_boundary": 0,
+  "tenant_name": "mesocosm-section",
+  "width": 32
+}

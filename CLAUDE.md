@@ -38,9 +38,9 @@ templates. Game rules live in system plugins (schema plus scripts). The
 substrate never knows what a hit point is.
 
 Isometry is a standalone consumer of the Merely stack (Cambium,
-genet-layout, netrender), the woodshed pattern: git deps on the mark-ik
-remotes, patch mirror at the workspace root, machine-local path overrides
-via a gitignored `.cargo/config.toml`.
+Genet Livery, Netrender), with Git dependencies on the owned remotes and a
+patch mirror at the workspace root. Machine-local path overrides use the
+explicitly supplied, gitignored `.cargo/tabletop-local.toml`.
 
 See `design_docs/PROJECT_DESCRIPTION.md` for the product description and
 `design_docs/DOC_README.md` for the doc index.

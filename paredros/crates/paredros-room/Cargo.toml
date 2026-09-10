@@ -31,13 +31,13 @@ v1b-proof = ["v1-proof"]
 paredros-identity = { path = "../paredros-identity" }
 paredros-world = { path = "../paredros-world" }
 wing-functions = { path = "../../../shared/wing-functions" }
-netrender_text = { path = "../../../../netrender/netrender_text" }
-modulus = { git = "https://github.com/merely-made/mere.git", rev = "d82afa17e2cca86da843f07a2d718d2e69eb9f10", optional = true }
+netrender_text = { workspace = true }
+modulus = { workspace = true, optional = true }
 mesocosm-core = { version = "0.0.1", path = "../../../mesocosm/crates/mesocosm-core" }
 mesocosm-lens = { version = "0.0.1", path = "../../../mesocosm/crates/mesocosm-lens", optional = true }
 mesocosm-mesh = { version = "0.0.1", path = "../../../mesocosm/crates/mesocosm-mesh" }
 mesocosm-render = { version = "0.0.1", path = "../../../mesocosm/crates/mesocosm-render" }
-netrender = { path = "../../../../netrender/netrender" }
+netrender = { workspace = true }
 renderling = { path = "../../../../../crates/renderling/crates/renderling" }
 wgpu = { version = "30", default-features = false, features = [
     "dx12",

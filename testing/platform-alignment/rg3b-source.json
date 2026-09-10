@@ -1,0 +1,22 @@
+{
+  "proof": "RG3 Mesocosm single-renderer opaque-tenant receipt",
+  "source_head": "dadbd0ceea63aff7db55909bd9cfda7c8729f34e",
+  "chrome_dirty_diff_git_object": "600d8f928ee4020033a02523f2350e28ec9721bc",
+  "source_paths": {
+    "chrome_rs": "C:/Users/mark_/Code/repos/isometry/mesocosm/crates/mesocosm-genet/src/chrome.rs",
+    "chrome_tests_rs": "C:/Users/mark_/Code/repos/isometry/mesocosm/crates/mesocosm-genet/src/chrome/tests.rs",
+    "composite_rs": "C:/Users/mark_/Code/repos/isometry/mesocosm/crates/mesocosm-render/src/composite.rs"
+  },
+  "source_sha256": {
+    "chrome_rs": "e9a42bf22d8c5644e998f09b4b38f635dd18ce2deaf87d86768250b7fed55f23",
+    "chrome_tests_rs": "2d46600b745189dfa88d0a1a25cb1a64c8939d897c052f82f1c2030c34de682e",
+    "composite_rs": "fe1392c69abfa16d9ad9dd00ea5ffac4946ef8b689369dc0a082d450c6bb823b"
+  },
+  "probe": {
+    "manifest": "C:/t/wing-chrome-proof/Cargo.toml",
+    "lockfile": "C:/t/wing-chrome-proof/Cargo.lock",
+    "target_dir": "C:/t/wing-chrome-target",
+    "manifest_sha256": "c530e43016b08a2801b107bf291de20ab353ca741e4e95a377b114c15391e40a",
+    "lockfile_sha256": "a868e76062c78259a215639e64801655ee8b96fa3f5f86829d55210ae298b4e9"
+  }
+}

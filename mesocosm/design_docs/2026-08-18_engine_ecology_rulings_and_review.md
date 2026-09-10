@@ -814,3 +814,9 @@ and remaining gates are recorded in the [body plan, section 12](2026-07-31_wing_
 The dependency review found no need for platform pin changes in this pure-data
 slice. The renderer compatibility bridge remains a separate coordinated API
 migration; the audit does not claim the three dependency graphs aligned.
+
+**Platform follow-up, 2026-09-09:** the separate migration is now implemented
+for Mesocosm's single renderer, with an actual-source GPU composition receipt.
+The exact source selections and remaining application/upstream gates are tracked
+in the [wing consolidation plan](../../design_docs/2026-09-09_games_wing_consolidation_plan.md#platform-alignment-follow-up-2026-09-09).
+The baseline identities above describe the audit input, not the current selection.

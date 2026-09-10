@@ -134,3 +134,103 @@ The local migration record above describes the initial handoff. Subsequently:
   test processes were stopped when unrelated jobs held the shared Cargo cache.
   Physical input and headed acceptance remain open. Paredros formatting checks
   also encountered unrelated external Renderling formatting differences.
+## Platform alignment follow-up (2026-09-09)
+
+Status: implemented and consumer-verified. The repository move above remains
+complete; this follow-up retains the three Cargo workspace roots. Separate
+upstream workspace blockers and headed acceptance are recorded below.
+
+Align the Mere and Genet consumer edges with the published Netrender
+`c77b0be84fb6fc28a3c1602a2b1637f7d913acc0` API. Mesocosm replaces its
+`netrender_graph` bridge and two renderer instances with one renderer. Product
+paint order, sRGB conversion, alpha, and tenant submission receipts stay intact.
+Paredros adopts the same immutable renderer source instead of an implicit sibling
+checkout. Direct Genet DOM edges and root patches must match Mere's chosen pin.
+
+The Mere and Genet main checkouts contain unrelated active changes. Narrow owner
+integration worktrees isolate dependency updates from those changes; their exact
+commits become consumer pins only after verification. The final Mere selection
+also includes the existing atlas and deferred-input APIs used by tabletop, so
+those consumer calls do not depend on an unpublished local override.
+
+Done conditions:
+
+- One reachable identity per renderer, device, paint-list and DOM package in each
+  product, and the same source across products wherever those packages occur.
+- Mesocosm compiles with one Netrender instance and retains its opaque section
+  composition comparison and submission-count receipt.
+- Focused consumer checks plus all-feature/all-target workspace attempts record
+  concrete pass results or blockers; local overrides are labelled separately.
+- The source audit can consume saved Cargo metadata and reject duplicate package
+  identities without requiring another dependency resolution.
+
+### Single-renderer composition receipt
+
+The actual Mesocosm `chrome.rs` and `mesocosm-render::composite` source were
+compiled by path in an isolated probe against Git Netrender `c77b0be`. The
+`opaque_section_graph_byte_matches_direct_composite` test passed on an NVIDIA
+GeForce RTX 4060 Laptop GPU using Vulkan at 32 by 24 pixels. It exercises a
+visible UI raster between two tenant-master frames on the same renderer and
+asserts stable allocation count and identical tenant-master bytes. Presentation
+retains the existing maximum channel difference of 3, with one reported physical
+tenant submission, one logical producer, one graph encoder batch and one graph
+submission boundary. See [the machine receipt](../testing/platform-alignment/rg3b-single-renderer.json).
+The [source receipt](../testing/platform-alignment/rg3b-source.json) identifies
+the actual source hashes and isolated probe lockfile. This is a GPU composition
+check, separate from full-host or headed acceptance.
+
+### Upstream source selection
+
+Genet's isolated integration commit
+`3a7b50230d447f6fa7ed6921cba019f78347d932` is published on
+`wing-platform-alignment-20260909`, from the previously consumed `9e8f9dc` base.
+It aligns renderer, device, paint-list API/lowering, the registry paint patch,
+and the standalone renderer smoke package to Netrender `c77b0be`. The focused
+`genet-livery` and `genet-render-host` check passed. The full Genet workspace
+all-features/all-targets check stopped in vendored Parley tests. Restoring the
+tracked Lato font omitted by the sparse checkout isolated the remaining error:
+`parley_dev::font_dirs()` is unresolved in `test_builders.rs:59`. The focused
+production-host check remains green. Verification used the isolated sparse
+source checkout, preserving the active main checkout.
+
+Mere's matching owner update is published as
+`fb7e136b13298b1e9c56ece8a282fb1b1fac4d8c` on the same named integration branch.
+Its pin-only parent is `fc382ac4`; the final commit promotes the existing atlas,
+retained paint, return-motion and host profiling APIs used by tabletop. The
+focused all-target check of `cambium-genet-winit-host`, `cambium`, `sprigging`
+and `scenotime` passed, as did all 36 Scenotime library tests. The broader
+Mere check, repeated on the final source, stopped in Knot's `EditableTextV1`
+initializers at `endpoint.rs:1067` and `:1097`, which lack `public_revision`.
+Cleromancy's matching source selection is published as
+`3b321539c5bc854403623087d8af18dcef6f2b53`; its final locked library check passes.
+Tabletop selects that exact commit rather than following Cleromancy main.
+
+### Consumer verification (2026-09-10)
+
+All three products' all-features metadata pass the shared source-identity
+audit across 80 package names: each has at most one reachable
+identity per product, with matching identities wherever shared. Legitimate
+package absences are informational. The [saved audit output](../testing/platform-alignment/source-identities.txt)
+records the selected identities. Tabletop's tracked lockfile is refreshed;
+Mesocosm and Paredros keep their existing ignored-lock policy. The audit covers
+every resolved Git package from Mere, Genet and Netrender, plus critical names
+that may be supplied through registry or local overrides. This broader check
+also aligned Mesocosm's Taffy and IPC patches and Paredros's Parley patch with
+Genet. Tabletop, Mesocosm and Paredros all pass
+`cargo check --workspace --all-features --all-targets --locked -j 2` after these
+patches. Checks use the published Git graph without tabletop local overrides.
+
+The separate `shared/wing-integration` lockfile selects the same Mere revision;
+all four live cross-product integration tests pass. Mesocosm's camera comparison
+example now handles the four terrarium directions added by the camera work.
+
+Run `pwsh -File scripts/audit-source-identity.ps1 -AllFeatures -FailOnDuplicate
+-FailOnMismatch` for the locked three-product source gate. Saved metadata may be
+provided explicitly for a repeatable audit without resolving again. The audit
+validates each workspace root and resolved graph before traversing reachable
+packages; it preserves case-distinct JSON feature keys such as `USB` and `usb`.
+`pwsh -File scripts/tests/audit-source-identity.ps1` passes eleven regression
+cases, including case-distinct features, reachable versus unreachable duplicate
+sources, dynamically discovered platform packages, and incomplete or mismatched
+metadata. PowerShell 7 is required. The [verification record](../testing/platform-alignment/verification.json)
+collects exact pins, metadata hashes, check results and GPU provenance.

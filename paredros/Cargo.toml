@@ -33,15 +33,25 @@ members = [
 spirv-std = { git = "https://github.com/rust-gpu/rust-gpu.git", rev = "05b34493ce661dccd6694cf58afc13e3c8f7a7e0" }
 craballoc = { path = "../../../crates/crabslab/crates/craballoc" }
 crabslab = { path = "../../../crates/crabslab/crates/crabslab" }
-# Netrender (a sibling path dep here) resolves vello from crates.io, and
+# The renderer graph may resolve vello from crates.io, and
 # upstream vello 0.10 still requires wgpu 29. Without this the graph carries
 # two wgpu majors and netrender's vello rasterizer stops type-checking
 # against this workspace's wgpu 30. Retires when a wgpu-30 vello ships.
 vello = { git = "https://github.com/mark-ik/vello.git", branch = "mark-ik/wgpu-30" }
+# Share the text implementation selected by the other game hosts.
+parley = { git = "https://github.com/merely-made/genet.git", rev = "3a7b50230d447f6fa7ed6921cba019f78347d932" }
 
 # The probe builds a lot of shader and rasterizer code. Unoptimized debug
 # builds render a frame slowly enough to misread as a hang.
 [profile.dev]
 opt-level = 1
+
+# Renderer source is selected once for this product; use the same immutable
+# family revision as the other games and their Mere/Genet host dependencies.
+[workspace.dependencies]
+conatus = { git = "https://github.com/merely-made/mere.git", rev = "fb7e136b13298b1e9c56ece8a282fb1b1fac4d8c" }
+modulus = { git = "https://github.com/merely-made/mere.git", rev = "fb7e136b13298b1e9c56ece8a282fb1b1fac4d8c" }
+netrender = { git = "https://github.com/merely-made/netrender.git", rev = "c77b0be84fb6fc28a3c1602a2b1637f7d913acc0" }
+netrender_text = { git = "https://github.com/merely-made/netrender.git", rev = "c77b0be84fb6fc28a3c1602a2b1637f7d913acc0" }
 
 [dependencies]
