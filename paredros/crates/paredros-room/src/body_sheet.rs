@@ -364,6 +364,27 @@ impl Hud {
         scene
     }
 
+    /// Small text-first surface for native action probes. Keeping this on the
+    /// existing HUD reuses the same font and netrender scene boundary.
+    pub fn timed_scene(&mut self, title: &str, lines: &[String]) -> Scene {
+        let mut scene = Scene::new(LOGICAL_SIZE[0], LOGICAL_SIZE[1]);
+        scene.push_rect(0., 0., 1280., 720., [0.035, 0.05, 0.065, 1.]);
+        scene.push_rect(24., 20., 1256., 680., [0.025, 0.04, 0.055, 0.96]);
+        let ink = [0.91, 0.95, 0.96, 1.];
+        self.text.label(&mut scene, title, [48., 48.], 28., ink, 1160.);
+        for (index, line) in lines.iter().enumerate() {
+            self.text.label(
+                &mut scene,
+                line,
+                [54., 112. + index as f32 * 31.],
+                18.,
+                if index == 0 { [0.95, 0.78, 0.42, 1.] } else { ink },
+                1140.,
+            );
+        }
+        scene
+    }
+
     fn panel(&self, scene: &mut Scene, x: f32, y: f32, xx: f32, yy: f32) {
         scene.push_rect(x, y, xx, yy, [0.025, 0.04, 0.055, 0.96]);
     }

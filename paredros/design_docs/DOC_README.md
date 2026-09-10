@@ -37,7 +37,9 @@ dependencies while the execution plan retains F0-F8 semantic milestones:
 - [Functional loops and wiring](2026-09-09_functional_loops_plan.md): session
   authority, injury and directional combat, building, saves and continuation;
   bounded J0 body-sheet safety and J1a controlled-session persistence implemented
-  locally; J1a passes 35 library + 3 integration tests. Full host/contact join open.
+  locally; J1a passes 35 library + 3 integration tests. B1 timed limb contributions
+  now pass 9 focused model tests, one native handler test and an automated
+  captured/presented smoke run. Physical input and full host/contact join remain open.
 - [World conditions and authored laws](2026-09-09_world_conditions_plan.md):
   independent skill/risk surgery, causal composition, proposed stored charge and
   sympathetic coupling, and explicitly scoped rules adapters; planned.
@@ -101,5 +103,3 @@ and social/charge proposals remain unimplemented and open to design discussion.
 ## Archive
 
 None yet. Retired plans go to `archive_docs/<YYYY-MM-DD>/`.
-
-- Timed limb contributions: [functional loops B1](2026-09-09_functional_loops_plan.md#b1-timed-limb-contributions-2026-09-09), prepare/charge/release and partial interruption; implementation in progress.

@@ -404,7 +404,7 @@ enter its settled shared owner earlier.
 
 ## B1: timed limb contributions (2026-09-09)
 
-**Status: core implemented; native verification in progress.** Authorized after the shared functional evaluator and
+**Status: implemented; automated native verification completed.** Authorized after the shared functional evaluator and
 wire-format commit `dadbd0c`. This slice turns finite-charge operation receipts
 into a product-owned action lifecycle; it does not claim full geometric combat.
 
@@ -446,7 +446,8 @@ but does not identify which specific limb was lost.
 
 ContactWorld-to-GameState collision outcomes, hit quality, damage allocation,
 full equipment tool bindings, native pointer trajectory sampling and general
-spell/enchantment execution need further consumer work. This first action model
+spell/enchantment execution need further consumer work. Succession remains owned
+by Session; the timed coordinator does not yet expose transfer to a successor. This first action model
 produces direction/binding/charge receipts for those adjudicators to consume.
 
 ### Progress
@@ -460,7 +461,7 @@ produces direction/binding/charge receipts for those adjudicators to consume.
   suites passed all 9 tests (7 admission, 2 lifecycle). Coverage includes separate
   limb contributions, shared gate interruption, exhausted supply, partial loss
   followed by save/restore/release, death, stale anatomy, forged bindings and
-  rejected transitions. The native handler/render gate remains in progress.
+  rejected transitions. Native handler and presentation receipts are recorded below.
 
 Run the native surface with `./scripts/wing.ps1 paredros run -p paredros-room
 --bin timed_action`. Arrow keys prepare a direction; hold Space or left mouse
@@ -472,3 +473,25 @@ frame. These controls currently use an authored two-limb functional network.
 This save envelope bounds input bytes and action contributors/ticks. Session
 history still uses the existing replay log; these checks do not establish a
 bounded multi-year world size or a history-compaction policy.
+
+- 2026-09-09: recovered the original independent Mesocosm gate after an agent
+  interruption: `mesocosm-core` completed with exit 0, 670 passed and 1 ignored.
+  The long-run matter conservation case passed (2,534.06 seconds for its suite).
+  This closes that run, not verification of later composition commit `d10c259`:
+  concurrent source edits prevented an exact compile-input attribution. One
+  existing `unused_mut` warning was reported at `organism/kingdom.rs:333`.
+
+- 2026-09-09: native `timed_action` built with locked Mere `fc382ac4` and
+  Netrender `c77b0be8` pins. The bounded smoke passed preparation, joining two
+  independent limbs, charging, atomic injury, exact save/load restoration and
+  one surviving strike receipt, then captured a nontrivial frame and presented
+  the window. The capture was visually inspected: both control lines and final
+  release status were readable. It is an automated headed receipt, not physical
+  keyboard/mouse acceptance. The host waits while idle instead of polling.
+  Local artifacts: `C:/Users/mark_/Code/.tmp/paredros-timed-action-20260909-pinned/`
+  (`smoke.png`, `smoke.save`, `stdout.log`, `stderr.log`).
+
+- 2026-09-09: `cargo test -p paredros-room --bin timed_action --offline --locked
+  -j 2 --target-dir target-contact` passed its one handler lifecycle test on the
+  same Mere `fc382ac4` / Netrender `c77b0be8` graph as the headed smoke. Existing
+  room dead-code and unused Vello-patch warnings remain unrelated to this slice.

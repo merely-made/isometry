@@ -30,6 +30,7 @@ v1b-proof = ["v1-proof"]
 [dependencies]
 paredros-identity = { path = "../paredros-identity" }
 paredros-world = { path = "../paredros-world" }
+wing-functions = { path = "../../../shared/wing-functions" }
 netrender_text = { path = "../../../../netrender/netrender_text" }
 modulus = { git = "https://github.com/merely-made/mere.git", rev = "d82afa17e2cca86da843f07a2d718d2e69eb9f10", optional = true }
 mesocosm-core = { version = "0.0.1", path = "../../../mesocosm/crates/mesocosm-core" }
@@ -58,6 +59,10 @@ required-features = ["r1-proof"]
 [[bin]]
 name = "body_sheet"
 path = "src/bin/body_sheet.rs"
+
+[[bin]]
+name = "timed_action"
+path = "src/bin/timed_action.rs"
 
 [[bin]]
 name = "v1_residency"
