@@ -1,7 +1,7 @@
 # Trophic Grammar Plan (2026-09-04)
 
 **Status: accepted by Mark 2026-09-04; TG1 complete 2026-09-05;
-TG2a-TG2d implemented 2026-09-09. Full TG2-TG7 remain open.** The three
+TG2a-TG2e implemented 2026-09-09. Full TG2-TG7 remain open.** The three
 rulings in section 4 are given. This is PE4's first
 build: the material scheme ruled 2026-09-02 turned into a trophic grammar. It
 owns typed intake, typed accounts, part composition, defenses, and selective
@@ -189,11 +189,47 @@ keeping its tissue-to-tissue conversion restriction intact.
 
 `FlowEvent.composition` is optional during integration. `None` means the
 route has not supplied typed evidence, rather than a claim that its matter
-was untyped. Grammar revision 4 covers the changed feeding semantics. Birth,
-upkeep, travel and completed decay still need their typed joins and accepted
-conversion records; synthesis and lineage tissue recipes remain open as well.
+was untyped. Grammar revision 4 covers the changed feeding semantics. TG2e
+below extends birth, upkeep, travel and completed decay with typed joins and
+accepted conversion records; synthesis and lineage tissue recipes remain open.
 This slice establishes dietary retention from authored mixed donors. It does
 not establish a naturally generated typed food web or close TG2/TG3.
+
+**TG2e birth and completed returns, 2026-09-09.** Ordinary and forced birth
+provision the child from the parent's actual stock debit. The realized child
+distributes that lot across active parts in stable order, retaining each
+part's scalar mass. Failed distribution leaves the phenotype unchanged, and
+severed parts keep their historical mixtures. Reserve endowment is an
+unchanged untyped transfer.
+
+Upkeep carries its paid substance lot alongside the scalar debt. Upkeep,
+travel and cadenced carrion decay use one completed-return function: its
+mineralization record retains the actual input and the deposited untyped
+output. Death itself leaves body composition intact. Only the material
+removed by decay loses its nis. The independent receipt checker admits a
+mixed typed/untyped input for completed mineralization. This is a named
+metabolic return, not a relabelling based on the body's current kingdom.
+
+Known untyped reserve, soil-uptake and dev-source flows now carry explicit
+composition; graft flows carry the harvested branch's mixture. Unknown
+substance callers still default to missing evidence, rather than silently
+claiming untyped stock. Grammar revision 5 covers the new birth semantics.
+The new reconciliation instrument compares all four channels by organism and
+account, with soil aggregated across columns. This does not provide individual
+part or soil-column flow addresses. Synthesis, lineage tissue recipes, dietary
+display and full ecological/performance acceptance remain open.
+
+The next bounded join is producer synthesis: draw only untyped soil, record
+the explicit conversion into producer tissue, and route the resulting stock
+through the existing intake function. Pending typed soil remains unavailable
+to roots. **Mark's founder ruling, 2026-09-09:** generated basic lifeforms
+start with an explicit tissue recipe appropriate to their declared clade or
+kingdom. Untyped founder bodies are temporary implementation scaffolding,
+not the intended biological default. Feeding and growth can change the
+mixture, and available provenance remains visible. A recipe initializes new
+founders; the body's later kingdom or anatomy never relabels existing matter.
+Births retain the parent's actual donated stock. Implement recipe ownership
+in the lineage/generation path after the bounded synthesis join.
 
 ### TG3: scruple per part
 
@@ -311,6 +347,21 @@ beginning body types; start investigating a beginning set of traits.
 ---
 
 ## Findings
+
+- **2026-09-09, TG2e birth and returns:** an isolated `d10c259` checkout
+  with exactly this slice's fifteen source files passed 501 core unit tests,
+  70 embodied-action tests, 14 flow tests, eight matter tests, six replay
+  tests and 29 runtime tests: 628 passed, with one existing ignored core
+  test. Release validation used the resolved lockfile, offline. Final sources
+  matched the isolated inputs byte for byte, passed formatting and stayed
+  within the 600-line ceiling. Parallel host, dependency and Paredros work
+  was excluded. The mixed-body lifecycle independently reconciles four
+  channels through forced ordinary birth, death and cadenced mineralization,
+  replaying the exact flow vectors and world state. Its decay horizon covers
+  the corpse's remaining untyped stock plus one dose: the earlier twelve-tick
+  fixture observed only untyped growth returning, not typed mineralization.
+  Full natural typed-food-web acceptance and performance measurements remain
+  open; the long-run suite establishes scalar conservation.
 
 - **2026-09-09, TG2d feeding:** an isolated `dadbd0c` checkout with this
   slice's source changes passed 493 core unit tests, 29 runtime tests,
@@ -446,11 +497,21 @@ beginning body types; start investigating a beginning set of traits.
 
 ## Progress
 
+- **2026-09-09, TG2e.** Birth preserves parental material; upkeep, travel
+  and cadenced decay record actual input and completed untyped returns.
+  Death retains body tissue. Lifecycle reconciliation and snapshot replay
+  compare all four channels per organism/account and aggregate soil. The
+  decay fixture waits through its measured untyped stock before requiring
+  typed mineralization; root growth still introduces untyped matter until
+  the synthesis join. Mark ruled explicit starting tissue recipes for
+  generated basic lifeforms, with acquired mixtures and provenance retained.
+
 - **2026-09-09, TG2d.** Feeding preserves donor mixtures across whole meals,
   NPC bites and root growth. Accepted flows distinguish unchanged lots from
-  reserve digestion; typed spill remains pending in soil. Birth, upkeep,
-  travel, decay, synthesis and lineage recipes remain the next accounting
-  joins before a per-channel ecological-loop receipt or TG3 acceptance.
+  reserve digestion; typed spill remains pending in soil. TG2e below extends
+  this receipt through birth and completed returns. Synthesis and lineage
+  recipes remain before a natural per-channel ecological-loop receipt or
+  TG3 acceptance.
 
 - **2026-09-04.** Drafted, awaiting Mark. No code touched.
 - **2026-09-04, later.** Accepted; the three rulings given as recommended. TG1 dispatches next.

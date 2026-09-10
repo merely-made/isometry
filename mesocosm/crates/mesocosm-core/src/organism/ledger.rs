@@ -156,10 +156,14 @@ impl Organism {
         let owed = self.upkeep_mg();
         let reserve_mg = self.energy_mg.min(owed);
         self.energy_mg -= reserve_mg;
-        let unpaid_mg = self.spend_mass(owed - reserve_mg);
+        let substance_stock = self.phenotype.spend_stock(owed - reserve_mg);
+        let substance_mg =
+            u64::try_from(substance_stock.total()).expect("upkeep is bounded by its debt");
+        let unpaid_mg = owed - reserve_mg - substance_mg;
         Upkeep {
             reserve_mg,
-            substance_mg: owed - reserve_mg - unpaid_mg,
+            substance_mg,
+            substance_stock,
             unpaid_mg,
         }
     }
@@ -170,6 +174,8 @@ impl Organism {
 pub struct Upkeep {
     pub reserve_mg: u64,
     pub substance_mg: u64,
+    /// Actual tissue spent; the caller completes and records its return.
+    pub substance_stock: Stock,
     /// What the body could not cover. This is starvation.
     pub unpaid_mg: u64,
 }

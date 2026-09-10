@@ -1,7 +1,7 @@
 // Copyright 2026 Mark Alan Boykin
 // SPDX-License-Identifier: MPL-2.0
 
-//! Material evidence emitted by an accepted feeding mutation.
+//! Material evidence emitted by an accepted material mutation.
 //! Absence means the route still reports scalar amounts, not untyped matter.
 
 use super::FlowEvent;
@@ -17,6 +17,17 @@ pub struct Composition {
     pub conversion: Option<Conversion>,
 }
 
+impl Composition {
+    pub(super) fn untyped(amount_mg: u64) -> Self {
+        let stock = Stock::single(Material::Untyped, amount_mg);
+        Self {
+            input: stock,
+            output: stock,
+            conversion: None,
+        }
+    }
+}
+
 impl FlowEvent {
     /// An unchanged lot moved between the named accounts.
     pub fn with_stock(mut self, stock: Stock) -> Self {
@@ -25,6 +36,25 @@ impl FlowEvent {
             input: stock,
             output: stock,
             conversion: None,
+        });
+        self
+    }
+
+    /// Completed return to soil, preserving the exact consumed input in the record.
+    pub fn mineralized(mut self, stock: Stock) -> Self {
+        assert_eq!(stock.total(), u128::from(self.amount_mg));
+        if stock.amounts()[1..].iter().all(|amount| *amount == 0) {
+            return self.with_stock(stock);
+        }
+        assert_eq!(self.destination, super::Account::Soil);
+        assert!(matches!(
+            self.source,
+            super::Account::Substance | super::Account::Soil
+        ));
+        self.composition = Some(Composition {
+            input: stock,
+            output: Stock::single(Material::Untyped, self.amount_mg),
+            conversion: Some(Conversion::Mineralization),
         });
         self
     }

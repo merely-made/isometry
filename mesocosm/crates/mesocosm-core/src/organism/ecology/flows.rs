@@ -18,6 +18,9 @@ use crate::places::Soil;
 
 use super::{Organism, STARVED_UPKEEP_TICKS};
 
+mod returns;
+pub(super) use returns::{decay, pay_travel, pay_upkeep};
+
 /// Where a body put what it just took in.
 ///
 /// The three destinations sum to what was offered, which is what makes the
@@ -144,34 +147,6 @@ pub(super) fn record_intake(
 
 #[cfg(test)]
 mod feeding;
-
-/// Travel, paid in substance into the ground it was covered over.
-///
-/// **The trail, not a sink** (TD6): what a step costs comes out of the walker
-/// and lands in the column it started from, so a body that wandered the
-/// enclosure has left its cost lying behind it. Charged at the origin because
-/// that is where the ground was covered.
-pub(super) fn pay_travel(
-    organism: &mut Organism,
-    soil: &mut Soil,
-    records: &mut Records<'_>,
-    from: [i32; 3],
-    distance: u64,
-) {
-    let owed = distance.max(1);
-    let unpaid = organism.spend_mass(owed);
-    let column = soil.column_at(from);
-    soil.deposit(column, owed - unpaid);
-    records.flow(
-        from,
-        FlowEvent::returned(
-            Process::Travel,
-            Subject::of(organism),
-            Account::Substance,
-            owed - unpaid,
-        ),
-    );
-}
 
 /// A body's remains go back to the ground where it lies: what it was still
 /// carrying as reserve, released the moment it stops being able to hold it.

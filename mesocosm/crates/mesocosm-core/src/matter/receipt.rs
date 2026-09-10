@@ -194,7 +194,6 @@ fn validate_conversion(
         Conversion::Mineralization
             if matches!(to, Address::Soil(_))
                 && matches!(from, Address::Part(_, _) | Address::Soil(_))
-                && input_amounts[0] == 0
                 && input_amounts[1..].iter().any(|amount| *amount > 0)
                 && output_amounts[0] > 0
                 && output_amounts[1..].iter().all(|amount| *amount == 0) =>

@@ -182,6 +182,14 @@ impl World {
             organism.energy_mg -= cost_mg;
         }
 
+        let stock = branch
+            .parts
+            .iter()
+            .try_fold(crate::matter::Stock::EMPTY, |total, part| {
+                total.checked_add(part.stock)
+            })
+            .expect("a harvested branch fits its donor mass");
+
         // The source loses the branch only after the checked candidate lands.
         let lost = self.organisms[donor_index].phenotype.sever(donor_part);
         debug_assert_eq!(lost.len(), branch.len(), "the branch left whole");
@@ -195,7 +203,8 @@ impl World {
                 eater,
                 Account::Substance,
                 mass_mg,
-            ),
+            )
+            .with_stock(stock),
         );
         if cost_mg > 0 {
             let column = self.soil.column_at(position);

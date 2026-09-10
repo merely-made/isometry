@@ -57,7 +57,8 @@ pub const DEFAULT_EPOCH_TICKS: u64 = 1_000;
 /// distinguished at the `WorldRules` admission gate rather than replayed as
 /// TG1. Revision 2 introduces typed soil; revision 3 adds part scruple storage.
 /// Revision 4 preserves whole-meal mixtures and records reserve digestion.
-pub const TROPHIC_GRAMMAR_REVISION: u32 = 4;
+/// Revision 5 preserves birth provisioning and records completed tissue returns.
+pub const TROPHIC_GRAMMAR_REVISION: u32 = 5;
 
 /// How long a candidate is grown before its flow record is read. (P4b)
 ///

@@ -26,6 +26,14 @@ pub enum StockMassError {
         part_mass_mg: u64,
         stock_total_mg: u128,
     },
+    BodyMismatch {
+        body_mass_mg: u128,
+        stock_total_mg: u128,
+    },
+    MosaicMismatch {
+        parts: usize,
+        mosaics: usize,
+    },
 }
 
 /// Why a typed attachment could not be committed.
@@ -137,6 +145,53 @@ impl BodyPhenotype {
             });
         }
         mosaic.scruple = stock;
+        debug_assert!(self.conserves());
+        Ok(())
+    }
+
+    /// Assigns one exact lot across attached parts in stable part order.
+    ///
+    /// The body's scalar masses are retained. Each active part takes its mass
+    /// from the remaining lot, so the last part closes the exact total. The
+    /// total is checked before any scruple changes, keeping a failed birth
+    /// allocation from partially relabelling a child.
+    pub fn distribute_stock(&mut self, stock: Stock) -> Result<(), StockMassError> {
+        if self.body.parts.len() != self.mosaics.len() {
+            return Err(StockMassError::MosaicMismatch {
+                parts: self.body.parts.len(),
+                mosaics: self.mosaics.len(),
+            });
+        }
+        let body_mass_mg = self
+            .body
+            .living()
+            .map(|part| u128::from(part.mass_mg))
+            .sum();
+        if stock.total() != body_mass_mg {
+            return Err(StockMassError::BodyMismatch {
+                body_mass_mg,
+                stock_total_mg: stock.total(),
+            });
+        }
+
+        let mut remaining = stock;
+        // Severed parts are outside the child's active body mass and retain
+        // their historical scruples. Start from every existing lot so the
+        // final commit changes only active parts.
+        let mut allocations: Vec<Stock> =
+            self.mosaics.iter().map(|mosaic| mosaic.scruple).collect();
+        for (index, part) in self.body.parts.iter().enumerate() {
+            if part.severed {
+                continue;
+            }
+            let (allocation, rest) = remaining.take(part.mass_mg);
+            allocations[index] = allocation;
+            remaining = rest;
+        }
+        debug_assert_eq!(remaining, Stock::EMPTY);
+        for (mosaic, allocation) in self.mosaics.iter_mut().zip(allocations) {
+            mosaic.scruple = allocation;
+        }
         debug_assert!(self.conserves());
         Ok(())
     }

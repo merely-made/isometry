@@ -595,4 +595,6 @@ mod tests;
 #[cfg(test)]
 mod tg1_tests;
 #[cfg(test)]
+mod tg2_returns_tests;
+#[cfg(test)]
 mod typed_soil_tests;

@@ -16,6 +16,7 @@
 use crate::development::PartPalette;
 use crate::flow::{Account, FlowEvent, Process, Records, Subject};
 use crate::history::Event;
+use crate::matter::{Material, Stock};
 use crate::places::{Ground, Tier};
 use crate::rng::Rng;
 use crate::species::Lineages;
@@ -98,7 +99,7 @@ pub fn bear(
     palette: PartPalette,
     ground: Option<&Ground>,
 ) -> Option<Organism> {
-    let (child, cost, endowment) = {
+    let (mut child, cost, endowment) = {
         let parent = &organisms[index];
         let cost = parent.biomass_mg() / OFFSPRING_COST;
         // A child's opening budget is **provisioned**, out of the parent's own
@@ -199,19 +200,42 @@ pub fn bear(
     let forebear = Subject::of(parent);
     // `cost` is a quarter of what this body weighs, so the debit is always
     // payable in full whichever door asked for the birth; a shortfall here
-    // would be matter out of nothing.
-    let short = parent.spend_mass(cost);
-    debug_assert_eq!(short, 0, "a birth outran its parent");
+    // would be matter out of nothing. The lot retains its mixture while the
+    // child receives it across the already-realized body.
+    let body_stock = parent.phenotype.spend_stock(cost);
+    debug_assert_eq!(
+        body_stock.total(),
+        u128::from(cost),
+        "a birth outran its parent"
+    );
+    child
+        .phenotype
+        .distribute_stock(body_stock)
+        .expect("a realized child weighs exactly what its parent paid");
     parent.energy_mg -= endowment;
     parent.since_offspring = 0;
 
     // A birth is a transfer, not a spawn. Both halves come out of the
     // parent's own accounts and land in the matching account of the child,
     // which is what TD6 made true and this is what says so.
-    for (account, mg) in [(Account::Substance, cost), (Account::Reserve, endowment)] {
+    for (account, stock) in [
+        (Account::Substance, body_stock),
+        (
+            Account::Reserve,
+            Stock::single(Material::Untyped, endowment),
+        ),
+    ] {
         records.flow(
             born_at,
-            FlowEvent::between(Process::Birth, forebear, account, heir, account, mg),
+            FlowEvent::between(
+                Process::Birth,
+                forebear,
+                account,
+                heir,
+                account,
+                u64::try_from(stock.total()).expect("a birth transfer fits u64"),
+            )
+            .with_stock(stock),
         );
     }
     Some(child)
@@ -227,3 +251,6 @@ pub(crate) fn filial_seed(parent: u64, child: OrganismId) -> u64 {
     let mut stream = Rng::from_seed(parent ^ FILIAL_SALT ^ u64::from(child.0));
     stream.next_u64()
 }
+
+#[cfg(test)]
+mod birth;

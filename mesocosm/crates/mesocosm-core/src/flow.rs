@@ -57,6 +57,7 @@ use crate::places::{PlaceId, Places};
 
 mod accounts;
 mod composition;
+mod construct;
 pub use composition::{Composition, Conversion};
 
 pub use accounts::Accounts;
@@ -234,86 +235,6 @@ pub struct FlowEvent {
     pub from: Option<Subject>,
     /// Whose account it reached, when it reached one.
     pub to: Option<Subject>,
-}
-
-impl FlowEvent {
-    /// Out of the ground and into a body.
-    pub fn uptake(to: Subject, into: Account, amount_mg: u64) -> Self {
-        Self {
-            process: Process::Uptake,
-            carrier: Carrier::Matter,
-            source: Account::Soil,
-            destination: into,
-            amount_mg,
-            composition: None,
-            from: None,
-            to: Some(to),
-        }
-    }
-
-    /// Out of a body and back into the ground.
-    pub fn returned(process: Process, from: Subject, out_of: Account, amount_mg: u64) -> Self {
-        Self {
-            process,
-            carrier: Carrier::Matter,
-            source: out_of,
-            destination: Account::Soil,
-            amount_mg,
-            composition: None,
-            from: Some(from),
-            to: None,
-        }
-    }
-
-    /// Out of the dev source and into the ground. (DT3)
-    ///
-    /// Names no [`Subject`] on either end, exactly as [`Self::uptake`] names
-    /// none on the soil end: neither account belongs to a body, so a
-    /// reconciliation over bodies passes this by and the soil's own claim is
-    /// the whole of it.
-    pub fn placed(amount_mg: u64) -> Self {
-        Self {
-            process: Process::Place,
-            carrier: Carrier::Matter,
-            source: Account::Dev,
-            destination: Account::Soil,
-            amount_mg,
-            composition: None,
-            from: None,
-            to: None,
-        }
-    }
-
-    /// Between two bodies: a meal, or a parent provisioning a child.
-    pub fn between(
-        process: Process,
-        from: Subject,
-        out_of: Account,
-        to: Subject,
-        into: Account,
-        amount_mg: u64,
-    ) -> Self {
-        Self {
-            process,
-            carrier: Carrier::Matter,
-            source: out_of,
-            destination: into,
-            amount_mg,
-            composition: None,
-            from: Some(from),
-            to: Some(to),
-        }
-    }
-
-    /// The signed effect of this flow on one account, in milligrams.
-    ///
-    /// A transfer between two of the same account nets to nothing, which is what
-    /// makes soil-to-soil transport honest to leave unrecorded.
-    pub fn net_on(&self, account: Account) -> i128 {
-        let into = i128::from(self.destination == account);
-        let out = i128::from(self.source == account);
-        (into - out) * i128::from(self.amount_mg)
-    }
 }
 
 /// The world's one-tick flow buffer.

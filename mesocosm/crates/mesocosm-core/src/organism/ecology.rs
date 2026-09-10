@@ -279,18 +279,7 @@ fn step_inner(
         // nothing left to spend eats itself. Either way the milligrams go back
         // to the ground it is standing on — a body that burns itself has to
         // put that mass somewhere, and that somewhere is the cycle. (TD6)
-        let owed = organism.upkeep_mg();
-        let rent = organism.pay_upkeep();
-        soil.deposit(column, owed - rent.unpaid_mg);
-        for (out_of, mg) in [
-            (Account::Reserve, rent.reserve_mg),
-            (Account::Substance, rent.substance_mg),
-        ] {
-            records.flow(
-                at,
-                FlowEvent::returned(Process::Upkeep, subject, out_of, mg),
-            );
-        }
+        flows::pay_upkeep(organism, soil, records);
 
         // Nothing draws more than it can hold: past the body plan's adult mass
         // and a full reserve, more matter would only be handed straight back.
@@ -468,7 +457,6 @@ fn step_inner(
 
     // **What the tick did to each body**, once every ledger has settled.
     for organism in organisms.iter_mut() {
-        let column = soil.column_at(organism.position);
         match organism.stage {
             Stage::Juvenile | Stage::Mature => {
                 // The hand's body is not driven. Everything above still
@@ -546,18 +534,7 @@ fn step_inner(
                 // phase and the enclosure does not decay in lockstep. The
                 // scavenger's own draw (`decay_rate_for_body`) is untouched:
                 // the yield lever was measured and ruled out, this is duration.
-                let returning = u64::from(organism.age.is_multiple_of(CARRION_DECAY_TICKS));
-                let unreturned = organism.spend_mass(returning);
-                soil.deposit(column, returning - unreturned);
-                records.flow(
-                    organism.position,
-                    FlowEvent::returned(
-                        Process::Decay,
-                        Subject::of(organism),
-                        Account::Substance,
-                        returning - unreturned,
-                    ),
-                );
+                flows::decay(organism, soil, records);
                 if organism.biomass_mg() == 0 {
                     organism.stage = Stage::Spent;
                     records.event(
