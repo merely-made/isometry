@@ -321,6 +321,7 @@ impl BodyLayer {
                 materials: &body.materials,
                 origin: body.origin,
                 scale: self.scale,
+                yaw_radians: 0.0,
                 tint: body.tint,
                 focused: self.focus_subject == Some(body.projection.organism),
                 selected_part: self.selected.and_then(|selection| {

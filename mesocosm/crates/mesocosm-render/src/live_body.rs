@@ -35,6 +35,9 @@ pub struct LiveBody<'a> {
     pub origin: [f32; 3],
     /// Uniform world scale for this body.
     pub scale: f32,
+    /// Continuous presentation yaw around the body's local origin.
+    /// Positive radians follow `Yaw`; attachments turn with their parent body.
+    pub yaw_radians: f32,
     /// Linear multiplier applied after the volume material colour.
     pub tint: [f32; 3],
     /// Gives this body a restrained inspection emphasis.
@@ -52,6 +55,7 @@ impl<'a> LiveBody<'a> {
             mesh,
             origin,
             scale: 1.0,
+            yaw_radians: 0.0,
             tint: [1.0; 3],
             focused: false,
             selected_part: None,
@@ -338,6 +342,7 @@ impl LiveBodyRenderer {
             if !body.origin.iter().all(|value| value.is_finite())
                 || !body.scale.is_finite()
                 || body.scale <= 0.0
+                || !body.yaw_radians.is_finite()
                 || !body.tint.iter().all(|value| value.is_finite())
             {
                 return Err(LiveBodyError::InvalidBody);
@@ -556,6 +561,7 @@ fn model_matrix(body: LiveBody<'_>, yaw: Yaw, pivot: [i32; 3], pivot_at: [i32; 3
     };
     Mat4::from_translation(glam::Vec3::from_array(body.origin))
         * Mat4::from_scale(glam::Vec3::splat(body.scale))
+        * Mat4::from_rotation_y(body.yaw_radians)
         * Mat4::from_translation(glam::Vec3::new(
             pivot_at[0] as f32,
             pivot_at[1] as f32,

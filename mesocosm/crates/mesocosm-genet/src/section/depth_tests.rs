@@ -188,6 +188,7 @@ fn voxel_body_and_brick_tracer_share_depth_in_both_orders() {
                         materials: &[],
                         origin: [0.0, 0.0, z],
                         scale: 1.0,
+                        yaw_radians: 0.0,
                         tint: [1.0; 3],
                         focused: false,
                         selected_part: selected.then_some(PartId(0)),

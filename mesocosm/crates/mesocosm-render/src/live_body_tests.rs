@@ -96,6 +96,37 @@ fn quarter_turn_uses_the_mesh_placement_convention() {
 }
 
 #[test]
+fn parent_yaw_turns_nonzero_pivots_and_attachment_offsets_together() {
+    let mesh = BodyMesh::single(VolumeRef::from_tag(1), &Volume::solid([1, 1, 1], 1));
+    let mut body = LiveBody::new(&mesh, [10.0, 20.0, 30.0]);
+    assert_eq!(body.yaw_radians, 0.0);
+    body.scale = 2.0;
+    // The part's quarter turn maps point - pivot [2, 2, 4] to [4, 2, -2].
+    // Its attachment then places that point at [8, 7, 4] in body space.
+    for (yaw, expected) in [
+        (core::f32::consts::FRAC_PI_2, [18.0, 34.0, 14.0]),
+        (
+            core::f32::consts::FRAC_PI_4,
+            [
+                10.0 + 12.0 * core::f32::consts::SQRT_2,
+                34.0,
+                30.0 - 4.0 * core::f32::consts::SQRT_2,
+            ],
+        ),
+    ] {
+        body.yaw_radians = yaw;
+        let point = model_matrix(body, Yaw::Quarter, [1, 2, 3], [4, 5, 6])
+            .transform_point3(glam::Vec3::new(3.0, 4.0, 7.0));
+        assert!(
+            (point - glam::Vec3::from_array(expected))
+                .abs()
+                .max_element()
+                < 1e-5
+        );
+    }
+}
+
+#[test]
 fn an_unchanged_frame_reuses_all_gpu_uploads() {
     let Some(host) = gpu() else { return };
     let (colour, depth) = attachments(host.device());
@@ -274,6 +305,59 @@ fn an_unchanged_frame_reuses_all_gpu_uploads() {
         "severing removes the added placement"
     );
     eprintln!("VB1 sever receipt: {severed:?}");
+
+    for changed in [true, false] {
+        let yaw = core::f32::consts::FRAC_PI_4;
+        let rotated_body = [LiveBody {
+            yaw_radians: yaw,
+            ..moved_body[0]
+        }];
+        let mut rotation = host.device().create_command_encoder(&Default::default());
+        let rotated = live
+            .draw(
+                host.device(),
+                host.queue(),
+                &mut rotation,
+                &colour_view,
+                &depth_view,
+                clip,
+                None,
+                &rotated_body,
+            )
+            .unwrap();
+        host.queue().submit(Some(rotation.finish()));
+        assert_eq!(
+            rotated.mesh_builds, 0,
+            "parent pose reuses immutable geometry"
+        );
+        assert_eq!(rotated.mesh_upload_bytes, 0);
+        assert_eq!(rotated.frame_upload_bytes, 0);
+        assert_eq!(rotated.instance_upload_bytes > 0, changed);
+        assert_eq!(rotated.instances, 1);
+        assert_eq!(rotated.draw_parts, 1);
+        eprintln!("parent yaw receipt: {rotated:?}");
+    }
+
+    for yaw in [f32::NAN, f32::INFINITY, f32::NEG_INFINITY] {
+        let invalid = [LiveBody {
+            yaw_radians: yaw,
+            ..moved_body[0]
+        }];
+        let mut encoder = host.device().create_command_encoder(&Default::default());
+        assert_eq!(
+            live.draw(
+                host.device(),
+                host.queue(),
+                &mut encoder,
+                &colour_view,
+                &depth_view,
+                clip,
+                None,
+                &invalid,
+            ),
+            Err(LiveBodyError::InvalidBody)
+        );
+    }
 }
 
 #[test]
