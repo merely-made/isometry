@@ -27,9 +27,9 @@ fn ready(host: &mut Host) {
 }
 
 #[test]
-fn body_plan_switch_upgrades_old_draft_and_preserves_habitat() {
+fn body_plan_switch_preserves_current_draft_habitat() {
     use mesocosm_core::world::generation::{BodyPlan, VERSION};
-    let mut host = opened(serde_json::from_str(r#"{"version":1,"seed":7}"#).unwrap());
+    let mut host = opened(serde_json::from_str(r#"{"seed":7}"#).unwrap());
     let original = host.runtime.state_hash();
     ready(&mut host);
     let habitat = host

@@ -29,6 +29,22 @@ impl Composition {
 }
 
 impl FlowEvent {
+    /// A producer turns untyped soil into its own provenance-bearing tissue.
+    pub fn synthesized(mut self, output: Stock) -> Self {
+        assert_eq!(self.source, super::Account::Soil);
+        assert_eq!(self.destination, super::Account::Substance);
+        assert_eq!(output.total(), u128::from(self.amount_mg));
+        assert_eq!(output.amount(Material::Untyped), 0);
+        assert_eq!(output.amount(Material::Consumer), 0);
+        assert_eq!(output.amount(Material::Decomposer), 0);
+        self.composition = Some(Composition {
+            input: Stock::single(Material::Untyped, self.amount_mg),
+            output,
+            conversion: Some(Conversion::Synthesis),
+        });
+        self
+    }
+
     /// An unchanged lot moved between the named accounts.
     pub fn with_stock(mut self, stock: Stock) -> Self {
         assert_eq!(stock.total(), u128::from(self.amount_mg));
@@ -96,6 +112,25 @@ mod tests {
             to: target,
             input,
             output,
+        };
+        assert_eq!(reconcile(&before, &after, &[receipt]), Ok(()));
+    }
+
+    #[test]
+    fn synthesis_reconciles_untyped_soil_as_producer_tissue() {
+        let soil = Address::Soil([0, 0, 0]);
+        let tissue = Address::Part(OrganismId(2), PartId(0));
+        let before = Book::from([(soil, Stock::single(Material::Untyped, 26))]);
+        let after = Book::from([
+            (soil, Stock::EMPTY),
+            (tissue, Stock::single(Material::Producer, 26)),
+        ]);
+        let receipt = Receipt::Conversion {
+            kind: Conversion::Synthesis,
+            from: soil,
+            to: tissue,
+            input: Stock::single(Material::Untyped, 26),
+            output: Stock::single(Material::Producer, 26),
         };
         assert_eq!(reconcile(&before, &after, &[receipt]), Ok(()));
     }

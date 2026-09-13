@@ -340,6 +340,9 @@ impl World {
             copy.apply(Intent::Idle);
             for flow in copy.flows() {
                 let record = &flow.record;
+                if record.is_internal() {
+                    continue;
+                }
                 if record.to.is_some_and(|to| to.lineage == species) {
                     score.income_mg = score.income_mg.saturating_add(record.amount_mg);
                 }

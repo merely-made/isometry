@@ -48,6 +48,9 @@ use crate::development::{DevelopmentError, PartPalette, develop_body};
 use crate::plan::Symmetry;
 use crate::process::IntakePort;
 
+mod tissue;
+pub use tissue::{InitialTissueRecipe, TissueRecipeError};
+
 /// One lineage.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Species {
@@ -59,6 +62,11 @@ pub struct Species {
     /// inherits its parent's recipe and diverges from there.
     #[serde(default = "crate::axis::Recipe::default_founding")]
     pub recipe: crate::axis::Recipe,
+    /// The lineage's declared tissue before it has eaten or grown anything.
+    ///
+    /// It is stored for founder provenance. Existing bodies retain their
+    /// allocated stock when their anatomy or trophic reading later changes.
+    pub initial_tissue: InitialTissueRecipe,
     /// The lineage's inherited trophic silhouette. It is part of the
     /// developer's declared input, so previews and births agree.
     #[serde(default)]
@@ -192,6 +200,7 @@ impl Lineages {
         self.species.entry(id).or_insert(Species {
             id,
             recipe: crate::axis::Recipe::default_founding(),
+            initial_tissue: InitialTissueRecipe::default(),
             symmetry: Symmetry::default(),
             name: None,
             parent: None,
@@ -215,6 +224,7 @@ impl Lineages {
         // A fork inherits its parent's body recipe, vocabulary included: a
         // founder does not forget what its line had learned to grow.
         let recipe = self.species[&parent].recipe.clone();
+        let initial_tissue = self.species[&parent].initial_tissue;
         let symmetry = self.species[&parent].symmetry;
         // A fork inherits what its parent is made of. Splitting a line is a
         // commitment, not a change of tissue.
@@ -230,6 +240,7 @@ impl Lineages {
             Species {
                 id,
                 recipe,
+                initial_tissue,
                 symmetry,
                 name: Some(name),
                 parent: Some(parent),
@@ -254,6 +265,13 @@ impl Lineages {
     pub fn set_recipe(&mut self, id: SpeciesId, recipe: crate::axis::Recipe) {
         if let Some(species) = self.species.get_mut(&id) {
             species.recipe = recipe;
+        }
+    }
+
+    /// Installs a lineage's explicit unparented-founder tissue declaration.
+    pub fn set_initial_tissue(&mut self, id: SpeciesId, tissue: InitialTissueRecipe) {
+        if let Some(species) = self.species.get_mut(&id) {
+            species.initial_tissue = tissue;
         }
     }
 
@@ -535,5 +553,17 @@ mod tests {
             crate::graft::Domain::default(),
             "a line this world has never heard of answers with the default"
         );
+    }
+
+    #[test]
+    fn a_fork_inherits_its_initial_tissue_declaration() {
+        let mut lineages = Lineages::new();
+        let parent = SpeciesId(7);
+        let tissue = InitialTissueRecipe::try_new([0, 3, 2, 0]).unwrap();
+        lineages.found(parent);
+        lineages.set_initial_tissue(parent, tissue);
+
+        let child = lineages.fork(parent, "mixed founder".into(), 1).unwrap();
+        assert_eq!(lineages.get(child).unwrap().initial_tissue, tissue);
     }
 }

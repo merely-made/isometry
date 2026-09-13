@@ -86,6 +86,9 @@ impl Accounts {
         self.ticks = self.ticks.saturating_add(1);
         for flow in flows {
             let record = &flow.record;
+            if record.is_internal() {
+                continue;
+            }
             if record.to.is_some_and(|to| to.organism == organism) {
                 self.income_mg = self.income_mg.saturating_add(record.amount_mg);
             }
@@ -162,6 +165,19 @@ mod tests {
             ),
             // Nothing to do with me at all.
             Envelope::new(1, None, FlowEvent::uptake(other, Account::Substance, 900)),
+            // Digestion within this body changes accounts, not its income.
+            Envelope::new(
+                1,
+                None,
+                FlowEvent::between(
+                    Process::Uptake,
+                    me,
+                    Account::Substance,
+                    me,
+                    Account::Reserve,
+                    20,
+                ),
+            ),
         ];
 
         let mut accounts = Accounts::default();

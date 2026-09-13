@@ -14,12 +14,13 @@ use std::collections::BTreeMap;
 
 use crate::body::SpeciesId;
 use crate::development::{DevelopmentError, PartPalette};
+use crate::matter::Material;
 use crate::organism::ecology;
 use crate::organism::{Kingdom, Organism, OrganismId, Signal, Stage};
 use crate::plan::Role;
 use crate::process::{IntakePort, NisKind, Process, Registry};
 use crate::rng::Rng;
-use crate::species::Lineages;
+use crate::species::{InitialTissueRecipe, Lineages};
 
 use super::{DEVELOPMENT_SALT, ENCLOSURE, GRAFT_SALT, PLACE_SALT, PLACE_SIDE, RECIPE_SALT, World};
 
@@ -322,6 +323,14 @@ impl World {
             };
             lineages.set_recipe(species, recipe);
             lineages.set_symmetry(species, kingdom.symmetry());
+            lineages.set_initial_tissue(
+                species,
+                InitialTissueRecipe::single(match kingdom {
+                    Kingdom::Producer => Material::Producer,
+                    Kingdom::Consumer => Material::Consumer,
+                    Kingdom::Decomposer => Material::Decomposer,
+                }),
+            );
             // What this line's flesh is, as this world numbers domains. Its own
             // salted stream, so the assignment moves nothing else. (P3)
             let mut stream = Rng::from_seed(seed ^ GRAFT_SALT ^ u64::from(species.0));
@@ -359,6 +368,13 @@ impl World {
             let mass_mg = body.total_mass_mg();
             body.plan.symmetry = founder.kingdom.symmetry();
             let mut phenotype = crate::phenotype::BodyPhenotype::seed(body);
+            let stock = lineage
+                .initial_tissue
+                .stock_for(mass_mg)
+                .expect("live founders always declare tissue");
+            phenotype
+                .distribute_stock(stock)
+                .expect("founder tissue is scaled to the realized body");
             lineage.apply_intake_ports(&mut phenotype);
             if authored_consumers
                 && (founder.species == omnivore_species || founder.species == SpeciesId(1))

@@ -52,6 +52,50 @@ fn a_score_states_its_window_and_derives_one_number_from_it() {
 }
 
 #[test]
+fn producer_reserve_conversion_is_not_extra_scoring_income() {
+    let mut world = brisk(11, 40);
+    let producer = world
+        .living()
+        .find(|o| o.kingdom() == crate::organism::Kingdom::Producer)
+        .unwrap()
+        .id;
+    world.organisms.retain(|o| o.id == producer);
+    world.controlled = Some(producer);
+    let organism = world
+        .organisms
+        .iter_mut()
+        .find(|o| o.id == producer)
+        .unwrap();
+    organism.energy_mg = 0;
+    let species = organism.species;
+    let score = world.score(species, None);
+    let mut income = 0;
+    let mut internal = 0;
+    for _ in 0..world.rules.score_ticks {
+        world.apply(Intent::Idle);
+        for flow in world.drain_flows() {
+            let flow = flow.record;
+            if flow.to.is_some_and(|to| to.lineage == species) {
+                if flow
+                    .from
+                    .is_some_and(|from| flow.to.unwrap().organism == from.organism)
+                {
+                    internal += flow.amount_mg;
+                } else {
+                    income += flow.amount_mg;
+                }
+            }
+        }
+    }
+    assert!(
+        internal > 0,
+        "the hungry producer synthesized and digested tissue"
+    );
+    assert!(income > 0);
+    assert_eq!(score.income_mg, income);
+}
+
+#[test]
 fn the_ordering_takes_the_best_candidate_that_beats_the_status_quo() {
     // The authored two-candidate case, and the three answers it can give.
     let standing = (None, scored(1_000, 400));

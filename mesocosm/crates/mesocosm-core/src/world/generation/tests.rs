@@ -9,20 +9,14 @@ fn palette() -> PartPalette {
 }
 
 #[test]
-fn old_requests_keep_their_bodies_and_reject_new_grammar() {
+fn older_requests_are_rejected_before_material_interpretation() {
     let old = Request {
         version: 1,
         ..Request::default()
     };
     let new = Request::default();
-    assert_eq!(
-        old.preview(palette()).unwrap().candidates,
-        new.preview(palette()).unwrap().candidates
-    );
-    assert_eq!(
-        state_hash(&old.prepare(palette()).unwrap().enter(1).unwrap()),
-        state_hash(&new.prepare(palette()).unwrap().enter(1).unwrap())
-    );
+    assert_eq!(old.validate(), Err(Error::Version(1)));
+    assert!(new.preview(palette()).is_ok());
     let mut invalid = old;
     invalid.criteria.body_plan = BodyPlan::Branched;
     assert!(invalid.validate().is_err());
@@ -110,6 +104,27 @@ fn prepared_previews_are_disposable_and_match_fresh_entry() {
         state_hash(&expected)
     );
     assert!(prepared.enter(usize::MAX).is_err());
+}
+
+#[test]
+fn generated_creator_entry_installs_the_selected_tissue() {
+    let mut request = Request::default();
+    request.criteria.role = Some(Kingdom::Producer);
+    let world = request.prepare(palette()).unwrap().enter(0).unwrap();
+    let founder = world.controlled().expect("generated founder is controlled");
+    let expected = crate::matter::Material::Producer;
+    assert_eq!(
+        world
+            .lineages()
+            .get(founder.species)
+            .expect("founder lineage")
+            .initial_tissue,
+        crate::InitialTissueRecipe::single(expected)
+    );
+    assert_eq!(
+        founder.phenotype.total_stock().unwrap(),
+        crate::matter::Stock::single(expected, founder.biomass_mg())
+    );
 }
 
 #[test]

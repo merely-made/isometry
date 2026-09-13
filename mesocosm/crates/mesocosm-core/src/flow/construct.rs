@@ -4,6 +4,13 @@
 use super::{Account, Carrier, Composition, FlowEvent, Process, Subject};
 
 impl FlowEvent {
+    /// Matter routed between accounts within one body is not new income.
+    pub fn is_internal(&self) -> bool {
+        self.source.is_body()
+            && self.destination.is_body()
+            && matches!((self.from, self.to), (Some(from), Some(to)) if from.organism == to.organism)
+    }
+
     /// Out of the ground and into a body.
     pub fn uptake(to: Subject, into: Account, amount_mg: u64) -> Self {
         Self {

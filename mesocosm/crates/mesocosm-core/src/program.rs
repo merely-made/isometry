@@ -404,6 +404,13 @@ pub fn preview(
 ) -> Result<Preview, DevelopmentError> {
     let body = species.realize(seed, founder.mass_mg, founder.palette)?;
     let mut grown = BodyPhenotype::seed(body);
+    let stock = species
+        .initial_tissue
+        .stock_for(grown.body().total_mass_mg())
+        .expect("a lineage preview needs declared founding tissue");
+    grown
+        .distribute_stock(stock)
+        .expect("the recipe was scaled to this preview body");
     species.apply_intake_ports(&mut grown);
     let program = species.program().digest();
     let Some(revision) = species.program().current() else {

@@ -19,7 +19,9 @@ use crate::places::Soil;
 use super::{Organism, STARVED_UPKEEP_TICKS};
 
 mod returns;
+mod synthesis;
 pub(super) use returns::{decay, pay_travel, pay_upkeep};
+pub(super) use synthesis::record_synthesis;
 
 /// Where a body put what it just took in.
 ///
@@ -56,13 +58,6 @@ pub(super) struct Landed {
 /// Called after [`Organism::pay_upkeep`], so the reserve it reads is this
 /// tick's, post-rent. TD6's ceilings bound both halves — substance at the body
 /// plan's adult mass, reserve at the same number.
-pub(super) fn earn(organism: &mut Organism, mg: u64) -> Landed {
-    earn_stock(
-        organism,
-        Stock::single(crate::matter::Material::Untyped, mg),
-    )
-}
-
 /// Typed feeding income, preserving nis when it becomes body substance and
 /// explicitly digesting it when it becomes reserve.
 pub(super) fn earn_stock(organism: &mut Organism, stock: Stock) -> Landed {

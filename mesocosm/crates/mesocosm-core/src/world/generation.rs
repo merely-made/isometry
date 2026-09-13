@@ -8,13 +8,15 @@
 use serde::{Deserialize, Serialize};
 
 use super::{ENCLOSURE, Founding, World};
+use crate::matter::Material;
 use crate::places::{PlaceId, Soil, surface_stance_for};
 use crate::{
-    BodyDocument, BodyPhenotype, Kingdom, PartPalette, Recipe, Rng, Soma, SpeciesId, Symmetry,
+    BodyDocument, BodyPhenotype, InitialTissueRecipe, Kingdom, PartPalette, Recipe, Rng, Soma,
+    SpeciesId, Symmetry,
 };
 
 /// Bump when seed streams, admission, or founding interpretation change.
-pub const VERSION: u32 = 3;
+pub const VERSION: u32 = 4;
 
 mod body_plan;
 pub use body_plan::BodyPlan;
@@ -147,25 +149,11 @@ pub enum Error {
 
 impl Request {
     pub fn validate(&self) -> Result<(), Error> {
-        if !(1..=VERSION).contains(&self.version) {
+        if self.version != VERSION {
             return Err(Error::Version(self.version));
         }
         if self.min_open_steps > 4 {
             return Err(Error::Invalid("start access must be 0..4 directions"));
-        }
-        if self.version < 3
-            && (self.fixed_body.is_some()
-                || self.min_open_steps != 0
-                || self.soil_pattern != SoilPattern::Patches)
-        {
-            return Err(Error::Invalid(
-                "habitat comparison requires generator version 3",
-            ));
-        }
-        if self.version == 1 && self.criteria.body_plan != BodyPlan::Axial {
-            return Err(Error::Invalid(
-                "branched bodies require generator version 2",
-            ));
         }
         let c = &self.criteria;
         if self
@@ -401,8 +389,27 @@ impl Prepared {
         world
             .lineages
             .set_symmetry(SpeciesId(1), candidate.symmetry);
+        world.lineages.set_initial_tissue(
+            SpeciesId(1),
+            InitialTissueRecipe::single(match candidate.role {
+                Kingdom::Producer => Material::Producer,
+                Kingdom::Consumer => Material::Consumer,
+                Kingdom::Decomposer => Material::Decomposer,
+            }),
+        );
+        let tissue = world
+            .lineages
+            .get(SpeciesId(1))
+            .expect("the controlled lineage remains registered")
+            .initial_tissue
+            .stock_for(candidate.body.total_mass_mg())
+            .expect("generated founder declares tissue");
         let organism = &mut world.organisms[0];
         organism.phenotype = BodyPhenotype::seed(candidate.body.clone());
+        organism
+            .phenotype
+            .distribute_stock(tissue)
+            .expect("generated founder tissue is scaled to its body");
         organism.development_seed = candidate.seed;
         organism.life_history_mass_mg = candidate.body.total_mass_mg();
         organism.energy_mg = organism.life_history_mass_mg;

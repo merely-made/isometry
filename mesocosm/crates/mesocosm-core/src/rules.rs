@@ -58,7 +58,8 @@ pub const DEFAULT_EPOCH_TICKS: u64 = 1_000;
 /// TG1. Revision 2 introduces typed soil; revision 3 adds part scruple storage.
 /// Revision 4 preserves whole-meal mixtures and records reserve digestion.
 /// Revision 5 preserves birth provisioning and records completed tissue returns.
-pub const TROPHIC_GRAMMAR_REVISION: u32 = 5;
+/// Revision 6 introduces producer synthesis and explicit founder tissue recipes.
+pub const TROPHIC_GRAMMAR_REVISION: u32 = 6;
 
 /// How long a candidate is grown before its flow record is read. (P4b)
 ///

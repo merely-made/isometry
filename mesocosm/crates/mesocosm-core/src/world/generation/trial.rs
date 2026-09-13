@@ -105,6 +105,9 @@ impl TrialEvidence {
 
     fn record_flow(&mut self, flow: RecordedFlow, subject: OrganismId) {
         let record = flow.record;
+        if record.is_internal() {
+            return;
+        }
         if record.to.is_some_and(|to| to.organism == subject) {
             self.subject_incoming_mg = self.subject_incoming_mg.saturating_add(record.amount_mg);
             match record.process {
@@ -229,7 +232,10 @@ mod tests {
                 None,
                 FlowEvent::between(
                     Process::Feeding,
-                    subject(),
+                    Subject {
+                        organism: OrganismId(8),
+                        ..subject()
+                    },
                     Account::Substance,
                     eater,
                     Account::Reserve,
@@ -240,6 +246,21 @@ mod tests {
         );
         evidence.record_flow(
             Envelope::new(1, None, FlowEvent::uptake(eater, Account::Reserve, 4)),
+            eater.organism,
+        );
+        evidence.record_flow(
+            Envelope::new(
+                1,
+                None,
+                FlowEvent::between(
+                    Process::Uptake,
+                    eater,
+                    Account::Substance,
+                    eater,
+                    Account::Reserve,
+                    4,
+                ),
+            ),
             eater.organism,
         );
         assert_eq!(evidence.subject_feeding_events, 1);

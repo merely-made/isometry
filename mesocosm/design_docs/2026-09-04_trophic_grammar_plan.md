@@ -1,7 +1,8 @@
 # Trophic Grammar Plan (2026-09-04)
 
 **Status: accepted by Mark 2026-09-04; TG1 complete 2026-09-05;
-TG2a-TG2e implemented 2026-09-09. Full TG2-TG7 remain open.** The three
+TG2a-TG2e implemented 2026-09-09; TG2f implemented 2026-09-12.
+Full TG2-TG7 remain open.** The three
 rulings in section 4 are given. This is PE4's first
 build: the material scheme ruled 2026-09-02 turned into a trophic grammar. It
 owns typed intake, typed accounts, part composition, defenses, and selective
@@ -167,8 +168,8 @@ composition alone, preserving the existing Paredros and tabletop boundaries.
 World grammar revision 3 covers the additional part state; previous world
 snapshots have no migration. Structural body-profile versioning is unchanged.
 
-Existing scalar founders and scalar growth initialize untyped stock. This
-slice does not infer a material kind from current anatomy, and does not close
+At TG2c, scalar founders and scalar growth initialized untyped stock. That
+slice did not infer a material kind from current anatomy, and did not close
 the material-aware metabolism, whole-body feeding, birth and decay joins or
 the per-channel full-run receipt. Mixed-stock acceptance here is an authored
 part/graft fixture, not yet a naturally realized dietary difference. Those
@@ -216,10 +217,10 @@ substance callers still default to missing evidence, rather than silently
 claiming untyped stock. Grammar revision 5 covers the new birth semantics.
 The new reconciliation instrument compares all four channels by organism and
 account, with soil aggregated across columns. This does not provide individual
-part or soil-column flow addresses. Synthesis, lineage tissue recipes, dietary
-display and full ecological/performance acceptance remain open.
+part or soil-column flow addresses. TG2f below adds synthesis and founder
+recipes; dietary display and full ecological/performance acceptance remain open.
 
-The next bounded join is producer synthesis: draw only untyped soil, record
+TG2f takes the next bounded join, producer synthesis: draw only untyped soil, record
 the explicit conversion into producer tissue, and route the resulting stock
 through the existing intake function. Pending typed soil remains unavailable
 to roots. **Mark's founder ruling, 2026-09-09:** generated basic lifeforms
@@ -228,8 +229,39 @@ kingdom. Untyped founder bodies are temporary implementation scaffolding,
 not the intended biological default. Feeding and growth can change the
 mixture, and available provenance remains visible. A recipe initializes new
 founders; the body's later kingdom or anatomy never relabels existing matter.
-Births retain the parent's actual donated stock. Implement recipe ownership
-in the lineage/generation path after the bounded synthesis join.
+Births retain the parent's actual donated stock. Recipe ownership belongs
+in the lineage/generation path.
+
+**TG2f synthesis and founder recipes, implemented 2026-09-12.** This slice
+implements the founder ruling above and the producer conversion. Root intake
+still draws only untyped soil. An accepted draw becomes producer tissue,
+with a named synthesis record; reserve allocation then records digestion
+inside that body. Internal routing must not count again as external income,
+either in the inspector, creator trial or adaptation score.
+
+`InitialTissueRecipe` stores checked material weights on `Species`. Empty
+recipes are refused by construction and deserialization; exact scaling uses
+largest remainders with the existing material tie order. Forks retain this
+declaration. World grammar revision 6 identifies the new biology. Creator
+request version 4 identifies the new founding interpretation and refuses
+older explicit request versions; structural `BodyDocument` remains unchanged.
+
+Lineages declare exact starting tissue proportions. World founders, generated
+starts and lineage previews apply that recipe once; births continue receiving
+the parent's actual donated stock. A later anatomical or trophic change does
+not rewrite existing scruples. Pending typed soil, dietary display and full
+ecological acceptance remain separate work.
+
+The next accounting join is completed mineralization of pending typed soil,
+followed by the bounded natural soil-to-body-to-soil per-channel loop.
+TG3 still needs dietary differences shown through the inspection surface
+and the declared compatibility allowance applied at intake.
+
+**Done when:** generated founders carry declared tissue, producer uptake and
+reserve routing reconcile every material channel, mixed recipes close odd
+mass totals exactly, invalid recipes are refused, and snapshots replay the
+accepted flows under the new grammar. Existing action, runtime and long-run
+matter checks must pass with the same scalar rates.
 
 ### TG3: scruple per part
 
@@ -347,6 +379,24 @@ beginning body types; start investigating a beginning set of traits.
 ---
 
 ## Findings
+
+- **2026-09-12, TG2f synthesis and founders:** all core/runtime library and
+  integration suites passed on `89752cd` plus this patch: 753 passed, one
+  existing ignored test across 18 suites. The command was
+  `cargo test --manifest-path mesocosm/Cargo.toml -p mesocosm-core -p mesocosm-runtime --lib --tests --release --offline --locked`
+  with a separate build target. Source hashes matched before and after the
+  run, and changed sources passed formatting and the 600-line ceiling.
+  The independent generation test reconciles actual four-channel accounts,
+  requires synthesis and digestion, provisions a mixed child, replays exact
+  flows/state and refuses grammar 5 at restore. Standard and creator founders,
+  mixed/large recipe weights, malformed recipe loading, inherited declarations
+  and unchanged scalar matter conservation passed. A typed-soil fixture
+  exposed upkeep-before-uptake ordering: the soil's biological channels stay
+  intact while that tick's returned untyped nutrients can be synthesized.
+  Its assertion now accounts for the actual return. Native creator validation
+  was not rerun; its existing body-plan fixture now uses the current request
+  default. Dietary visualization, natural typed-loop acceptance and performance
+  measurements remain open.
 
 - **2026-09-09, TG2e birth and returns:** an isolated `d10c259` checkout
   with exactly this slice's fifteen source files passed 501 core unit tests,
@@ -496,6 +546,13 @@ beginning body types; start investigating a beginning set of traits.
   `perception.rs:206`, and no body change measured holds the corridor.
 
 ## Progress
+
+- **2026-09-12, TG2f.** Producers synthesize typed tissue from untyped soil.
+  Founder recipes declare the starting mixture and follow lineage forks;
+  generated entry and previews apply them once. Same-body reserve digestion
+  remains in the material record and is excluded from external-income
+  readings and adaptation scores. Pending soil mineralization, dietary
+  display and full ecological acceptance remain open.
 
 - **2026-09-09, TG2e.** Birth preserves parental material; upkeep, travel
   and cadenced decay record actual input and completed untyped returns.

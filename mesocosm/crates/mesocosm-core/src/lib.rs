@@ -119,7 +119,7 @@ pub use rng::Rng;
 pub use rules::{RulesetDigest, TROPHIC_GRAMMAR_REVISION, WorldRules};
 pub use score::{Reading, readings};
 pub use snapshot::{SnapshotError, restore, restore_under, snapshot, state_hash};
-pub use species::{Lineages, Species};
+pub use species::{InitialTissueRecipe, Lineages, Species, TissueRecipeError};
 pub use wire::{WireError, frame, unframe};
 pub use world::{
     ExpressionPreview, Founding, Gland, Graft, GraftPreview, INSTINCT_IDLE_TICKS, Ineligible,

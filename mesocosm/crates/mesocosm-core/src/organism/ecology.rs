@@ -17,6 +17,7 @@
 use crate::cohort;
 use crate::development::PartPalette;
 use crate::flow::{Account, FlowEvent, Process, Records, Subject};
+use crate::matter::{Material, Stock};
 use crate::places::{FORAGE_RADIUS, Ground, Places, Soil, Tier, TierLine};
 use crate::process::FeedingMode;
 use crate::rng::Rng;
@@ -34,7 +35,7 @@ mod kinship;
 mod movement;
 mod rates;
 
-use flows::{earn, earn_stock, record_intake, release_reserve};
+use flows::{earn_stock, record_intake, record_synthesis, release_reserve};
 use movement::{
     CarrionTarget, LivingTarget, carrion_cells, choose_carrion_target, choose_living_target,
     disperse, living_cells,
@@ -313,9 +314,10 @@ fn step_inner(
                         .clamp(UPKEEP_BASE_MG, income)
                         .min(room);
                     let drawn = soil.draw_richest_within(column, FORAGE_RADIUS, want);
-                    let landed = earn(organism, drawn);
-                    soil.deposit(column, landed.spilled_mg);
-                    record_intake(records, at, None, subject, &landed);
+                    let landed = earn_stock(organism, Stock::single(Material::Producer, drawn));
+                    soil.deposit_stock(column, landed.spilled_stock)
+                        .expect("a conserved producer spill fits the ecology's finite soil");
+                    record_synthesis(records, at, subject, &landed);
                 }
             },
             // **The bite scales with build** (TD9): the mouthful reads the same

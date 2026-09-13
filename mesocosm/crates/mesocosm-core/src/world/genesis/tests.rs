@@ -22,6 +22,23 @@ mod tg1;
 // being about the world that ships.
 use super::super::FOUNDERS;
 
+#[test]
+fn founders_hold_their_lineages_declared_tissue() {
+    let world = World::new(41, FOUNDERS);
+    for organism in &world.organisms {
+        let lineage = world
+            .lineages
+            .get(organism.species)
+            .expect("every founder has a lineage");
+        let expected = lineage
+            .initial_tissue
+            .stock_for(organism.biomass_mg())
+            .expect("live founder lineages declare tissue");
+        assert_eq!(organism.phenotype.total_stock().unwrap(), expected);
+        assert_eq!(expected.amount(crate::matter::Material::Untyped), 0);
+    }
+}
+
 // **The DC1.5 census.** The pyramid no longer authors a kingdom onto a
 // founder; it picks which body that founder draws, and the world reads the
 // kingdom back off the body's feeding organs. So the transitional draw owes
